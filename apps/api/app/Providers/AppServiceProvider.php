@@ -6,6 +6,8 @@ use App\Models\PersonalAccessToken;
 use App\Modules\Merchants\Domain\MembershipPolicy;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Merchants\Infrastructure\Membership;
+use App\Modules\Pricing\Application\StaticCarrierRates;
+use App\Modules\Pricing\Domain\CarrierRates;
 use App\Modules\WalletBilling\Domain\PaymentProvider;
 use App\Modules\WalletBilling\Infrastructure\DisabledPaymentProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -23,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(CarrierRates::class, StaticCarrierRates::class);
         $this->app->bind(PaymentProvider::class, DisabledPaymentProvider::class);
         $this->app->scoped(MerchantContext::class, fn () => new MerchantContext);
     }

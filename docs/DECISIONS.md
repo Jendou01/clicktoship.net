@@ -52,3 +52,11 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 * Request and permanent business-operation idempotency are separate. Outbox processing uses atomic local consumer receipts with SKIP LOCKED; no exactly-once network delivery claim. Financial history never expires with a response cache.
 * Unknown/protected reservations remain reserved past timeout and cannot be force-released by expiry/structural reconciliation. External resolution is blocked pending authoritative carrier evidence and an approved independent decision contract.
 * Initial financial writes serialize on the merchant root for consistency with Phase 3 revocations. Correctness precedes lock-granularity optimization; no measured production performance SLA is claimed.
+
+## Phase 5 pricing decisions
+
+* Approved scope: deterministic internal static estimates, immutable versioned snapshots, confidential cost separation and zero wallet/shipping effects. No Aramex tariff/tax/availability is inferred from the illustrative 14 SAR input.
+* Reuse integer `Money` and currency catalog; only SAR enabled, no FX. Require explicit verified tax treatment, service capabilities and city classification; unknown cities/routes fail closed.
+* Merchant > tier > carrier > global, then explicit selector specificity. Reject ambiguity. Versions use common closed configuration variants with generated relational FKs/bands, avoiding duplicate history schemas.
+* All publication/disable operations use independent current authority and recent MFA; merchant-specific work requires separate approved session-bound grants for both parties. No tenant bypass.
+* [Calculation, security, API, retention and approval details](architecture/PHASE_5_PRICING.md). Accounting/tax/contract and live-carrier launch approvals remain outstanding.

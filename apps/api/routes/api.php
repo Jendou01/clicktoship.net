@@ -60,3 +60,5 @@ Route::prefix('v1')->group(function (): void {
 require __DIR__.'/management.php';
 
 require __DIR__.'/finance.php';
+
+require __DIR__.'/pricing.php';

@@ -98,3 +98,7 @@ WalletBilling owns currency wallets/accounts, immutable journals/entries, reserv
 PostgreSQL finance_command serializes on merchant then wallet/hold/original posting, enforces per-currency balance and spend/refund bounds and commits operation/dedupe/history/projections/outbox together. Immutable journal and entry triggers include deferred balancing and projection checks, plus current-transaction-only entry insertion. Redis is never authoritative for money. Corrections additionally serialize with admin security and sorted user/session locks; maker/checker and their target grants/MFA/session state are revalidated before execution. Production accounting/privilege/operational gates are in docs/finance; no claim of a production runtime-role deployment.
 
 Payments, settlement, withdrawals and shipping charges have no active public command route. Internal financial commands are tested with isolated synthetic fixtures; the application binds only DisabledPaymentProvider. Service-clearing posting templates are provisional pending qualified accountant review. Financial correction execution is hardcoded disabled in normal configuration. Unknown/protected reservations cannot be timed out or manually force-released without a future approved evidence/reconciliation workflow.
+
+## Static pricing estimates
+
+Phase 5 owns versioned pricing configuration and immutable tenant-scoped quotes. It reuses the financial money/currency catalog and has no ledger write path. [Pricing architecture and launch gates](PHASE_5_PRICING.md).

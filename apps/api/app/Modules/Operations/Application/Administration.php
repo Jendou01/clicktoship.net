@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 
 final class Administration
 {
-    public const CAPABILITIES = ['platform.merchant.view', 'platform.merchant.status', 'platform.verification.review', 'platform.wallet.view', 'platform.finance.reconcile', 'platform.finance.correct'];
+    public const CAPABILITIES = ['platform.merchant.view', 'platform.merchant.status', 'platform.verification.review', 'platform.wallet.view', 'platform.finance.reconcile', 'platform.finance.correct', 'platform.pricing.view', 'platform.pricing.manage', 'platform.pricing.approve'];
 
     public function grants(Request $r): array
     {

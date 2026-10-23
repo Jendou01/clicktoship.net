@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–3
-  version: 0.3.0
+  title: ClickToShip API — Phases 1–5
+  version: 0.5.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA and explicitly approved session-bound administration. Shipping remains unavailable.
 paths:
@@ -5972,6 +5972,1302 @@ paths:
               required:
               - access_grant
               - wallet_id
+
+  /api/v1/rates:
+    get:
+      operationId: pricingGetRates
+      summary: Discover configured services; live availability remains unverified
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      services:
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: false
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            carrier:
+                              type: string
+                            name_en:
+                              type: string
+                            name_ar:
+                              type: string
+                            availability:
+                              const: not_live_verified
+                            shipping_enabled:
+                              const: false
+                          required:
+                          - id
+                          - carrier
+                          - name_en
+                          - name_ar
+                          - availability
+                          - shipping_enabled
+                    required:
+                    - services
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+  /api/v1/rates/quote:
+    post:
+      operationId: pricingPostRatesQuote
+      summary: Create or replay an immutable estimate
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '201':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingPublicQuote'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingQuoteInput'
+  /api/v1/rates/quotes:
+    get:
+      operationId: pricingGetRatesQuotes
+      summary: Paginated merchant quote history
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      quotes:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingPublicQuote'
+                      page:
+                        type: integer
+                        minimum: 1
+                        maximum: 100000
+                      last_page:
+                        type: integer
+                        minimum: 1
+                        maximum: 100000
+                    required:
+                    - quotes
+                    - page
+                    - last_page
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+  /api/v1/rates/quotes/{quote}:
+    get:
+      operationId: pricingGetRatesQuotesQuote
+      summary: Retrieve immutable quote
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingPublicQuote'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: quote
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/rates/quotes/{quote}/validate:
+    get:
+      operationId: pricingGetRatesQuotesQuoteValidate
+      summary: Check expiry and service disablement; never authorizes billing
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      valid:
+                        type: boolean
+                      shipping_enabled:
+                        const: false
+                    required:
+                    - id
+                    - valid
+                    - shipping_enabled
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: quote
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/rates/quotes/{quote}/recalculate:
+    post:
+      operationId: pricingPostRatesQuotesQuoteRecalculate
+      summary: Create new version using current approved configuration and new key
+      description: Authenticated active merchant context and rates.read/rates.quote permission intersected with token
+        scopes. No carrier request, live availability, shipment or wallet effect.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '201':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingPublicQuote'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: quote
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingQuoteInput'
+  /api/v1/admin/pricing/definitions:
+    get:
+      operationId: pricingGetAdminPricingDefinitions
+      summary: List confidential authorized pricing definitions (maximum 500)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      definitions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingDefinition'
+                    required:
+                    - definitions
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+    post:
+      operationId: pricingPostAdminPricingDefinitions
+      summary: Create immutable draft; never auto-publish
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '201':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingDraftReceipt'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingDraft'
+  /api/v1/admin/pricing/definitions/{definition}:
+    patch:
+      operationId: pricingPatchAdminPricingDefinitionsDefinition
+      summary: Create a complete replacement draft with expected version
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingDraftReceipt'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingDraft'
+  /api/v1/admin/pricing/definitions/{definition}/versions:
+    get:
+      operationId: pricingGetAdminPricingDefinitionsDefinitionVersions
+      summary: Read retained versions (latest 100)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      versions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingVersion'
+                    required:
+                    - versions
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/pricing/definitions/{definition}/publish:
+    post:
+      operationId: pricingPostAdminPricingDefinitionsDefinitionPublish
+      summary: Independently publish with optimistic publication state
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      state_version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      enabled:
+                        type: boolean
+                    required:
+                    - id
+                    - version
+                    - state_version
+                    - enabled
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingStateChange'
+  /api/v1/admin/pricing/definitions/{definition}/disable:
+    post:
+      operationId: pricingPostAdminPricingDefinitionsDefinitionDisable
+      summary: Independently disable with optimistic publication state
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      state_version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      enabled:
+                        type: boolean
+                    required:
+                    - id
+                    - version
+                    - state_version
+                    - enabled
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingStateChange'
+  /api/v1/admin/pricing/audit:
+    get:
+      operationId: pricingGetAdminPricingAudit
+      summary: Read immutable authorized pricing events (latest 100)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingEvent'
+                    required:
+                    - events
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+  /api/v1/admin/pricing/merchants/{merchant}/definitions:
+    get:
+      operationId: pricingGetAdminPricingMerchantsMerchantDefinitions
+      summary: List confidential authorized pricing definitions (maximum 500)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      definitions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingDefinition'
+                    required:
+                    - definitions
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: pricingPostAdminPricingMerchantsMerchantDefinitions
+      summary: Create immutable draft; never auto-publish
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '201':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingDraftReceipt'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingDraft'
+  /api/v1/admin/pricing/merchants/{merchant}/definitions/{definition}:
+    patch:
+      operationId: pricingPatchAdminPricingMerchantsMerchantDefinitionsDefinition
+      summary: Create a complete replacement draft with expected version
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PricingDraftReceipt'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingDraft'
+  /api/v1/admin/pricing/merchants/{merchant}/definitions/{definition}/versions:
+    get:
+      operationId: pricingGetAdminPricingMerchantsMerchantDefinitionsDefinitionVersions
+      summary: Read retained versions (latest 100)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      versions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingVersion'
+                    required:
+                    - versions
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/pricing/merchants/{merchant}/definitions/{definition}/publish:
+    post:
+      operationId: pricingPostAdminPricingMerchantsMerchantDefinitionsDefinitionPublish
+      summary: Independently publish with optimistic publication state
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      state_version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      enabled:
+                        type: boolean
+                    required:
+                    - id
+                    - version
+                    - state_version
+                    - enabled
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingStateChange'
+  /api/v1/admin/pricing/merchants/{merchant}/definitions/{definition}/disable:
+    post:
+      operationId: pricingPostAdminPricingMerchantsMerchantDefinitionsDefinitionDisable
+      summary: Independently disable with optimistic publication state
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      state_version:
+                        type: integer
+                        minimum: 1
+                        maximum: 2147483647
+                      enabled:
+                        type: boolean
+                    required:
+                    - id
+                    - version
+                    - state_version
+                    - enabled
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: definition
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingStateChange'
+  /api/v1/admin/pricing/merchants/{merchant}/audit:
+    get:
+      operationId: pricingGetAdminPricingMerchantsMerchantAudit
+      summary: Read immutable authorized pricing events (latest 100)
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PricingEvent'
+                    required:
+                    - events
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/pricing/merchants/{merchant}/quotes/{quote}:
+    get:
+      operationId: pricingGetAdminPricingMerchantsMerchantQuotesQuote
+      summary: Inspect confidential calculation under current target grant
+      description: Browser session, recent MFA and granular platform.pricing permission required. Target paths require
+        exact approved session-bound merchant access; no Super Admin bypass. Publish/disable require a different currently
+        authorized maker and approver.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: Whitelisted successful result in the standard API envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                - error
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      quote:
+                        $ref: '#/components/schemas/PricingPublicQuote'
+                      internal:
+                        type: object
+                        description: Confidential normalized input, full immutable selected configuration versions,
+                          cost, estimated margin and calculation assumptions. Never returned by merchant endpoints.
+                    required:
+                    - quote
+                    - internal
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '401':
+          description: Authentication/session revoked or expired
+        '403':
+          description: RBAC, MFA, suspension or merchant access denied
+        '404':
+          description: Resource unavailable in authorized scope
+        '409':
+          description: Stale version, ambiguous configuration or changed idempotency payload
+        '419':
+          description: CSRF failure
+        '422':
+          description: Input invalid or rate unavailable; no confidential cost diagnostics
+        '429':
+          description: Authentication/action throttle
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: quote
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
 components:
   headers:
     RequestId:
@@ -7570,6 +8866,1243 @@ components:
         created_at:
           type: string
           format: date-time
+    PricingPackage:
+      type: object
+      additionalProperties: false
+      properties:
+        weight_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        length_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        width_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        height_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+      required:
+      - weight_grams
+      - length_mm
+      - width_mm
+      - height_mm
+    PricingQuoteInput:
+      type: object
+      additionalProperties: false
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        currency:
+          const: SAR
+        origin:
+          type: object
+          additionalProperties: false
+          properties:
+            country:
+              type: string
+              pattern: ^[A-Z]{2}$
+            city:
+              type: string
+              minLength: 1
+              maxLength: 100
+          required:
+          - country
+          - city
+        destination:
+          type: object
+          additionalProperties: false
+          properties:
+            country:
+              type: string
+              pattern: ^[A-Z]{2}$
+            city:
+              type: string
+              minLength: 1
+              maxLength: 100
+          required:
+          - country
+          - city
+        packages:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/PricingPackage'
+        cod_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+          maxLength: 12
+        declared_value_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+          maxLength: 12
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - service_id
+      - currency
+      - origin
+      - destination
+      - packages
+      - cod_minor
+      - declared_value_minor
+      - idempotency_key
+    PricingPublicQuote:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        revision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        service_id:
+          type: string
+          format: uuid
+        service_name:
+          type: object
+          additionalProperties: false
+          properties:
+            en:
+              type: string
+            ar:
+              type: string
+          required:
+          - en
+          - ar
+        carrier:
+          type: string
+        currency:
+          const: SAR
+        service_availability:
+          const: configured_estimate
+        carrier_availability:
+          const: not_live_verified
+        shipping_enabled:
+          const: false
+        selling_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        discount_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        fees:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              code:
+                type: string
+              amount_minor:
+                type: string
+                pattern: ^(0|[1-9][0-9]{0,12})$
+                description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+            required:
+            - code
+            - amount_minor
+        tax:
+          type: object
+          additionalProperties: false
+          properties:
+            mode:
+              enum:
+              - exempt
+              - exclusive
+            amount_minor:
+              type: string
+              pattern: ^(0|[1-9][0-9]{0,12})$
+              description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+          required:
+          - mode
+          - amount_minor
+        total_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        billable_weight_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        actual_weight_grams:
+          type: integer
+          minimum: 1
+          maximum: 100000000000
+        volumetric_weight_grams:
+          type: integer
+        inputs:
+          type: object
+          additionalProperties: false
+          properties:
+            service_id:
+              type: string
+              format: uuid
+            currency:
+              const: SAR
+            origin:
+              type: object
+              additionalProperties: false
+              properties:
+                country:
+                  type: string
+                  pattern: ^[A-Z]{2}$
+                city:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+              required:
+              - country
+              - city
+            destination:
+              type: object
+              additionalProperties: false
+              properties:
+                country:
+                  type: string
+                  pattern: ^[A-Z]{2}$
+                city:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+              required:
+              - country
+              - city
+            packages:
+              type: array
+              minItems: 1
+              maxItems: 100
+              items:
+                $ref: '#/components/schemas/PricingPackage'
+            cod_minor:
+              type: string
+              pattern: ^(0|[1-9][0-9]{0,12})$
+              description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+              maxLength: 12
+            declared_value_minor:
+              type: string
+              pattern: ^(0|[1-9][0-9]{0,12})$
+              description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+              maxLength: 12
+          required:
+          - service_id
+          - currency
+          - origin
+          - destination
+          - packages
+          - cod_minor
+          - declared_value_minor
+        pricing_version:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - parent_id
+      - revision
+      - service_id
+      - service_name
+      - carrier
+      - currency
+      - service_availability
+      - carrier_availability
+      - shipping_enabled
+      - selling_minor
+      - discount_minor
+      - fees
+      - tax
+      - total_minor
+      - billable_weight_grams
+      - actual_weight_grams
+      - volumetric_weight_grams
+      - inputs
+      - pricing_version
+      - expires_at
+      - created_at
+    PricingServiceConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        carrier:
+          type: string
+          pattern: ^[a-z0-9_-]{1,50}$
+        volumetric_divisor:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        weight_step_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        weight_mode:
+          enum:
+          - aggregate
+          - per_package
+        ttl_seconds:
+          type: integer
+          minimum: 30
+          maximum: 3600
+        rounding:
+          enum:
+          - half_up
+          - up
+        capabilities:
+          type: object
+          additionalProperties: false
+          properties:
+            cod:
+              type: boolean
+            remote:
+              type: boolean
+            declared_value:
+              type: boolean
+          required:
+          - cod
+          - remote
+          - declared_value
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - carrier
+      - volumetric_divisor
+      - weight_step_grams
+      - weight_mode
+      - ttl_seconds
+      - rounding
+      - capabilities
+    PricingZoneConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        cities:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 100
+        remote:
+          type: boolean
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - country
+      - cities
+      - remote
+    PricingTierConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+      required:
+      - name_en
+      - name_ar
+      - evidence
+    PricingAssignmentConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        tier_id:
+          type: string
+          format: uuid
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - tier_id
+    PricingTaxConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        jurisdiction:
+          enum:
+          - origin
+          - destination
+        mode:
+          enum:
+          - exempt
+          - exclusive
+        percent_bps:
+          type: integer
+          minimum: 0
+          maximum: 10000
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - country
+      - jurisdiction
+      - mode
+      - percent_bps
+    PricingTariffConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        service_id:
+          type: string
+          format: uuid
+        origin_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        destination_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        origin_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        destination_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        lane:
+          enum:
+          - domestic
+          - international
+          - null
+        weight_from:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        weight_to:
+          type: integer
+          minimum: 1
+          maximum: 1000000001
+        packages_from:
+          type: integer
+          minimum: 1
+          maximum: 100
+        packages_to:
+          type: integer
+          minimum: 1
+          maximum: 100
+        base_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        fixed_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        percent_bps:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        included_grams:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        step_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        step_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - service_id
+      - weight_from
+      - weight_to
+      - packages_from
+      - packages_to
+      - base_minor
+      - fixed_minor
+      - percent_bps
+      - included_grams
+      - step_grams
+      - step_minor
+      - origin_country
+      - destination_country
+    PricingRuleConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        service_id:
+          type: string
+          format: uuid
+        origin_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        destination_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        origin_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        destination_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        lane:
+          enum:
+          - domestic
+          - international
+          - null
+        weight_from:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        weight_to:
+          type: integer
+          minimum: 1
+          maximum: 1000000001
+        packages_from:
+          type: integer
+          minimum: 1
+          maximum: 100
+        packages_to:
+          type: integer
+          minimum: 1
+          maximum: 100
+        base_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        fixed_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        percent_bps:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        included_grams:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        step_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        step_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        scope:
+          enum:
+          - global
+          - carrier
+          - tier
+          - merchant
+        tier_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        mode:
+          enum:
+          - fixed
+          - markup
+        discount_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        discount_bps:
+          type: integer
+          minimum: 0
+          maximum: 10000
+        min_margin_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        min_margin_bps:
+          type: integer
+          minimum: 0
+          maximum: 10000
+        tax_id:
+          type: string
+          format: uuid
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - service_id
+      - weight_from
+      - weight_to
+      - packages_from
+      - packages_to
+      - base_minor
+      - fixed_minor
+      - percent_bps
+      - included_grams
+      - step_grams
+      - step_minor
+      - scope
+      - mode
+      - discount_minor
+      - discount_bps
+      - min_margin_minor
+      - min_margin_bps
+      - tax_id
+    PricingFeeConfiguration:
+      type: object
+      additionalProperties: false
+      properties:
+        name_en:
+          type: string
+          maxLength: 100
+        name_ar:
+          type: string
+          maxLength: 100
+        evidence:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        service_id:
+          type: string
+          format: uuid
+        origin_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        destination_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        origin_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        destination_zone:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        lane:
+          enum:
+          - domestic
+          - international
+          - null
+        weight_from:
+          type: integer
+          minimum: 0
+          maximum: 1000000000
+        weight_to:
+          type: integer
+          minimum: 1
+          maximum: 1000000001
+        packages_from:
+          type: integer
+          minimum: 1
+          maximum: 100
+        packages_to:
+          type: integer
+          minimum: 1
+          maximum: 100
+        code:
+          enum:
+          - service
+          - cod
+          - remote
+          - declared_value
+        side:
+          enum:
+          - carrier
+          - merchant
+        basis:
+          enum:
+          - base
+          - sell
+          - cod
+          - declared_value
+        fixed_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Integer minor units, maximum 1000000000000; no float or implicit FX.
+        percent_bps:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        per_package:
+          type: boolean
+      required:
+      - name_en
+      - name_ar
+      - evidence
+      - service_id
+      - weight_from
+      - weight_to
+      - packages_from
+      - packages_to
+      - code
+      - side
+      - basis
+      - fixed_minor
+      - percent_bps
+      - per_package
+    PricingDraft:
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: service
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingServiceConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: zone
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingZoneConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: tier
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingTierConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: assignment
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingAssignmentConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: tax
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingTaxConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: tariff
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingTariffConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+        - currency
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: rule
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingRuleConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+        - currency
+      - type: object
+        additionalProperties: false
+        properties:
+          kind:
+            const: fee
+          code:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]{1,80}$
+          version:
+            type: integer
+            minimum: 0
+            maximum: 2147483647
+          currency:
+            type:
+            - string
+            - 'null'
+            pattern: ^[A-Z]{3}$
+          effective_from:
+            type: string
+            format: date-time
+          effective_to:
+            type: string
+            format: date-time
+          configuration:
+            $ref: '#/components/schemas/PricingFeeConfiguration'
+          access_grant:
+            type: string
+            format: uuid
+        required:
+        - kind
+        - code
+        - version
+        - effective_from
+        - effective_to
+        - configuration
+        - currency
+      description: Closed typed version payload. Merchant scope only through approved target path; assignment requires
+        a merchant path and rule.scope=merchant must match ownership. Tariff route countries are mandatory. Non-monetary
+        definitions may omit currency. Evidence is mandatory, no default tariff or tax.
+    PricingStateChange:
+      type: object
+      additionalProperties: false
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        state_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        access_grant:
+          type: string
+          format: uuid
+      required:
+      - version
+      - state_version
+    PricingDraftReceipt:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        state_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+      - id
+      - version
+      - state_version
+    PricingDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          enum:
+          - service
+          - zone
+          - tier
+          - assignment
+          - tax
+          - tariff
+          - rule
+          - fee
+        merchant_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        code:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        state_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        active_version:
+          type:
+          - integer
+          - 'null'
+        enabled:
+          type: boolean
+        configuration:
+          oneOf:
+          - $ref: '#/components/schemas/PricingServiceConfiguration'
+          - $ref: '#/components/schemas/PricingZoneConfiguration'
+          - $ref: '#/components/schemas/PricingTierConfiguration'
+          - $ref: '#/components/schemas/PricingAssignmentConfiguration'
+          - $ref: '#/components/schemas/PricingTaxConfiguration'
+          - $ref: '#/components/schemas/PricingTariffConfiguration'
+          - $ref: '#/components/schemas/PricingRuleConfiguration'
+          - $ref: '#/components/schemas/PricingFeeConfiguration'
+        currency:
+          type:
+          - string
+          - 'null'
+        effective_from:
+          type: string
+          format: date-time
+        effective_to:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+    PricingEvent:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        definition_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        actor_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        action:
+          enum:
+          - draft
+          - publish
+          - disable
+        access_grant:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - definition_id
+      - version
+      - actor_id
+      - session_id
+      - action
+      - access_grant
+      - created_at
+    PricingVersion:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        configuration:
+          type: object
+        currency:
+          type:
+          - string
+          - 'null'
+        effective_from:
+          type: string
+          format: date-time
+        effective_to:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
   securitySchemes:
     SessionCookie:
       type: apiKey
