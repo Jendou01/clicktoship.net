@@ -1,8 +1,9 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — implemented foundation
-  version: 0.1.0
-  description: Only health endpoints are implemented. Planned business resources are documented in API_DESIGN.md.
+  title: ClickToShip API — implemented Phases 1–2
+  version: 0.2.0
+  description: Implemented Phase 1 health and Phase 2 identity, merchant tenancy and built-in RBAC. No shipping, wallet or
+    payment operations.
 paths:
   /api/v1/health/live:
     get:
@@ -47,6 +48,1503 @@ paths:
                 $ref: '#/components/schemas/ReadinessError'
         '429':
           $ref: '#/components/responses/Throttled'
+  /api/v1/auth/register:
+    post:
+      summary: Register a global identity and optional owned organization
+      operationId: postAuthRegister
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: CSRF-protected first-party session only. Returns unverified identity; enqueues encrypted verification notification.
+        No default platform grants.
+      responses:
+        '201':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+  /api/v1/auth/login:
+    post:
+      summary: Log in and rotate session
+      operationId: postAuthLogin
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Case-normalized email; account suspension checked. Five attempts/minute per identity+IP, 20/IP. No remember-me
+        session.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+  /api/v1/auth/logout:
+    post:
+      summary: Invalidate current browser session or current bearer token
+      operationId: postAuthLogout
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: ''
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      logged_out: &id001
+                        type: boolean
+                    required:
+                    - logged_out
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/auth/me:
+    get:
+      summary: Read authenticated identity
+      operationId: getAuthMe
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: ''
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/auth/password/forgot:
+    post:
+      summary: Request recovery without exposing account existence
+      operationId: postAuthPasswordForgot
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Same public response for unknown/suspended identities. Reset hashes stored in PostgreSQL; notification
+        encrypted in Redis. Development mail captured by Mailpit, never logs.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message: &id002
+                        type: string
+                    required:
+                    - message
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotRequest'
+  /api/v1/auth/password/reset:
+    post:
+      summary: Consume reset token and revoke all credentials
+      operationId: postAuthPasswordReset
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: 60-minute expiry. Single-use transaction locks reset row; updates password/auth version and revokes every
+        session/token. Does not implicitly verify email.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      password_reset: *id001
+                    required:
+                    - password_reset
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+  /api/v1/auth/email/resend:
+    post:
+      summary: Resend verification email
+      operationId: postAuthEmailResend
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Rate limited; no link or credential in response.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message: *id002
+                    required:
+                    - message
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/auth/email/verify:
+    post:
+      summary: Verify own email using signed link body
+      operationId: postAuthEmailVerify
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Notification URL uses browser fragment; verification material is POSTed in JSON, never requested as a query
+        URL. Signature, expiry, user ID and email hash checked.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      email_verified: *id001
+                    required:
+                    - email_verified
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+  /api/v1/auth/sessions:
+    get:
+      summary: List own active sessions
+      operationId: getAuthSessions
+      security:
+      - SessionCookie: []
+      description: Opaque registry UUIDs only, never Redis session IDs/hashes. Idle and absolute expiry enforced.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      sessions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Session'
+                    required:
+                    - sessions
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/auth/sessions/{session}:
+    delete:
+      summary: Revoke own session
+      operationId: deleteAuthSessionsSession
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Current session revocation logs out; foreign user IDs return 404.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      revoked: *id001
+                    required:
+                    - revoked
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: session
+        in: path
+        required: true
+        schema: &id003
+          type: string
+          format: uuid
+  /api/v1/auth/memberships:
+    get:
+      summary: List authorized merchant memberships
+      operationId: getAuthMemberships
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Alias of GET /merchants. Bearer clients only see the bound merchant.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantsResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/merchants:
+    get:
+      summary: List authorized merchant organizations
+      operationId: getMerchants
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified email required. Session sees active own memberships, maximum 100; bearer sees only bound merchant.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantsResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      summary: Create an organization with owner membership
+      operationId: postMerchants
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified email required. Caller becomes merchant owner, never platform administrator.
+      responses:
+        '201':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      merchant:
+                        $ref: '#/components/schemas/Merchant'
+                    required:
+                    - merchant
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantRequest'
+  /api/v1/merchants/select:
+    post:
+      summary: Switch active merchant for this session
+      operationId: postMerchantsSelect
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified, active membership required. Other browser sessions are unchanged. Tokens cannot switch. Selection
+        audited.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      active_merchant_id: *id003
+                    required:
+                    - active_merchant_id
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectMerchantRequest'
+  /api/v1/merchants/current:
+    get:
+      summary: Read current authorized merchant
+      operationId: getMerchantsCurrent
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: ' Requires merchant.view from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentMerchantResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/roles:
+    get:
+      summary: Read immutable merchant role catalogue
+      operationId: getRoles
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Six merchant roles only. Four platform roles/assignments are separate and never grant tenant bypass; no
+        public platform grant API. Requires roles.view from current membership intersected with token abilities.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      roles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Role'
+                    required:
+                    - roles
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/permissions:
+    get:
+      summary: Read effective permissions
+      operationId: getPermissions
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: ' Requires roles.view from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      permissions:
+                        type: array
+                        items: *id002
+                    required:
+                    - permissions
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/team:
+    get:
+      summary: List current merchant memberships
+      operationId: getTeam
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: ' Requires team.view from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+    post:
+      summary: Add verified registered user
+      operationId: postTeam
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Audited transaction serializes on merchant. Target permission grants cannot exceed actor; only owner may
+        assign owner. Requires team.manage from current membership intersected with token abilities.
+      responses:
+        '201':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      membership:
+                        type: object
+                        properties:
+                          id: *id003
+                          version: &id004
+                            type: integer
+                        required:
+                        - id
+                        - version
+                    required:
+                    - membership
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreateRequest'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/team/{membership}:
+    get:
+      summary: Read merchant-scoped membership
+      operationId: getTeamMembership
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: ' Requires team.view from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      membership:
+                        type: object
+                        properties:
+                          id: *id003
+                          user_id: *id003
+                          status: *id002
+                          version: *id004
+                        required:
+                        - id
+                        - user_id
+                        - status
+                        - version
+                    required:
+                    - membership
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: membership
+        in: path
+        required: true
+        schema: *id003
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+    patch:
+      summary: Change role/status with version precondition
+      operationId: patchTeamMembership
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Locks merchant then membership and reauthorizes under lock. Stale version/last-owner loss 409. No physical
+        deletion. Requires team.manage from current membership intersected with token abilities.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      membership:
+                        type: object
+                        properties:
+                          id: *id003
+                          status: *id002
+                          version: *id004
+                        required:
+                        - id
+                        - status
+                        - version
+                    required:
+                    - membership
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdateRequest'
+      parameters:
+      - name: membership
+        in: path
+        required: true
+        schema: *id003
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+    delete:
+      summary: Remove membership without deleting history
+      operationId: deleteTeamMembership
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Same concurrency/owner rules as PATCH with status=removed. Existing token requests immediately lose eligibility.
+        Requires team.manage from current membership intersected with token abilities.
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      membership:
+                        type: object
+                        properties:
+                          id: *id003
+                          status: *id002
+                          version: *id004
+                        required:
+                        - id
+                        - status
+                        - version
+                    required:
+                    - membership
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      parameters:
+      - name: membership
+        in: path
+        required: true
+        schema: *id003
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/tokens:
+    get:
+      summary: List own tokens for current merchant
+      operationId: getTokens
+      security:
+      - SessionCookie: []
+      description: ' Requires tokens.manage from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      tokens:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Token'
+                    required:
+                    - tokens
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+    post:
+      summary: Mint expiring merchant-bound token
+      operationId: postTokens
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Current password and browser session required. Five attempts/minute per user+IP; no token chaining. Display
+        once, never in logs/URLs. Requires tokens.manage from current membership intersected with token abilities.
+      responses:
+        '201':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenCreatedResponse'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /api/v1/tokens/{token}:
+    delete:
+      summary: Revoke own merchant-bound token
+      operationId: deleteTokensToken
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: ' Requires tokens.manage from current membership intersected with token abilities.'
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      revoked: *id001
+                    required:
+                    - revoked
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema: *id003
+      - name: X-Merchant-ID
+        in: header
+        required: false
+        schema: *id003
+        description: 'Optional stale-view guard: must match server-selected merchant/token binding. Never authorizes switching.'
+  /sanctum/csrf-cookie:
+    get:
+      summary: Initialize first-party browser session and XSRF cookie
+      operationId: csrfCookie
+      security: []
+      description: Call on the same origin before browser mutations. Send credentials and X-XSRF-TOKEN thereafter. Does not
+        authenticate a user.
+      responses:
+        '204':
+          description: Browser session/XSRF cookies initialized
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Session cookie is HttpOnly; XSRF-TOKEN is readable for the CSRF header.
 components:
   headers:
     RequestId:
@@ -67,11 +1565,66 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+    Error400:
+      description: Stateful first-party request/session required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error401:
+      description: Authentication missing, expired, invalid or revoked
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error403:
+      description: Permission denied, suspension or unverified email
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error404:
+      description: Unavailable or foreign resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error409:
+      description: No/stale merchant context, stale membership version, duplicate membership or last-owner protection
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error419:
+      description: Missing or invalid CSRF token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error422:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error429:
+      description: Redis-backed rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Error503:
+      description: Dependency unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     Meta:
       type: object
       additionalProperties: false
-      required: [request_id]
+      required:
+      - request_id
       properties:
         request_id:
           type: string
@@ -79,7 +1632,10 @@ components:
     Checks:
       type: object
       additionalProperties: false
-      required: [database, redis, schema]
+      required:
+      - database
+      - redis
+      - schema
       properties:
         database:
           type: boolean
@@ -90,11 +1646,15 @@ components:
     LiveResponse:
       type: object
       additionalProperties: false
-      required: [data, meta, error]
+      required:
+      - data
+      - meta
+      - error
       properties:
         data:
           type: object
-          required: [status]
+          required:
+          - status
           additionalProperties: false
           properties:
             status:
@@ -106,12 +1666,17 @@ components:
     ReadyResponse:
       type: object
       additionalProperties: false
-      required: [data, meta, error]
+      required:
+      - data
+      - meta
+      - error
       properties:
         data:
           type: object
           additionalProperties: false
-          required: [status, checks]
+          required:
+          - status
+          - checks
           properties:
             status:
               const: ready
@@ -124,7 +1689,10 @@ components:
     ErrorResponse:
       type: object
       additionalProperties: false
-      required: [data, meta, error]
+      required:
+      - data
+      - meta
+      - error
       properties:
         data:
           type: 'null'
@@ -132,7 +1700,10 @@ components:
           $ref: '#/components/schemas/Meta'
         error:
           type: object
-          required: [code, message, details]
+          required:
+          - code
+          - message
+          - details
           additionalProperties: false
           properties:
             code:
@@ -143,15 +1714,438 @@ components:
               type: object
     ReadinessError:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - properties:
-            error:
+      - $ref: '#/components/schemas/ErrorResponse'
+      - properties:
+          error:
+            properties:
+              code:
+                const: DEPENDENCIES_UNAVAILABLE
+              details:
+                type: object
+                required:
+                - checks
+                properties:
+                  checks:
+                    $ref: '#/components/schemas/Checks'
+    User:
+      type: object
+      properties:
+        id: *id003
+        name: *id002
+        email:
+          type: string
+          format: email
+        email_verified: *id001
+        locale:
+          enum:
+          - en
+          - ar
+          type: string
+      required:
+      - id
+      - name
+      - email
+      - email_verified
+      - locale
+    AuthResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            active_merchant_id:
+              type:
+              - string
+              - 'null'
+              format: uuid
+          required:
+          - user
+          - active_merchant_id
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+      required:
+      - data
+      - meta
+      - error
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password: &id005
+          type: string
+          minLength: 12
+          maxLength: 128
+          format: password
+          writeOnly: true
+          description: Uppercase + lowercase + number + symbol. Never appears in URLs or logs.
+        password_confirmation: *id005
+        locale:
+          type: string
+          enum:
+          - en
+          - ar
+        merchant_name:
+          type:
+          - string
+          - 'null'
+          maxLength: 120
+      required:
+      - name
+      - email
+      - password
+      - password_confirmation
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          maxLength: 128
+          format: password
+          writeOnly: true
+      required:
+      - email
+      - password
+    ForgotRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+      - email
+    ResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        token:
+          type: string
+          maxLength: 200
+          writeOnly: true
+        password: *id005
+        password_confirmation: *id005
+      required:
+      - email
+      - token
+      - password
+      - password_confirmation
+    VerificationRequest:
+      type: object
+      properties:
+        verification:
+          type: string
+          maxLength: 2048
+          writeOnly: true
+          description: Original relative signed URL from email fragment, sent only in this JSON body. Expires after 60 minutes;
+            bound to authenticated user/email.
+      required:
+      - verification
+    MerchantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+      required:
+      - name
+    SelectMerchantRequest:
+      type: object
+      properties:
+        merchant_id: *id003
+      required:
+      - merchant_id
+    Merchant:
+      type: object
+      properties:
+        id: *id003
+        name: *id002
+      required:
+      - id
+      - name
+    MembershipReference:
+      type: object
+      properties:
+        id: *id003
+        name: *id002
+        membership_id: *id003
+        role: *id002
+      required:
+      - id
+      - name
+      - membership_id
+      - role
+    MerchantsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            merchants:
+              type: array
+              items:
+                $ref: '#/components/schemas/MembershipReference'
+          required:
+          - merchants
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+      required:
+      - data
+      - meta
+      - error
+    CurrentMerchantResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            merchant:
+              $ref: '#/components/schemas/Merchant'
+            permissions:
+              type: array
+              items: *id002
+          required:
+          - merchant
+          - permissions
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+      required:
+      - data
+      - meta
+      - error
+    Membership:
+      type: object
+      properties:
+        id: *id003
+        name: *id002
+        email:
+          type: string
+          format: email
+        role: *id002
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - removed
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - name
+      - email
+      - role
+      - status
+      - version
+    TeamResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            memberships:
+              type: array
+              items:
+                $ref: '#/components/schemas/Membership'
+            pagination:
+              type: object
               properties:
-                code:
-                  const: DEPENDENCIES_UNAVAILABLE
-                details:
-                  type: object
-                  required: [checks]
-                  properties:
-                    checks:
-                      $ref: '#/components/schemas/Checks'
+                page: *id004
+                pages: *id004
+                total: *id004
+              required:
+              - page
+              - pages
+              - total
+          required:
+          - memberships
+          - pagination
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+      required:
+      - data
+      - meta
+      - error
+    TeamCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Existing verified, non-suspended registered identity. No invitation or automatic account creation.
+        role:
+          type: string
+          description: Built-in merchant role code. Owner grants require current owner.
+      required:
+      - email
+      - role
+    TeamUpdateRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        role: *id002
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - removed
+      required:
+      - version
+    VersionRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - version
+    TokenRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 80
+        abilities:
+          type: array
+          minItems: 1
+          maxItems: 30
+          uniqueItems: true
+          items: *id002
+          description: Explicit subset of current merchant permissions; wildcard/platform abilities rejected.
+        current_password:
+          type: string
+          format: password
+          maxLength: 128
+          writeOnly: true
+        expires_in_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 30
+      required:
+      - name
+      - abilities
+      - current_password
+    TokenCreatedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: Displayed once; cache disabled. Store securely.
+            id: *id003
+            expires_at:
+              type: string
+              format: date-time
+          required:
+          - token
+          - id
+          - expires_at
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+      required:
+      - data
+      - meta
+      - error
+    Token:
+      type: object
+      properties:
+        id: *id003
+        name: *id002
+        abilities:
+          type: array
+          items: *id002
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - name
+      - abilities
+      - created_at
+      - last_used_at
+      - expires_at
+    Session:
+      type: object
+      properties:
+        id: *id003
+        created_at:
+          type: string
+          format: date-time
+        last_seen_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        current: *id001
+      required:
+      - id
+      - created_at
+      - last_seen_at
+      - expires_at
+      - current
+    Role:
+      type: object
+      properties:
+        code: *id002
+        name: *id002
+        permissions:
+          type: array
+          items: *id002
+      required:
+      - code
+      - name
+      - permissions
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: clicktoship-session
+      description: Same-origin Sanctum session. Obtain XSRF cookie via GET /sanctum/csrf-cookie before mutations. Cookie name
+        is deployment configurable.
+    CsrfToken:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: URL-decoded XSRF-TOKEN cookie; mandatory for session mutations.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Hashed, expiring Sanctum API token, bound to one merchant and intersected with current membership permissions.

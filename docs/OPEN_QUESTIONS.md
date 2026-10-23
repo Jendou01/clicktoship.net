@@ -13,11 +13,10 @@ Foundation work is independent of these integration/launch prerequisites. Supply
 | P0 | PSP, supported merchant countries, funding/refund methods, regulatory and PDPL requirements? No real PSP until approved | Finance/Legal | funding/launch |
 | P0 | Chart of accounts, hold expiry/unknown-result policy, adjustment thresholds, dual approvers and tax invoice requirements? No implicit FX | Finance | ledger acceptance |
 | P1 | COD eligibility/currency and settlement liability? Resolve USD-only manual and COD/CODS conflict | Finance/Aramex | COD |
-| P1 | Apply saved packagist.org network addition, then rerun Composer vulnerability audit (current attempt blocked by proxy 403) | Environment owner | PHP advisory audit / release gate |
 | P1 | Current country/postal/address/office services docs? Only FetchCities explicitly supplied | Aramex | location capabilities |
 | P1 | Shipment cancellation/return/POD API contracts? Keep disabled/manual until confirmed | Aramex | optional capabilities |
 | P1 | Salla partner access/scopes and Shopyzee official extension/API contracts? | Integrations owner | Phases 13/14 |
 | P1 | Launch geography, languages, timezone defaults, volume/retention and object-store region/provider? Arabic/English and UTC data default | Product/Security | production sizing/privacy |
 | P1 | Design/brand assets and merchant verification requirements? Use restrained accessible bilingual design | Product | full dashboard |
 
-No missing external detail authorizes invented endpoints or fabricated integration success. Phase 2 authentication/tenancy can proceed while these are resolved.
+No missing external detail authorizes invented endpoints or fabricated integration success. Phase 2 authentication/tenancy is implemented independently. Production email sender/domain, TLS/origins, restricted DB runtime roles and privileged MFA remain launch configuration/administrative work; no secret values should be supplied in chat.

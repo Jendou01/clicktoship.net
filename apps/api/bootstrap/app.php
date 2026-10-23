@@ -1,11 +1,16 @@
 <?php
 
 use App\Http\Middleware\RequestId;
+use App\Modules\Identity\Http\ActiveIdentity;
+use App\Modules\Identity\Http\RequireSession;
+use App\Modules\Merchants\Http\ClearMerchantContext;
+use App\Modules\Merchants\Http\ResolveMerchant;
 use App\Support\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequestsWithRedis;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,7 +19,15 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend(RequestId::class);
+        $middleware->prepend([RequestId::class, ClearMerchantContext::class]);
+        $middleware->statefulApi();
+        $middleware->redirectGuestsTo(fn (Request $request) => null);
+        $middleware->alias([
+            'identity.active' => ActiveIdentity::class,
+            'identity.session' => RequireSession::class,
+            'merchant' => ResolveMerchant::class,
+            'auth.throttle' => ThrottleRequestsWithRedis::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*'));

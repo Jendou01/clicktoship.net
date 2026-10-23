@@ -1,6 +1,6 @@
 # API conventions
 
-Canonical prefix `/api/v1`; OpenAPI 3.1 is in openapi.yaml. Only health routes are implemented in foundation. Planned routes below are a contract direction, not an implementation claim.
+Canonical prefix `/api/v1`; OpenAPI 3.1 is in openapi.yaml. Health plus Phase 2 identity/merchant/team/session/token routes are implemented and specified in OpenAPI. Remaining business routes below are planned.
 
 ## Representation
 Success: `{data: <object|array>, meta: {request_id: <uuid>, ...}, error: null}`.
@@ -37,3 +37,15 @@ Business create responses expose pending/unknown/accepted/rejected explicitly. C
 
 ## Compatibility
 Additive schema changes within v1; breaking semantic changes need version/transition. External APIs normalize carrier fields into internal DTOs. Future OpenAPI additions must include request validation, security, error schema, examples and executed tests before being marked implemented.
+
+## Implemented Phase 2 contract
+
+The authoritative operation list and request/response schemas are in `openapi.yaml`. Browser clients first GET `/sanctum/csrf-cookie`, then send credentials and decoded XSRF-TOKEN as X-XSRF-TOKEN for mutations. First-party Origin/Referer must match configured Sanctum stateful domains. Public registration/login/recovery/reset also require this browser session and CSRF. HTTP 419 indicates CSRF expiry/mismatch. Logout/revocation return 200 envelopes. Auth and tenant responses use no-store, private.
+
+Registration optionally creates an owner organization; verified email is required before tenant operations. `/auth/me` returns a whitelisted identity and selected merchant ID, not authorization to use that merchant. `/merchants` and `/auth/memberships` list current authorized memberships. POST `/merchants/select` revalidates a requested merchant and stores it per browser session. Browser-only creation/switch/session/token endpoints reject bearer-only requests. Tokens are merchant-bound and cannot switch; effective permissions are token abilities intersected with current role permissions. X-Merchant-ID is an optional stale-context guard, never a tenant selector.
+
+Team mutations accept only a built-in merchant role and active/suspended/removed status; PATCH/DELETE require current integer version. Foreign member IDs return 404. Version or last-owner conflicts return 409. Team listing is page-based, default25/max100 with stable created_at/id ordering; unlike planned shipment cursor pagination, this small initial administrative collection uses page metadata. Session/token lists are bounded to 100.
+
+Verification email links carry the original expiring relative signed URL in a frontend fragment; POST `/auth/email/verify` submits it as `verification`. Reset links similarly carry token/email in the fragment; POST `/auth/password/reset` consumes the token once. Fragments are captured into memory and removed from history, including links opened on an already mounted screen. Credential forms use POST and disabled submission until hydration. Do not move credentials into query strings, analytics, logs or persistent browser storage.
+
+Roles/permissions are read-only catalogues. Platform roles have separate assignments and no public grant, impersonation or bypass endpoint. There is no admin API in this phase; explicit audited support access requires a later authorized workflow.

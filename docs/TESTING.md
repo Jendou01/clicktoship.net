@@ -16,3 +16,11 @@ Frontend: ESLint, TypeScript, Vitest/Testing Library for bilingual shell, Next.j
 
 ## Reporting rules
 Record command, target, count and exit status. Distinguish passed, failed, skipped and unrun. A successful build does not prove security or integration correctness. Never add placeholder passing tests or disable assertions to pass CI. No real customer data or uploaded credential values in fixtures. Current execution evidence is recorded in FOUNDATION_REPORT.md.
+
+## Phase 2 execution and commands
+
+Run README verification commands with real PostgreSQL/Redis; the bootstrap refuses any database except clicktoship_test. Tests include real CSRF/session requests, 6-role authorization, cross-tenant IDs and spoofed context, missing/invalid/legacy/expired/revoked tokens, suspension, email signatures, hashed single-use recovery, revocation/replay, immutable PostgreSQL constraints and audits, row-lock/version races, and one Redis worker processing distinct merchant jobs. API-originated job tests preserve narrowed scope and reject revoked tokens.
+
+Browser tests now require the full Compose stack and development SMTP inbox; default E2E_BASE_URL is http://127.0.0.1:8080 and MAILPIT_URL http://127.0.0.1:8025. Six Chromium tests include real registration/email verification, organization creation/switch, team read-only denial, scoped token mint/use/revoke, password recovery/session invalidation and Arabic/RTL/CSRF, plus the three existing foundation flows. Mail messages are selected by unique synthetic recipient, never by clearing the inbox. Component/client tests exercise rendering, validation, API credentials/XSRF/error behavior. No external carrier/payment API is called.
+
+GitHub Actions has separate api, web and full-stack browser jobs. Local results and limitations are in PHASE_2_REPORT.md; defining CI is not evidence that GitHub-hosted CI ran.

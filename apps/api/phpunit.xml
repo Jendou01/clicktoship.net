@@ -13,5 +13,15 @@
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>
         <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="MAIL_MAILER" value="array" force="true"/>
+        <server name="APP_ENV" value="testing"/>
+        <server name="APP_DEBUG" value="false"/>
+        <server name="DB_CONNECTION" value="pgsql"/>
+        <server name="DB_DATABASE" value="clicktoship_test"/>
+        <server name="DB_URL" value=""/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="CACHE_STORE" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+        <server name="MAIL_MAILER" value="array"/>
     </php>
 </phpunit>

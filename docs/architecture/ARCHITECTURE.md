@@ -66,3 +66,13 @@ Submission: draft → validating → quoted → payment_reserved → submission_
 
 ## International and operational policy
 Origin, destination, manufacture country, payer and billing currency are distinct. No hard-coded SA origin, CDS availability, universal 14 SAR tariff or automatic FX. Unsupported lanes fail before reservation. Uploads/labels use private storage, bounded parsing, malware scanning and signed authorization. Queue priority separates critical submissions/finance from bulk work. Availability 99.9%, RPO 15 minutes and RTO 4 hours are proposed targets, not measured guarantees. Production needs managed backups/PITR, restoration drill, observability and on-call runbooks.
+
+## Implemented Phase 2 boundaries
+
+`App\Modules\Identity` owns registration, credentials, verification/recovery notifications, sessions, tokens and audit recording. `App\Modules\Merchants` owns organization creation, membership changes, context, tenant policies and job middleware. Controllers validate/authorize and delegate to application services; no business shipping/financial modules were introduced.
+
+Tenant context is a scoped container binding, established from the authenticated session's selection or a bound token. Membership, user and merchant status are rechecked; global tenant-model queries fail closed without context. Tenant model creation/update and PostgreSQL identity constraints prevent reparenting. Global request and queue boundaries clear context before/after execution, including exceptions. Jobs carry merchant+actor+required permission; API-originated jobs must additionally capture the originating token ID using UseMerchantContext's tokenId argument. Execution checks current membership, role, suspension, token binding/version/expiry/revocation and original scope.
+
+Team services lock the merchant root before reauthorization and membership mutation, enforce expected version and retain an active owner. Independent PostgreSQL-process race tests exercise competing changes. Platform assignments do not participate in merchant permission resolution; all platform access paths remain closed. Future explicit support access needs its own time-limited authorization and audit design.
+
+Email notifications are encrypted queued jobs dispatched after commit. Development SMTP uses Mailpit; production must configure private delivery. Verification/reset tokens use URL fragments and POST bodies, never server-facing link query strings. The queue remains at-least-once; notification duplicates are harmless, while financial/shipping outbox semantics remain later work.

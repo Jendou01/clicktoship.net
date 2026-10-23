@@ -7,6 +7,17 @@ use Illuminate\Support\Facades\Http;
 
 abstract class TestCase extends BaseTestCase
 {
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+        if ($app->make('config')->get('database.connections.pgsql.database') !== 'clicktoship_test'
+            || $app->make('config')->get('database.default') !== 'pgsql') {
+            throw new \RuntimeException('Refusing database tests outside the dedicated PostgreSQL test database.');
+        }
+
+        return $app;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

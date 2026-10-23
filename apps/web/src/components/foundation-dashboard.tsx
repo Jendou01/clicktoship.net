@@ -20,6 +20,7 @@ export function FoundationDashboard({ locale }: { locale: Locale }) {
             <h1 id="welcome" className="max-w-2xl text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">{t.title}</h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">{t.description}</p>
             <p className="mt-8 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900"><span aria-hidden="true" className="size-2 rounded-full bg-amber-600" />{t.status}</p>
+            <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold"><a className="rounded-xl bg-teal-800 px-5 py-3 text-white" href={`/${locale}/login`}>{locale === "en" ? "Sign in" : "تسجيل الدخول"}</a><a className="rounded-xl border border-teal-800 px-5 py-3 text-teal-900" href={`/${locale}/register`}>{locale === "en" ? "Create account" : "إنشاء حساب"}</a></div>
             <p role="note" className="mt-4 max-w-xl text-sm leading-6 text-slate-600">{t.notice}</p>
           </div>
           <aside className="rounded-3xl bg-teal-950 p-8 text-white">

@@ -1,6 +1,6 @@
 # Database design and initial ERD
 
-This is the **target logical schema**, not a claim that all tables have migrations. Phase 1 migrates only users, sessions, password reset tokens, Sanctum tokens and framework queue/cache tables. Domain schema is introduced with its tested use cases, starting with merchants/roles in Phase 2. No production data migration is involved in this empty repository.
+This is the **target logical schema**, not a claim that all tables have migrations. Phase 1 migrated identity/framework support; Phase 2 adds the installed tenancy/authentication schema described below. All shipping/financial tables in the conceptual ERD remain unimplemented. No production migration or deployment has occurred.
 
 ## Types and invariants
 UUID primary keys; merchant_id on every tenant-owned aggregate and child. UTC timestamptz event times; occurred_at and received_at separate. Money = bigint minor amount + char(3) currency; currency exponent from a supported currency catalogue. No float or implicit FX. Weight/dimensions numeric(14,3) + unit. Country char(2); hash/digest references for sensitive payloads; encrypted PII/token columns only where needed. Mutable operational entities have created_at/updated_at; posted finance/event/audit history is append-only. Schema checks reject invalid status/negative values; SQL constraints and services both enforce invariants.
@@ -102,3 +102,26 @@ Topup: debit PSP clearing, credit merchant wallet liability only after verified 
 Index tenant/state/time/id lists; external identifiers and idempotency keys; webhook pending state/received_at; outbox publish readiness; holds(wallet_id,state); entries(account_id,transaction_id); tracking(shipment_id,occurred_at,id). Avoid unrestricted JSON: relational money, parties, packages, items and financial references; JSON only versioned raw provider envelopes/rule predicates/errors where justified. Large provider payloads use encrypted private object references and retention.
 
 No cascaded deletion of shipments, posted finance, events or audits. Restrict parent deletion for historical records; anonymize PII under approved retention without erasing finance. Soft-delete address book/settings entities; issued shipment party snapshots remain stable. Migrations must be reversible until deployment policy permits additive forward-only changes; rehearse upgrades/backfills and constraints on real PostgreSQL. Future RLS policies need non-superuser runtime role, FORCE ROW LEVEL SECURITY and transaction-local tenant settings tested across pooled connections; not enabled in foundation.
+
+## Installed Phase 2 schema
+
+`2026_10_23_010000_create_identity_and_merchant_tenancy` adds merchants, merchant_users, roles, permissions, role_permissions, merchant_role_assignments, platform_role_assignments, auth_sessions and audit_logs; users gain locale, suspension and auth_version; Sanctum tokens gain merchant_id and auth_version. Existing reset/verification support is reused. Built-in catalogues contain ten roles, no user accounts. IDs follow existing UUID conventions.
+
+Membership uniqueness is (merchant_id,user_id); (merchant_id,id) is referenced by role assignments. Composite (role_id,scope) and (permission_id,scope) foreign keys enforce merchant/platform scope. Initial membership has one built-in role. Status/locale/scope/version checks and lower(email) uniqueness are PostgreSQL constraints. Session registry stores a SHA256 session-ID digest and revocation/idle/absolute-expiry metadata; session contents remain Redis. Sanctum stores token hashes only.
+
+`2026_10_23_020000_harden_membership_identity` forbids changes to membership id, merchant_id or user_id in PostgreSQL, and blocks audit TRUNCATE in addition to UPDATE/DELETE. Audit writes contain identifiers and safe metadata only. Database owners can still drop/alter triggers; restricted production runtime roles and off-host retention remain launch work. Functions use CREATE OR REPLACE so disposable migrate:fresh is repeatable. Migration rollback/reapply is exercised only in the dedicated test database; never reset development data as a routine check.
+
+```mermaid
+erDiagram
+  users ||--o{ merchant_users : joins
+  merchants ||--o{ merchant_users : owns
+  merchant_users ||--|| merchant_role_assignments : receives
+  roles ||--o{ merchant_role_assignments : grants
+  roles ||--o{ platform_role_assignments : grants
+  users ||--o{ platform_role_assignments : receives
+  roles ||--o{ role_permissions : includes
+  permissions ||--o{ role_permissions : maps
+  users ||--o{ auth_sessions : opens
+  merchants ||--o{ personal_access_tokens : bounds
+  users ||--o{ personal_access_tokens : owns
+```

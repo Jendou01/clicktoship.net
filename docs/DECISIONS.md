@@ -19,3 +19,14 @@
 The cloud package network blocks GitHub API ZIP downloads. Setup primes Composer 2's normal cache with codeload ZIPs at locked commit references, verifies integrity and supplied checksums, and installs with --prefer-dist. Source fallback is disabled after full-history clones exhausted installation storage. No lockfile URL/reference rewriting or TLS bypass is used. The helper is tested and scoped to public GitHub packages.
 
 Changes to an accepted decision require a rationale, migration/compatibility impact and tests. Version constraints express supported major versions; lockfiles fix exact application dependencies. Docker base tags require scheduled updates and digest pinning for production deployment.
+
+## Phase 2 decisions (2026-10-23)
+
+* Keep merchant selection in each authenticated browser session, not globally on users; tokens bind to exactly one merchant and never switch.
+* Seed four platform and six merchant role definitions from the explicit Phase 2 request. Initial memberships have one role, catalogues are read-only, and platform assignment storage has no public mutation API. No Super Admin bypass or exposed MFA-less admin route.
+* Use merchant row serialization plus expected membership versions, reauthorization under lock and a last-owner invariant; optimistic validation alone cannot prevent concurrent owner loss.
+* Keep server-revocable session registry hashes alongside Redis sessions; reset increments authentication version and revokes every credential.
+* Use encrypted queued private-email notifications and fragment-to-POST link consumption; reject logging transports. Mailpit is development-only.
+* Add existing verified users directly to teams; invitation acceptance/delivery and custom roles are later product scope. Do not simulate invitation success.
+* Force and guard the dedicated PostgreSQL test database in both PHP environment/server state before destructive migration traits. Preserve tests using real Redis and separate PostgreSQL processes.
+* Keep token scope in queued work by capturing its token ID; execution rechecks revocation, expiry, version and narrowed permissions. Session-originated work carries actor/merchant permission and is similarly reauthorized.

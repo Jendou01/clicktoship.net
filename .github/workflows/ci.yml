@@ -63,8 +63,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npx --workspace=@clicktoship/web playwright install --with-deps chromium
-      - run: npm run test:e2e
       - run: npm audit --omit=dev --audit-level=high
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -72,3 +70,32 @@ jobs:
           name: playwright-results
           path: apps/web/test-results
           retention-days: 7
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      E2E_BASE_URL: http://127.0.0.1:8080
+      MAILPIT_URL: http://127.0.0.1:8025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Prepare isolated full stack
+        run: |
+          export LOCAL_UID="$(id -u)" LOCAL_GID="$(id -g)"
+          ./scripts/setup.sh
+          ./scripts/start.sh
+      - run: npx --workspace=@clicktoship/web playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: full-stack-browser-results
+          path: apps/web/test-results
+          retention-days: 7
+      - if: always()
+        run: docker compose down
