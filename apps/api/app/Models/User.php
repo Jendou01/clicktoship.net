@@ -53,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'suspended_at' => 'datetime',
             'auth_version' => 'integer',
+            'admin_version' => 'integer',
         ];
     }
 

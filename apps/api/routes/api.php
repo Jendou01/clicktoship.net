@@ -56,3 +56,5 @@ Route::prefix('v1')->group(function (): void {
         });
     });
 });
+
+require __DIR__.'/management.php';

@@ -45,7 +45,7 @@ final class TeamService
         return DB::transaction(function () use ($data): Membership {
             $this->lockAndAuthorize();
             $role = $this->role($data['role']);
-            $user = User::whereRaw('lower(email) = ?', [strtolower($data['email'])])->whereNull('suspended_at')->whereNotNull('email_verified_at')->first();
+            $user = User::whereRaw('lower(email) = ?', [strtolower($data['email'])])->whereNull('suspended_at')->whereNotNull('email_verified_at')->lockForUpdate()->first();
             if (! $user) {
                 throw ValidationException::withMessages(['email' => ['A verified registered account is required.']]);
             }
@@ -70,6 +70,10 @@ final class TeamService
             $old = DB::table('merchant_role_assignments as a')->join('roles as r', 'r.id', '=', 'a.role_id')->where('a.membership_id', $member->id)->value('r.code');
             $role = $this->role($data['role'] ?? $old, $old);
             $status = $data['status'] ?? $member->status;
+            if ($status === 'active') {
+                $eligible = User::whereKey($member->user_id)->whereNull('suspended_at')->whereNotNull('email_verified_at')->lockForUpdate()->first();
+                abort_unless($eligible, 409);
+            }
             $losesOwnership = $old === 'merchant.owner' && $member->status === 'active' && ($role->code !== 'merchant.owner' || $status !== 'active');
             if ($losesOwnership) {
                 $owners = DB::table('merchant_users as m')->join('merchant_role_assignments as a', 'a.membership_id', '=', 'm.id')
@@ -80,6 +84,9 @@ final class TeamService
             $member->status = $status;
             $member->version++;
             $member->save();
+            if ($status !== 'active' || $role->code !== $old) {
+                DB::table('personal_access_tokens')->where('merchant_id', $this->context->id())->where('tokenable_id', $member->user_id)->delete();
+            }
             DB::table('merchant_role_assignments')->where('membership_id', $member->id)->update(['role_id' => $role->id]);
             Audit::record('membership.updated', $this->context->actorId(), $this->context->id(), $member->id, ['role' => $role->code, 'status' => $status, 'version' => $member->version]);
 

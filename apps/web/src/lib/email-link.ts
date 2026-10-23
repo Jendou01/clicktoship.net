@@ -29,7 +29,7 @@ export function useEmailLink() {
   useEffect(() => { store.snapshot(); if (window.location.hash) window.history.replaceState(null, "", window.location.pathname); }, [store]);
   const values = useMemo(() => {
     const parameters = new URLSearchParams(hash.slice(1));
-    return { verification: parameters.get("verification") || "", token: parameters.get("token") || "", email: parameters.get("email") || "" };
+    return { invitation: parameters.get("invitation") || "", verification: parameters.get("verification") || "", token: parameters.get("token") || "", email: parameters.get("email") || "" };
   }, [hash]);
   return { values, clear: store.clear, read: () => Object.fromEntries(new URLSearchParams(store.snapshot().slice(1))) };
 }

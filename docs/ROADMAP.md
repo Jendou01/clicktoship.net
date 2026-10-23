@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–2 are implemented in bounded changes. Money and shipping remain separate reviewable phases. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–3 are implemented in bounded changes. Money and shipping remain separate reviewable phases. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -50,7 +50,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Profile/address/team/admin screens.
 * Automated tests: Role matrix, mass assignment, cross-merchant FKs and audit.
 * Acceptance criteria: Merchant lifecycle and audited restricted admin controls.
-* Completion report: Planned.
+* Completion report: Implemented on feat/phase-3-merchant-admin; see [PHASE_3_REPORT.md](PHASE_3_REPORT.md). Profiles, addresses/defaults, manual immutable verification, invitations, MFA and independently approved administration. Document uploads and assisted MFA recovery remain unavailable; shipping eligibility remains denied.
 
 ## Phase 4 — Wallet and financial ledger
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review and merge the Phase 2 feature branch through normal review. Phase 3 remains planned; no automatic implementation or production deployment. Resolve legal/carrier/PSP prerequisites independently.
+Review Phase 3 through a feature PR; no automatic merge, Phase 4 implementation or production deployment. Resolve legal/carrier/PSP prerequisites independently.

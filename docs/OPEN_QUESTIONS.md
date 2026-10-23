@@ -20,3 +20,7 @@ Foundation work is independent of these integration/launch prerequisites. Supply
 | P1 | Design/brand assets and merchant verification requirements? Use restrained accessible bilingual design | Product | full dashboard |
 
 No missing external detail authorizes invented endpoints or fabricated integration success. Phase 2 authentication/tenancy is implemented independently. Production email sender/domain, TLS/origins, restricted DB runtime roles and privileged MFA remain launch configuration/administrative work; no secret values should be supplied in chat.
+
+## Phase 3 remaining policy boundaries
+
+Business data can be manually reviewed without changing account activation; legal/KYC certification and country-specific statutory requirements are not claimed. Document collection remains deliberately absent until secure storage, malware scanning, authorized download and retention policies are approved. Assisted MFA reset is blocked until identity proof, independent approval and notification requirements are defined; supported recovery uses password plus one-use backup code. Closed-account reopening is not supported; active/suspended reactivation is supported. Production privileges, private delivery/domain/TLS configuration and privacy/retention remain launch gates. These do not block the approved non-financial Phase 3 workflows.

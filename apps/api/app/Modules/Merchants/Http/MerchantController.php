@@ -6,6 +6,7 @@ use App\Models\PersonalAccessToken;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Merchants\Application\MerchantService;
 use App\Modules\Merchants\Domain\MerchantContext;
+use App\Modules\Merchants\Domain\ShippingEligibility;
 use App\Modules\Merchants\Infrastructure\Merchant;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
@@ -56,7 +57,7 @@ final class MerchantController
         $context->require('merchant.view');
         $merchant = Merchant::findOrFail($context->id());
 
-        return ApiResponse::success(['merchant' => ['id' => $merchant->id, 'name' => $merchant->name], 'permissions' => $context->permissions()]);
+        return ApiResponse::success(['merchant' => ['id' => $merchant->id, 'name' => $merchant->name, 'account_status' => $merchant->status, 'verification_status' => $merchant->verification_status, 'version' => $merchant->version], 'shipping_eligibility' => ShippingEligibility::evaluate($merchant->status, $merchant->verification_status), 'permissions' => $context->permissions()]);
     }
 
     public function roles(MerchantContext $context): mixed

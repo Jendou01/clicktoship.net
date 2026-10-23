@@ -30,3 +30,15 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 * Add existing verified users directly to teams; invitation acceptance/delivery and custom roles are later product scope. Do not simulate invitation success.
 * Force and guard the dedicated PostgreSQL test database in both PHP environment/server state before destructive migration traits. Preserve tests using real Redis and separate PostgreSQL processes.
 * Keep token scope in queued work by capturing its token ID; execution rechecks revocation, expiry, version and narrowed permissions. Session-originated work carries actor/merchant permission and is similarly reauthorized.
+
+## Phase 3 approved decisions
+
+* Account active/suspended/closed, verification unverified/pending/verified/rejected and evaluated shipping eligibility are independent. Preserve existing activation during backfill; fail closed for all shipping in Phase 3.
+* Manual business-data review only; no documents or external KYC integration. Profile changes require review of a new immutable snapshot, never editing approved history. This is not legal/regulatory certification.
+* Built-in roles only. Owner-only business attestation, Owner/Admin profile/settings/team management, Shipping Manager address mutation, other shipping/viewer address reads and Finance limited profile/address reads. Server grants/token intersections remain authoritative.
+* Every platform administrator must confirm MFA and step up within 15 minutes. Request/approve merchant access separately; an independent MFA-authenticated Super Admin approves target/capability-specific session-bound grants. No self-approval or global bypass. Grant lifetime counts from request, not approval.
+* Bootstrap two existing independently controlled verified MFA-enrolled users exactly once through an audited CLI command; no production/default accounts or passwords. Platform assignment changes invalidate target credentials and grants and preserve the last usable Super Admin.
+* Closed merchant accounts cannot reopen through Phase 3 APIs; suspended accounts can reactivate under approved access. Security revocation is permanent for old credentials. No user/merchant hard deletion.
+* Backup-code recovery is supported; assisted/admin MFA reset is explicitly unavailable pending identity-proof, dual-control and notification requirements. Loss of all factors is not grounds for a bypass.
+* Encrypted private-mail invitations expire after 72 hours, rotate on resend, recheck inviter privileges at acceptance and never overwrite an existing membership. Existing Phase 2 direct-add remains available for compatibility.
+* E2E administrators exist only in an opt-in testing database with generated private temporary credentials. Normal setup never seeds privileged accounts. The fixture refuses normal development/production targets.

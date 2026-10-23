@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('auth-credentials', fn (Request $request) => Limit::perMinute(5)->by('credentials:'.$request->user()?->id.'|'.$request->ip()));
         RateLimiter::for('auth-actions', fn (Request $request) => Limit::perMinute(120)->by('actions:'.$request->user()?->id.'|'.$request->ip()));
+        RateLimiter::for('auth-mfa', fn (Request $request) => [Limit::perMinute(6)->by('mfa-user:'.$request->user()?->id), Limit::perMinute(20)->by('mfa-ip:'.$request->ip())]);
+        RateLimiter::for('auth-invite', fn (Request $request) => Limit::perMinute(20)->by('invite:'.$request->user()?->id.'|'.$request->ip()));
         RateLimiter::for('health', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
     }
 }
