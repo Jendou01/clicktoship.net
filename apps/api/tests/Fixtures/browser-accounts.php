@@ -18,7 +18,7 @@ if (! app()->environment('testing') || config('database.default') !== 'pgsql' ||
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['adminA', 'adminB', 'owner', 'member'] as $key) {
+    foreach (['adminA', 'adminB', 'owner', 'member', 'financeOwner', 'adminC', 'adminD'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;
@@ -45,6 +45,10 @@ DB::transaction(function () use (&$accounts) {
     }
     if (! DB::table('platform_role_assignments')->exists()) {
         Artisan::call('platform:bootstrap', ['first' => $accounts['adminA']['id'], 'second' => $accounts['adminB']['id']]);
+    }
+    foreach (['adminC', 'adminD'] as $key) {
+        $role = DB::table('roles')->where('code', 'platform.super_admin')->value('id');
+        DB::table('platform_role_assignments')->insertOrIgnore(['id' => (string) Str::uuid(), 'user_id' => $accounts[$key]['id'], 'role_id' => $role, 'role_scope' => 'platform', 'created_at' => now()]);
     }
     foreach (['adminA', 'adminB'] as $key) {
         if (! DB::table('platform_role_assignments as a')->join('roles as r', 'r.id', '=', 'a.role_id')->where('a.user_id', $accounts[$key]['id'])->where('r.code', 'platform.super_admin')->exists()) {

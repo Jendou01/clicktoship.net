@@ -62,7 +62,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Balances/holds/history with currency; no fake payment completion.
 * Automated tests: Concurrent holds, balance, immutable/balanced postings, duplicate callbacks, reversals.
 * Acceptance criteria: No overspend or duplicate posting under retries/races; accountant-reviewed model.
-* Completion report: Planned.
+* Completion report: Implemented on feat/phase-4-wallet-ledger; see [PHASE_4_REPORT.md](PHASE_4_REPORT.md). SAR-only activation, immutable ledger/reservations, idempotency, outbox, structural reconciliation and independently reviewed corrections. Real funding/settlement/withdrawals/shipping charges remain disabled; accountant acceptance remains outstanding.
 
 ## Phase 5 — Pricing engine
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review Phase 3 through a feature PR; no automatic merge, Phase 4 implementation or production deployment. Resolve legal/carrier/PSP prerequisites independently.
+Review the Phase 4 feature PR and accounting assumptions. No automatic merge, production activation or Phase 5 implementation. Real payments, shipping charges and quarantined external-outcome resolution remain separately gated.

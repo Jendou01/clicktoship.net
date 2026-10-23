@@ -16,7 +16,7 @@ import json,sys
 from pathlib import Path
 p=Path(sys.argv[1]);p.chmod(0o600)
 accounts=json.loads(p.read_text())
-assert set(accounts)=={'adminA','adminB','owner','member'}
+assert set(accounts)=={'adminA','adminB','owner','member','financeOwner','adminC','adminD'}
 PY
 "${compose_e2e[@]}" up -d --wait api worker scheduler web nginx
 # Reload upstream DNS after replacing backend containers; no test triggers restarts.

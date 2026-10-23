@@ -3,9 +3,11 @@
 use App\Models\User;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Operations\Application\PlatformSecurity;
+use App\Modules\WalletBilling\Application\Reconciliation;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
@@ -31,3 +33,18 @@ Artisan::command('platform:bootstrap {first : Existing verified MFA-enrolled use
         $this->info('Two existing MFA-enrolled users assigned; no credentials created.');
     });
 })->purpose('One-time audited bootstrap of two independent platform administrators');
+
+Artisan::command('finance:outbox', function (): void {
+    $this->info((string) app(Reconciliation::class)->drain());
+})->purpose('Process committed financial monitor events idempotently');
+Schedule::command('finance:outbox')->everyMinute()->withoutOverlapping();
+
+Artisan::command('finance:reconcile', function (): void {
+    DB::table('wallets')->orderBy('id')->chunkById(100, function ($wallets): void {
+        foreach ($wallets as $wallet) {
+            app(Reconciliation::class)->run($wallet->merchant_id, $wallet->id);
+        }
+    });
+    $this->info('Structural reconciliation completed; no payment or settlement performed.');
+})->purpose('Reconcile ledger and reservation projections without changing financial history');
+Schedule::command('finance:reconcile')->daily()->withoutOverlapping();

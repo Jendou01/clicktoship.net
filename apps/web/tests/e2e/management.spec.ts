@@ -1,3 +1,4 @@
+import { selectMerchantOption, showMerchantCard } from "./merchant-directory";
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -90,7 +91,7 @@ test("real invitation email acceptance and independent platform approval before 
   await challenge.getByLabel("Current password", { exact: true }).fill(accounts.adminA.password);
   await challenge.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminA.recovery_codes!.shift()!);
   await challenge.getByRole("button", { name: "Verify MFA", exact: true }).click(); await expect(page.getByRole("status")).toContainText("Changes saved");
-  await page.goto("/en/admin-access"); await page.getByLabel("Organization", { exact: true }).selectOption({ label: name });
+  await page.goto("/en/admin-access"); await selectMerchantOption(page, name);
   await page.getByLabel("Reason (at least 10 characters)", { exact: true }).fill(`Review ${name}`);
   await page.getByRole("button", { name: "Request merchant access", exact: true }).click(); await expect(page.getByRole("status")).toContainText("Changes saved");
   const approval = await browser.newContext({ baseURL: process.env.E2E_BASE_URL || "http://127.0.0.1:8080" }); const admin = await approval.newPage();
@@ -98,9 +99,9 @@ test("real invitation email acceptance and independent platform approval before 
   const verify = admin.getByRole("button", { name: "Verify MFA", exact: true }).locator("..");
   await verify.getByLabel("Current password", { exact: true }).fill(accounts.adminB.password); await verify.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminB.recovery_codes!.shift()!);
   await verify.getByRole("button", { name: "Verify MFA", exact: true }).click(); await expect(admin.getByRole("status")).toContainText("Changes saved");
-  await admin.goto("/en/admin-access");
+  await admin.goto("/en/admin-access"); await selectMerchantOption(admin, name);
   await admin.getByRole("article").filter({ has: admin.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Approve access", exact: true }).click(); await expect(admin.getByRole("status")).toContainText("Changes saved");
-  await page.goto("/en/admin-merchants"); await page.getByRole("article").filter({ has: page.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Open", exact: true }).click();
+  await page.goto("/en/admin-merchants"); await showMerchantCard(page, name); await page.getByRole("article").filter({ has: page.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2, name, exact: true })).toHaveCount(2);
   await expect(page.getByText("Shipping is unavailable. Email or business verification alone does not enable shipping.")).toBeVisible(); await approval.close();
 });
