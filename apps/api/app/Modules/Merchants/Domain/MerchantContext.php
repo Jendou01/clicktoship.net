@@ -21,6 +21,11 @@ final class MerchantContext
         return $this->merchant;
     }
 
+    public function tokenId(): ?string
+    {
+        return $this->token?->id;
+    }
+
     public function actorId(): ?string
     {
         return $this->actor;

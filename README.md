@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–5, including static pricing estimates, immutable quotes, authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–6 foundations, including static pricing estimates, immutable quotes, authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -115,3 +115,9 @@ Merchant calculator/service discovery/history: `/en/rates`, `/en/available-rates
 Authorized platform personnel must enter evidenced service/zone/tariff/selling/tax definitions, then obtain independent publication with recent MFA. Merchant-specific configuration/private quote access also requires independent session-bound target grants. Currency is SAR only; amounts use integer minor units and percentages use basis points. Missing assumptions fail closed. [Calculation/security architecture](docs/architecture/PHASE_5_PRICING.md), [completion report](docs/PHASE_5_REPORT.md) and [OpenAPI](docs/api/openapi.yaml).
 
 `./scripts/prepare-browser-tests.sh` also prepares a strictly isolated, clearly synthetic pricing fixture at `/tmp/clicktoship-pricing-e2e.json` (0600). It refuses normal development/production databases. Never commit, print or publish either browser credentials file. No live carrier API, shipping, funding or production deployment is enabled.
+
+## Phase 6 carrier connector
+
+Platform-only EN/AR screens: `carriers`, `aramex`, `carrier-services`, `carrier-capabilities`, `carrier-health`, `carrier-errors`, `carrier-webhooks`, `carrier-mappings`. Configure encrypted candidate master accounts/routes and obtain independent recent-MFA approval; approval never enables outbound calls or claims a successful sandbox connection. No merchant command route, webhook authentication invention, wallet effect or shipping eligibility activation.
+
+[Evidence matrix](docs/integrations/PHASE_6_EVIDENCE.md), [architecture](docs/architecture/PHASE_6_CARRIERS.md), [report](docs/PHASE_6_REPORT.md). All current V2 responses/status/webhook contracts remain missing; legacy SOAP structure tests and request-only Postman shapes do not prove live integration. The normal transport is hard disabled. No carrier request or billable shipment has been sent.

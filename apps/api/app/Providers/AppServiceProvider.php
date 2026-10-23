@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\PersonalAccessToken;
+use App\Modules\Carriers\Domain\CarrierTransport;
+use App\Modules\Carriers\Infrastructure\DisabledAramexTransport;
 use App\Modules\Merchants\Domain\MembershipPolicy;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Merchants\Infrastructure\Membership;
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(CarrierTransport::class, DisabledAramexTransport::class);
         $this->app->bind(CarrierRates::class, StaticCarrierRates::class);
         $this->app->bind(PaymentProvider::class, DisabledPaymentProvider::class);
         $this->app->scoped(MerchantContext::class, fn () => new MerchantContext);

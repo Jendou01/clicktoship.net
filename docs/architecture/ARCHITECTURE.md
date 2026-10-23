@@ -102,3 +102,7 @@ Payments, settlement, withdrawals and shipping charges have no active public com
 ## Static pricing estimates
 
 Phase 5 owns versioned pricing configuration and immutable tenant-scoped quotes. It reuses the financial money/currency catalog and has no ledger write path. [Pricing architecture and launch gates](PHASE_5_PRICING.md).
+
+## Implemented Phase 6 carrier foundations
+
+Carriers owns encrypted versioned operator accounts, candidate routes, request-only Aramex adapters, code-owned capability evidence, scoped intent/attempt journals, health and encrypted event retention/queue boundaries. Current V2 response and webhook authenticity contracts are missing, so runtime transport, production and external webhook ingestion remain hard disabled. Legacy SOAP structure tests do not verify JSON integration. No merchant shipment command, wallet write or eligibility activation is introduced. [Carrier architecture and capability-specific stops](PHASE_6_CARRIERS.md).

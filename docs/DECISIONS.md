@@ -60,3 +60,10 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 * Merchant > tier > carrier > global, then explicit selector specificity. Reject ambiguity. Versions use common closed configuration variants with generated relational FKs/bands, avoiding duplicate history schemas.
 * All publication/disable operations use independent current authority and recent MFA; merchant-specific work requires separate approved session-bound grants for both parties. No tenant bypass.
 * [Calculation, security, API, retention and approval details](architecture/PHASE_5_PRICING.md). Accounting/tax/contract and live-carrier launch approvals remain outstanding.
+
+## Phase 6 evidence-gated carrier connector
+
+* Current V2 responses, webhook authenticity/status catalogue and sandbox authorization are missing. Implement request/configuration/reliability foundations independently; code-owned gates prohibit all external execution and production. Never translate legacy SOAP evidence into current JSON verification.
+* Version and encrypt master account secrets and candidate route terms; independent current MFA-authenticated approval changes configuration only, never capability verification or merchant eligibility.
+* No automatic retry of uncertain mutations, unknown-state reset, client-reference resolver, label URL download or webhook authentication protocol. Scope/deduplicate persistent intents and retain encrypted append-only facts; verified mappings and full workflow await evidence/later phases.
+* [Evidence matrix](integrations/PHASE_6_EVIDENCE.md), [architecture](architecture/PHASE_6_CARRIERS.md). No changes to financial posting or pricing invariants.
