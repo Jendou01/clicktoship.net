@@ -98,3 +98,7 @@ Three complete ten-test Chromium cycles passed after fixing fixture isolation an
 Normal development had zero financial operations and zero financial access grants before safe rollback/reapply of the two new migrations. Both reapplied successfully, preserving existing Phase 0–3 data. Normal API/worker configuration was restored after E2E; PostgreSQL/Redis/schema and EN/AR smoke checks pass, all migrations are applied and Horizon is running. Development wallet/financial history remains zero-funded. Build verification was performed with the development web process stopped to prevent .next races, then normal service was restored.
 
 Delivery manifest: 56 files. No dependencies were added, credentials committed, tests skipped, production deployment performed or Phase 5 started. Commit, push and GitHub PR/check access are reported separately after Git operations.
+
+## PR #3 CI follow-up
+
+The delivered commit had a Pint comma-spacing error and a browser helper that could decide to paginate before the first directory page loaded. Fresh single-page CI data exposed the browser race; a retry then reused a consumed MFA backup code after worker restart. These issues were reproduced before editing and corrected without changing financial business logic, permissions, rate limits or timeouts. See [PHASE_4_CI_FIX_REPORT.md](PHASE_4_CI_FIX_REPORT.md) for evidence, changed files, regression tests and new verification results. Its follow-up results supersede the earlier delivery's CI-readiness claims.

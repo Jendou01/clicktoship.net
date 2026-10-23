@@ -13,9 +13,9 @@ async function merchant(page: Page, name: string) {
   await page.getByRole("button", { name: "Create organization", exact: true }).click(); await expect(page).toHaveURL(/\/en\/dashboard$/);
   await page.goto("/en/wallet"); await page.getByRole("button", { name: "Open SAR wallet", exact: true }).click(); await expect(page.getByText("0.00 SAR")).toHaveCount(3);
 }
-async function mfa(page: Page, account: Account) {
+async function mfa(page: Page, account: Account, retry: number) {
   await login(page, account); await page.goto("/en/mfa"); const form = page.getByRole("button", { name: "Verify MFA", exact: true }).locator("..");
-  await form.getByLabel("Current password", { exact: true }).fill(account.password); await form.getByLabel("Authenticator or recovery code", { exact: true }).fill(account.recovery_codes![6]);
+  await form.getByLabel("Current password", { exact: true }).fill(account.password); await form.getByLabel("Authenticator or recovery code", { exact: true }).fill(account.recovery_codes![6 + retry]);
   await form.getByRole("button", { name: "Verify MFA", exact: true }).click(); await expect(page.getByRole("status")).toContainText("Changes saved");
 }
 async function requestGrant(page: Page, name: string) {
@@ -37,11 +37,11 @@ test("empty SAR wallet, statement and Arabic balances keep funding unavailable",
   await page.goto("/ar/wallet"); await expect(page.getByRole("main")).toHaveAttribute("dir", "rtl"); await expect(page.getByText("الرصيد المتاح", { exact: true })).toBeVisible();
   await expect(page.getByText("تمويل المحفظة والسحب ورسوم الشحن غير متاحة.")).toBeVisible(); await expect(page.getByText("0.00 SAR")).toHaveCount(3);
 });
-test("two administrators independently review a correction while execution stays disabled", async ({ page, browser }) => {
-  const name = `Finance approvals ${randomUUID()}`; await merchant(page, name); await mfa(page, accounts.adminC); const grantA = await requestGrant(page, name);
+test("two administrators independently review a correction while execution stays disabled", async ({ page, browser }, testInfo) => {
+  const name = `Finance approvals ${randomUUID()}`; await merchant(page, name); await mfa(page, accounts.adminC, testInfo.retry); const grantA = await requestGrant(page, name);
   const context = await browser.newContext({ baseURL: process.env.E2E_BASE_URL || "http://127.0.0.1:8080" }); const other = await context.newPage();
   try {
-    await mfa(other, accounts.adminD); await approveGrant(other, name); const grantB = await requestGrant(other, name);
+    await mfa(other, accounts.adminD, testInfo.retry); await approveGrant(other, name); const grantB = await requestGrant(other, name);
     await approveGrant(page, name);
     await page.goto("/en/admin-finance"); await page.getByLabel("Approved merchant access", { exact: true }).selectOption(grantA);
     await page.getByLabel("Amount (SAR)", { exact: true }).fill("5.00"); await page.getByLabel("Reason (at least 10 characters)", { exact: true }).fill(`Reviewed correction ${name}`);

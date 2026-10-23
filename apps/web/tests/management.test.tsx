@@ -67,3 +67,16 @@ it("associates select labels separately from their option text", async () => {
   expect(await screen.findByLabelText("Default origin address", { exact: true })).toHaveRole("combobox");
   expect(screen.getByLabelText("Default return address", { exact: true })).toHaveRole("combobox");
 });
+it("keeps the directory navigation hidden until authorized first-page data is loaded", async () => {
+  let finishDirectory!: (data: unknown) => void;
+  const directory = new Promise((resolve) => { finishDirectory = resolve; });
+  configure({ "/admin/merchants?page=1": directory, "/admin/access-requests": { grants: [] } });
+  render(<ManagementScreen locale="en" screen="admin-merchants" />);
+  expect(screen.getByRole("heading", { name: "Merchant administration" })).toBeVisible();
+  await waitFor(() => expect(mockApi).toHaveBeenCalledWith("/admin/merchants?page=1"));
+  expect(screen.queryByRole("navigation", { name: "Page" })).not.toBeInTheDocument();
+  finishDirectory({ merchants: [{ id: "merchant", name: "First-page target", status: "active", verification_status: "unverified", version: 1 }], pagination: { pages: 1 } });
+  expect(await screen.findByRole("heading", { name: "First-page target" })).toBeVisible();
+  expect(screen.getByRole("navigation", { name: "Page" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+});

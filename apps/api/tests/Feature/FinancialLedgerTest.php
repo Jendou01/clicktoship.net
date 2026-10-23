@@ -207,6 +207,6 @@ class FinancialLedgerTest extends ManagementTestCase
         }
         $this->assertSame(1000000000000, (new Money('1000000000000', 'KWD'))->minor);
         $this->expectException(HttpException::class);
-        app(Ledger::class)->provision($m,'KWD');
+        app(Ledger::class)->provision($m, 'KWD');
     }
 }

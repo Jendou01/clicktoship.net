@@ -15,5 +15,8 @@ export async function selectMerchantOption(page: Page, name: string) {
 }
 export async function showMerchantCard(page: Page, name: string) {
   await expect(page.getByRole("heading", { name: "Merchant administration", exact: true })).toBeVisible();
+  // The heading is server-rendered before the authorized directory finishes loading.
+  // On a fresh single-page CI database, checking cards early incorrectly requests a disabled Next button.
+  await expect(page.getByRole("navigation", { name: "Page", exact: true })).toBeVisible();
   while (!(await page.getByRole("heading", { name, exact: true }).count())) await nextDirectoryPage(page);
 }
