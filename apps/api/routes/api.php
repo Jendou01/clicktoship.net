@@ -62,3 +62,5 @@ require __DIR__.'/management.php';
 require __DIR__.'/finance.php';
 
 require __DIR__.'/pricing.php';
+
+require __DIR__.'/carriers.php';

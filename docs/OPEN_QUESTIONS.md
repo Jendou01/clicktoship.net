@@ -38,3 +38,7 @@ Unknown external-outcome resolution remains blocked pending an authoritative evi
 3. Qualified approval of country/jurisdiction tax treatment, inclusive/multiple-tax/customs handling and margin interpretation. Explicit exemption also needs evidence.
 4. Future quote acceptance/contract revocation, carrier account availability and shipment orchestration policy before Phase 7 wallet reservations. No quote is currently a shipment charge.
 5. FX source, conversion/rounding policy and currencies remain separately blocked; no implicit conversion.
+
+## Phase 6 capability-specific stops
+
+Independent connector/configuration/request/queue/security work is implemented. External operations still need current V2 response/error/status schemas and scrubbed fixtures, secure authorized sandbox credentials/non-billable test policy, account/route/product/payer/customs/COD terms, rate-limit/reference/idempotency guarantees and the missing webhook authenticity/replay/ack/registration specification. Legacy SOAP/manual credentials and request-only examples are insufficient evidence. Label storage/retention, verified status maps and actual send/finalize/reconciliation remain separately gated. See [evidence matrix](integrations/PHASE_6_EVIDENCE.md); no live success or Phase 7 authorization is implied.

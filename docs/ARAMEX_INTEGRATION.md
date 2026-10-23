@@ -39,3 +39,7 @@ Allow only configured HTTPS destinations; production base URL must be confirmed,
 
 ## Activation gates
 Written resale/shipper-of-record permission; eligible origins/third-country lanes and pickup rules; tariffs/taxes/surcharges/billing currency; fresh sandbox credentials; current response/error schemas, rate limits and status catalogue; webhook auth/rotation/replay/retry protocol; carrier account enablement. Live activation requires operations, finance, legal and security approval and controlled pilot. No uploaded credential is implicitly authorized for use.
+
+## Phase 6 implementation
+
+The original Phase 1 capability inventory above is historical. Phase 6 implements independently testable connector/configuration/reliability foundations, with **all external capabilities still disabled** because current V2 responses and webhook authenticity contracts are absent. The legacy manual is not treated as V2 JSON evidence. See [current evidence matrix](integrations/PHASE_6_EVIDENCE.md), [architecture and blocked capabilities](architecture/PHASE_6_CARRIERS.md), and [completion report](PHASE_6_REPORT.md). No sandbox or production carrier call has been made.

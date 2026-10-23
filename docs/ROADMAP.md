@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–4 are merged; Phase 5 static pricing is implemented on its review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–4 are merged; Phase 5 static pricing is merged through PR #4; Phase 6 connector foundations are on their review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -86,7 +86,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Admin config health; no credential export.
 * Automated tests: HTTP fake contracts then explicit sandbox suite for each operation.
 * Acceptance criteria: Only tested/account-enabled operations surfaced; no production calls.
-* Completion report: Planned; external docs/access gaps recorded.
+* Completion report: [Phase 6 report](PHASE_6_REPORT.md); request/configuration/reliability foundations implemented. All external capabilities, sandbox testing and production blocked pending current response/auth/contract evidence.
 
 ## Phase 7 — Shipment management
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review the Phase 5 pricing feature branch and verified contract/tax/city-classification assumptions. No automatic merge, live activation, production deployment or Phase 6 implementation. Phase 7 must separately authorize quote acceptance and wallet orchestration.
+Review the Phase 6 connector feature branch and obtain current V2 response/error/status schemas, secure sandbox authorization/credentials, explicit route/account entitlements and webhook authenticity specification. No automatic merge, external activation, deployment or Phase 7 implementation.
