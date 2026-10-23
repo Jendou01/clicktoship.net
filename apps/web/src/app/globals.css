@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+:root { color-scheme: light; }
+body { margin: 0; font-family: Arial, "Noto Sans Arabic", Tahoma, sans-serif; }
+a { text-underline-offset: 4px; }
+::selection { background: #99f6e4; color: #134e4a; }

@@ -1,0 +1,98 @@
+name: clicktoship
+
+x-api: &api
+  image: clicktoship-api:dev
+  build:
+    context: .
+    dockerfile: infrastructure/docker/api.Dockerfile
+  working_dir: /app
+  init: true
+  volumes:
+    - ./apps/api:/app
+  environment:
+    APP_ENV: local
+    APP_DEBUG: "false"
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_DATABASE: clicktoship
+    DB_USERNAME: clicktoship
+    DB_PASSWORD: ${DB_PASSWORD:?Run scripts/setup.sh first}
+    REDIS_HOST: redis
+    REDIS_CLIENT: predis
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: clicktoship
+      POSTGRES_DB: clicktoship
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run scripts/setup.sh first}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/init-test-db.sh:/docker-entrypoint-initdb.d/10-test-db.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U clicktoship -d clicktoship"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-bookworm
+    command: [redis-server, --appendonly, "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    <<: *api
+    healthcheck:
+      test: [CMD, php, -r, "exit(@file_get_contents('http://127.0.0.1:8000/api/v1/health/ready') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+  worker:
+    <<: *api
+    command: [php, artisan, horizon]
+    depends_on:
+      api:
+        condition: service_healthy
+  scheduler:
+    <<: *api
+    command: [php, artisan, schedule:work]
+    depends_on:
+      api:
+        condition: service_healthy
+  web:
+    image: node:24-bookworm-slim
+    user: "1000:1000"
+    working_dir: /workspace
+    init: true
+    volumes:
+      - .:/workspace
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      npm_config_cache: /tmp/npm-cache
+    command: [npm, run, dev]
+  nginx:
+    image: nginx:1.28-bookworm
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./infrastructure/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  redis_data:

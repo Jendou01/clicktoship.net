@@ -1,0 +1,848 @@
+[
+  {
+    "name": "CreateShipments",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreateShipments",
+    "request_shape_only": {
+      "Shipments": [
+        {
+          "Reference1": "str",
+          "Reference2": "NoneType",
+          "Reference3": "NoneType",
+          "Shipper": {
+            "Reference1": "str",
+            "Reference2": "NoneType",
+            "AccountNumber": "str",
+            "PartyAddress": {
+              "Line1": "str",
+              "Line2": "str",
+              "Line3": "str",
+              "City": "str",
+              "StateOrProvinceCode": "str",
+              "PostCode": "str",
+              "CountryCode": "str",
+              "Longitude": "int",
+              "Latitude": "int",
+              "BuildingNumber": "NoneType",
+              "BuildingName": "NoneType",
+              "Floor": "NoneType",
+              "Apartment": "NoneType",
+              "POBox": "NoneType",
+              "Description": "NoneType"
+            },
+            "Contact": {
+              "Department": "NoneType",
+              "PersonName": "str",
+              "Title": "NoneType",
+              "CompanyName": "str",
+              "PhoneNumber1": "str",
+              "PhoneNumber1Ext": "str",
+              "PhoneNumber2": "str",
+              "PhoneNumber2Ext": "str",
+              "FaxNumber": "NoneType",
+              "CellPhone": "str",
+              "EmailAddress": "str",
+              "Type": "str"
+            }
+          },
+          "Consignee": {
+            "Reference1": "NoneType",
+            "Reference2": "NoneType",
+            "AccountNumber": "NoneType",
+            "PartyAddress": {
+              "Line1": "str",
+              "Line2": "str",
+              "Line3": "str",
+              "City": "str",
+              "StateOrProvinceCode": "str",
+              "PostCode": "str",
+              "CountryCode": "str",
+              "Longitude": "int",
+              "Latitude": "int",
+              "BuildingNumber": "NoneType",
+              "BuildingName": "NoneType",
+              "Floor": "NoneType",
+              "Apartment": "NoneType",
+              "POBox": "NoneType",
+              "Description": "NoneType"
+            },
+            "Contact": {
+              "Department": "NoneType",
+              "PersonName": "str",
+              "Title": "NoneType",
+              "CompanyName": "str",
+              "PhoneNumber1": "str",
+              "PhoneNumber1Ext": "str",
+              "PhoneNumber2": "str",
+              "PhoneNumber2Ext": "str",
+              "FaxNumber": "NoneType",
+              "CellPhone": "str",
+              "EmailAddress": "str",
+              "Type": "str"
+            }
+          },
+          "ThirdParty": "NoneType",
+          "ShippingDateTime": "str",
+          "DueDate": "str",
+          "Comments": "NoneType",
+          "PickupLocation": "NoneType",
+          "OperationsInstructions": "NoneType",
+          "AccountingInstrcutions": "NoneType",
+          "Details": {
+            "Dimensions": {
+              "Length": "int",
+              "Width": "int",
+              "Height": "int",
+              "Unit": "str"
+            },
+            "ActualWeight": {
+              "Unit": "str",
+              "Value": "float"
+            },
+            "ChargeableWeight": {
+              "Unit": "str",
+              "Value": "int"
+            },
+            "DescriptionOfGoods": "str",
+            "GoodsOriginCountry": "str",
+            "NumberOfPieces": "int",
+            "ProductGroup": "str",
+            "ProductType": "str",
+            "PaymentType": "str",
+            "PaymentOptions": "str",
+            "CustomsValueAmount": {
+              "CurrencyCode": "str",
+              "Value": "int"
+            },
+            "CashOnDeliveryAmount": {
+              "CurrencyCode": "str",
+              "Value": "int"
+            },
+            "InsuranceAmount": {
+              "CurrencyCode": "str",
+              "Value": "int"
+            },
+            "CashAdditionalAmount": {
+              "CurrencyCode": "str",
+              "Value": "int"
+            },
+            "CashAdditionalAmountDescription": "NoneType",
+            "CollectAmount": {
+              "CurrencyCode": "str",
+              "Value": "int"
+            },
+            "Services": "str",
+            "Items": [
+              {
+                "PackageType": "str",
+                "Quantity": "int",
+                "Weight": {
+                  "Unit": "str",
+                  "Value": "int"
+                },
+                "Comments": "str",
+                "Reference": "str",
+                "PiecesDimensions": "NoneType",
+                "CommodityCode": "NoneType",
+                "GoodsDescription": "NoneType",
+                "CountryOfOrigin": "NoneType",
+                "CustomsValue": "NoneType",
+                "ContainerNumber": "NoneType"
+              }
+            ],
+            "DeliveryInstructions": "NoneType",
+            "AdditionalProperties": "NoneType",
+            "ContainsDangerousGoods": "bool"
+          },
+          "Attachments": "NoneType",
+          "ForeignHAWB": "NoneType",
+          "TransportType ": "int",
+          "PickupGUID": "NoneType",
+          "Number": "NoneType",
+          "ScheduledDelivery": "NoneType"
+        }
+      ],
+      "LabelInfo": {
+        "ReportID": "int",
+        "ReportType": "str"
+      },
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Transaction": "NoneType"
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "CreatePickup",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreatePickup",
+    "request_shape_only": {
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Pickup": {
+        "PickupAddress": {
+          "Line1": "str",
+          "Line2": "str",
+          "Line3": "str",
+          "City": "str",
+          "StateOrProvinceCode": "str",
+          "PostCode": "str",
+          "CountryCode": "str",
+          "Longitude": "int",
+          "Latitude": "int",
+          "BuildingNumber": "NoneType",
+          "BuildingName": "NoneType",
+          "Floor": "NoneType",
+          "Apartme nt": "NoneType",
+          "POBox": "NoneType",
+          "Description": "NoneType"
+        },
+        "PickupContact": {
+          "Department": "str",
+          "PersonName": "str",
+          "Title": "NoneType",
+          "CompanyName": "str",
+          "PhoneNumber1": "str",
+          "PhoneNumber1Ext": "NoneType",
+          "PhoneNumber2": "NoneType",
+          "PhoneNumber2Ext": "NoneType",
+          "FaxNumber": "NoneType",
+          "CellPhone": "str",
+          "EmailAddress": "str",
+          "Type": "NoneType"
+        },
+        "PickupLocation": "str",
+        "PickupDate": "str",
+        "ReadyTime": "str",
+        "LastPickupTime": "str",
+        "ClosingTime": "str",
+        "Comments": "str",
+        "Reference1": "str",
+        "Reference2": "str",
+        "Vehicle": "str",
+        "Shipments": "NoneType",
+        "PickupItems": [
+          {
+            "ProductGroup": "str",
+            "ProductType": "str",
+            "NumberOfShipments": "int",
+            "PackageType": "str",
+            "Payment": "str",
+            "ShipmentWeight": {
+              "Unit": "str",
+              "Value": "float"
+            },
+            "ShipmentVolume": "NoneType",
+            "NumberOfPieces": "int",
+            "CashAmount": "NoneType",
+            "ExtraCharges": "NoneType",
+            "ShipmentDimensions": {
+              "Length": "int",
+              "Width": "int",
+              "Height": "int",
+              "Unit": "str"
+            },
+            "Comments": "str"
+          }
+        ],
+        "Status": "str",
+        "ExistingShipments": "NoneType",
+        "Branch": "str",
+        "RouteCode": "str"
+      },
+      "Transaction": {
+        "Reference1": "str",
+        "Reference2": "str",
+        "Reference3": "str",
+        "Reference4": "str",
+        "Reference5": "str"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "PrintLabel",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/PrintLabel",
+    "request_shape_only": {
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "LabelInfo": {
+        "ReportID": "int",
+        "ReportType": "str"
+      },
+      "OriginEntity": "str",
+      "ProductGroup": "str",
+      "ShipmentNumber": "str",
+      "Transaction": {
+        "Reference1": "str",
+        "Reference2": "str",
+        "Reference3": "str",
+        "Reference4": "str",
+        "Reference5": "str"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "CancelPickup",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CancelPickup",
+    "request_shape_only": {
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Comments": "str",
+      "PickupGUID": "str",
+      "Transaction": {
+        "Reference1": "str",
+        "Reference2": "str",
+        "Reference3": "str",
+        "Reference4": "str",
+        "Reference5": "str"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "FetchCities",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Location/Service_1_0.svc/json/FetchCities",
+    "request_shape_only": {
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "CountryCode": "str",
+      "NameStartsWith": "str",
+      "State": "str",
+      "Transaction": {
+        "Reference1": "str",
+        "Reference2": "str",
+        "Reference3": "str",
+        "Reference4": "str",
+        "Reference5": "str"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "CalculateRate",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc/json/CalculateRate",
+    "request_shape_only": {
+      "OriginAddress": {
+        "Line1": "NoneType",
+        "Line2": "NoneType",
+        "Line3": "NoneType",
+        "City": "str",
+        "StateOrProvinceCode": "NoneType",
+        "PostCode": "str",
+        "CountryCode": "str",
+        "Longitude": "int",
+        "Latitude": "int",
+        "BuildingNumber": "NoneType",
+        "BuildingName": "NoneType",
+        "Floor": "NoneType",
+        "Apartment": "NoneType",
+        "POBox": "NoneType",
+        "Description": "NoneType"
+      },
+      "DestinationAddress": {
+        "Line1": "NoneType",
+        "Line2": "NoneType",
+        "Line3": "NoneType",
+        "City": "str",
+        "StateOrProvinceCode": "NoneType",
+        "PostCode": "str",
+        "CountryCode": "str",
+        "Longitude": "int",
+        "Latitude": "int",
+        "BuildingNumber": "NoneType",
+        "BuildingName": "NoneType",
+        "Floor": "NoneType",
+        "Apartment": "NoneType",
+        "POBox": "NoneType",
+        "Description": "NoneType"
+      },
+      "ShipmentDetails": {
+        "Dimensions": "NoneType",
+        "ActualWeight": {
+          "Unit": "str",
+          "Value": "float"
+        },
+        "ChargeableWeight": {
+          "Unit": "str",
+          "Value": "float"
+        },
+        "DescriptionOfGoods": "NoneType",
+        "GoodsOriginCountry": "NoneType",
+        "NumberOfPieces": "int",
+        "ProductGroup": "str",
+        "ProductType": "str",
+        "PaymentType": "str",
+        "PaymentOptions": "NoneType",
+        "CustomsValueAmount": "NoneType",
+        "CashOnDeliveryAmount": "NoneType",
+        "InsuranceAmount": "NoneType",
+        "CashAdditionalAmount": "NoneType",
+        "CashAdditionalAmountDescription": "NoneType",
+        "CollectAmount": "NoneType",
+        "Services": "str",
+        "Items": "NoneType",
+        "DeliveryInstructions": "NoneType",
+        "AdditionalProperties": "NoneType",
+        "ContainsDangerousGoods": "bool"
+      },
+      "PreferredCurrencyCode": "str",
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Transaction": "NoneType"
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "TrackPickup",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Tracking/Service_1_0.svc/json/TrackPickup",
+    "request_shape_only": {
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Reference": "str",
+      "Transaction": {
+        "Reference1": "str",
+        "Reference2": "str",
+        "Reference3": "str",
+        "Reference4": "str",
+        "Reference5": "str"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "TrackShipments",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Tracking/Service_1_0.svc/json/TrackShipments",
+    "request_shape_only": {
+      "Shipments": [
+        "str"
+      ],
+      "GetLastTrackingUpdateOnly": "bool",
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Transaction": {
+        "Reference1": "NoneType",
+        "Reference2": "NoneType",
+        "Reference3": "NoneType",
+        "Reference4": "NoneType",
+        "Reference5": "NoneType"
+      }
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "CreatePickup - Linking Existing Shipment to Pickup",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreatePickup",
+    "request_shape_only": {
+      "Pickup": {
+        "PickupAddress": {
+          "Line1": "str",
+          "Line2": "str",
+          "Line3": "str",
+          "City": "str",
+          "StateOrProvinceCode": "str",
+          "PostCode": "str",
+          "CountryCode": "str",
+          "Longitude": "int",
+          "Latitude": "int",
+          "BuildingNumber": "NoneType",
+          "BuildingName": "NoneType",
+          "Floor": "NoneType",
+          "Apartme nt": "NoneType",
+          "POBox": "NoneType",
+          "Description": "NoneType"
+        },
+        "PickupContact": {
+          "Department": "str",
+          "PersonName": "str",
+          "Title": "NoneType",
+          "CompanyName": "str",
+          "PhoneNumber1": "str",
+          "PhoneNumber1Ext": "NoneType",
+          "PhoneNumber2": "NoneType",
+          "PhoneNumber2Ext": "NoneType",
+          "FaxNumber": "NoneType",
+          "CellPhone": "str",
+          "EmailAddress": "str",
+          "Type": "NoneType"
+        },
+        "PickupLocation": "str",
+        "PickupDate": "str",
+        "ReadyTime": "str",
+        "LastPickupTime": "str",
+        "ClosingTime": "str",
+        "Comments": "str",
+        "Reference1": "str",
+        "Reference2": "NoneType",
+        "Vehicle": "NoneType",
+        "Shipments": "NoneType",
+        "PickupItems": [
+          {
+            "ProductGroup": "str",
+            "ProductType": "str",
+            "NumberOfShipments": "int",
+            "PackageType": "str",
+            "Payment": "str",
+            "ShipmentWeight": "NoneType",
+            "ShipmentVolume": "NoneType",
+            "NumberOfPieces": "int",
+            "CashAmount": "NoneType",
+            "ExtraCharges": "NoneType",
+            "ShipmentDimensions": "NoneType",
+            "Comments": "str"
+          }
+        ],
+        "Status": "str",
+        "ExistingShipments": [
+          {
+            "Number": "str",
+            "OriginEntity": "str",
+            "ProductGroup": "str"
+          }
+        ],
+        "Branch": "NoneType",
+        "RouteCode": "NoneType",
+        "Dispatcher": "int"
+      },
+      "LabelInfo": "NoneType",
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Transaction": "NoneType"
+    },
+    "saved_response_count": 0
+  },
+  {
+    "name": "CreatePickup with Shipment",
+    "method": "POST",
+    "sandbox_url": "https://ws.sbx.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/CreatePickup",
+    "request_shape_only": {
+      "Pickup": {
+        "PickupAddress": {
+          "Line1": "str",
+          "Line2": "str",
+          "Line3": "str",
+          "City": "str",
+          "StateOrProvinceCode": "str",
+          "PostCode": "str",
+          "CountryCode": "str",
+          "Longitude": "int",
+          "Latitude": "int",
+          "BuildingNumber": "NoneType",
+          "BuildingName": "NoneType",
+          "Floor": "NoneType",
+          "Apartme nt": "NoneType",
+          "POBox": "NoneType",
+          "Description": "NoneType"
+        },
+        "PickupContact": {
+          "Department": "str",
+          "PersonName": "str",
+          "Title": "NoneType",
+          "CompanyName": "str",
+          "PhoneNumber1": "str",
+          "PhoneNumber1Ext": "NoneType",
+          "PhoneNumber2": "NoneType",
+          "PhoneNumber2Ext": "NoneType",
+          "FaxNumber": "NoneType",
+          "CellPhone": "str",
+          "EmailAddress": "str",
+          "Type": "NoneType"
+        },
+        "PickupLocation": "str",
+        "PickupDate": "str",
+        "ReadyTime": "str",
+        "LastPickupTime": "str",
+        "ClosingTime": "str",
+        "Comments": "str",
+        "Reference1": "str",
+        "Reference2": "NoneType",
+        "Vehicle": "NoneType",
+        "Shipments": [
+          {
+            "Reference1": "str",
+            "Reference2": "NoneType",
+            "Reference3": "NoneType",
+            "Shipper": {
+              "Reference1": "str",
+              "Reference2": "NoneType",
+              "AccountNumber": "str",
+              "PartyAddress": {
+                "Line1": "str",
+                "Line2": "str",
+                "Line3": "str",
+                "City": "str",
+                "StateOrProvinceCode": "str",
+                "PostCode": "str",
+                "CountryCode": "str",
+                "Longitude": "int",
+                "Latitude": "int",
+                "BuildingNumber": "NoneType",
+                "BuildingName": "NoneType",
+                "Floor": "NoneType",
+                "Apartment": "NoneType",
+                "POBox": "NoneType",
+                "Description": "NoneType"
+              },
+              "Contact": {
+                "Department": "NoneType",
+                "PersonName": "str",
+                "Title": "NoneType",
+                "CompanyName": "str",
+                "PhoneNumber1": "str",
+                "PhoneNumber1Ext": "str",
+                "PhoneNumber2": "str",
+                "PhoneNumber2Ext": "str",
+                "FaxNumber": "NoneType",
+                "CellPhone": "str",
+                "EmailAddress": "str",
+                "Type": "str"
+              }
+            },
+            "Consignee": {
+              "Reference1": "NoneType",
+              "Reference2": "NoneType",
+              "AccountNumber": "NoneType",
+              "PartyAddress": {
+                "Line1": "str",
+                "Line2": "str",
+                "Line3": "str",
+                "City": "str",
+                "StateOrProvinceCode": "str",
+                "PostCode": "str",
+                "CountryCode": "str",
+                "Longitude": "int",
+                "Latitude": "int",
+                "BuildingNumber": "NoneType",
+                "BuildingName": "NoneType",
+                "Floor": "NoneType",
+                "Apartment": "NoneType",
+                "POBox": "NoneType",
+                "Description": "NoneType"
+              },
+              "Contact": {
+                "Department": "NoneType",
+                "PersonName": "str",
+                "Title": "NoneType",
+                "CompanyName": "str",
+                "PhoneNumber1": "str",
+                "PhoneNumber1Ext": "str",
+                "PhoneNumber2": "str",
+                "PhoneNumber2Ext": "str",
+                "FaxNumber": "NoneType",
+                "CellPhone": "str",
+                "EmailAddress": "str",
+                "Type": "str"
+              }
+            },
+            "ThirdParty": "NoneType",
+            "ShippingDateTime": "str",
+            "DueDate": "str",
+            "Comments": "NoneType",
+            "PickupLocation": "NoneType",
+            "OperationsInstructions": "NoneType",
+            "AccountingInstrcutions": "NoneType",
+            "Details": {
+              "Dimensions": {
+                "Length": "int",
+                "Width": "int",
+                "Height": "int",
+                "Unit": "str"
+              },
+              "ActualWeight": {
+                "Unit": "str",
+                "Value": "float"
+              },
+              "ChargeableWeight": {
+                "Unit": "str",
+                "Value": "int"
+              },
+              "DescriptionOfGoods": "str",
+              "GoodsOriginCountry": "str",
+              "NumberOfPieces": "int",
+              "ProductGroup": "str",
+              "ProductType": "str",
+              "PaymentType": "str",
+              "PaymentOptions": "str",
+              "CustomsValueAmount": {
+                "CurrencyCode": "str",
+                "Value": "int"
+              },
+              "CashOnDeliveryAmount": {
+                "CurrencyCode": "str",
+                "Value": "int"
+              },
+              "InsuranceAmount": {
+                "CurrencyCode": "str",
+                "Value": "int"
+              },
+              "CashAdditionalAmount": {
+                "CurrencyCode": "str",
+                "Value": "int"
+              },
+              "CashAdditionalAmountDescription": "NoneType",
+              "CollectAmount": {
+                "CurrencyCode": "str",
+                "Value": "int"
+              },
+              "Services": "str",
+              "Items": [
+                {
+                  "PackageType": "str",
+                  "Quantity": "int",
+                  "Weight": {
+                    "Unit": "str",
+                    "Value": "int"
+                  },
+                  "Comments": "str",
+                  "Reference": "str",
+                  "PiecesDimensions": "NoneType",
+                  "CommodityCode": "NoneType",
+                  "GoodsDescription": "NoneType",
+                  "CountryOfOrigin": "NoneType",
+                  "CustomsValue": "NoneType",
+                  "ContainerNumber": "NoneType"
+                }
+              ],
+              "DeliveryInstructions": "NoneType",
+              "AdditionalProperties": "NoneType",
+              "ContainsDangerousGoods": "bool"
+            },
+            "Attachments": "NoneType",
+            "ForeignHAWB": "NoneType",
+            "TransportType ": "int",
+            "PickupGUID": "NoneType",
+            "Number": "NoneType",
+            "ScheduledDelivery": "NoneType"
+          }
+        ],
+        "LabelInfo": {
+          "ReportID": "int",
+          "ReportType": "str"
+        },
+        "PickupItems": [
+          {
+            "ProductGroup": "str",
+            "ProductType": "str",
+            "NumberOfShipments": "int",
+            "PackageType": "str",
+            "Payment": "str",
+            "ShipmentWeight": "NoneType",
+            "ShipmentVolume": "NoneType",
+            "NumberOfPieces": "int",
+            "CashAmount": "NoneType",
+            "ExtraCharges": "NoneType",
+            "ShipmentDimensions": "NoneType",
+            "Comments": "str"
+          }
+        ],
+        "Status": "str",
+        "ExistingShipments": "NoneType",
+        "Branch": "NoneType",
+        "RouteCode": "NoneType",
+        "Dispatcher": "int"
+      },
+      "ClientInfo": {
+        "UserName": "str",
+        "Password": "str",
+        "Version": "str",
+        "AccountNumber": "str",
+        "AccountPin": "str",
+        "AccountEntity": "str",
+        "AccountCountryCode": "str",
+        "Source": "int",
+        "PreferredLanguageCode": "NoneType"
+      },
+      "Transaction": "NoneType"
+    },
+    "saved_response_count": 0
+  }
+]

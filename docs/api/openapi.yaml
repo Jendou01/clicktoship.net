@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: ClickToShip API — implemented foundation
+  version: 0.1.0
+  description: Only health endpoints are implemented. Planned business resources are documented in API_DESIGN.md.
+paths:
+  /api/v1/health/live:
+    get:
+      operationId: healthLive
+      summary: Process liveness, independent of database and Redis
+      security: []
+      responses:
+        '200':
+          description: API process is live
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+  /api/v1/health/ready:
+    get:
+      operationId: healthReady
+      summary: PostgreSQL, Redis and current migration readiness
+      security: []
+      responses:
+        '200':
+          description: All required dependencies and migrations are ready
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: A required dependency or migration is unavailable
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessError'
+        '429':
+          $ref: '#/components/responses/Throttled'
+components:
+  headers:
+    RequestId:
+      description: Server-generated correlation identifier
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Throttled:
+      description: Too many requests
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Meta:
+      type: object
+      additionalProperties: false
+      required: [request_id]
+      properties:
+        request_id:
+          type: string
+          format: uuid
+    Checks:
+      type: object
+      additionalProperties: false
+      required: [database, redis, schema]
+      properties:
+        database:
+          type: boolean
+        redis:
+          type: boolean
+        schema:
+          type: boolean
+    LiveResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta, error]
+      properties:
+        data:
+          type: object
+          required: [status]
+          additionalProperties: false
+          properties:
+            status:
+              const: live
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+    ReadyResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta, error]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [status, checks]
+          properties:
+            status:
+              const: ready
+            checks:
+              $ref: '#/components/schemas/Checks'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: 'null'
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta, error]
+      properties:
+        data:
+          type: 'null'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: object
+          required: [code, message, details]
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+    ReadinessError:
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - properties:
+            error:
+              properties:
+                code:
+                  const: DEPENDENCIES_UNAVAILABLE
+                details:
+                  type: object
+                  required: [checks]
+                  properties:
+                    checks:
+                      $ref: '#/components/schemas/Checks'

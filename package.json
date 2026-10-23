@@ -1,0 +1,18 @@
+{
+  "name": "clicktoship",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=@clicktoship/web",
+    "build": "npm run build --workspace=@clicktoship/web",
+    "lint": "npm run lint --workspace=@clicktoship/web",
+    "typecheck": "npm run typecheck --workspace=@clicktoship/web",
+    "test": "npm run test --workspace=@clicktoship/web",
+    "test:e2e": "npm run test:e2e --workspace=@clicktoship/web"
+  }
+}

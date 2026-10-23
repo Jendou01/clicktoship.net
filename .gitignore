@@ -1,0 +1,20 @@
+# Secrets and user-uploaded material
+.env
+.env.*
+!.env.example
+!**/.env.example
+attachments/
+# Dependencies / build products
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+.cache/
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Python tooling
+__pycache__/
+*.pyc

@@ -1,0 +1,74 @@
+name: Foundation CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: clicktoship
+          POSTGRES_DB: clicktoship_test
+          # Only this ephemeral CI service, bound to runner loopback. No real credentials.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["127.0.0.1:5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U clicktoship -d clicktoship_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-bookworm
+        ports: ["127.0.0.1:6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PHP runtime
+        run: docker build -f infrastructure/docker/api.Dockerfile -t clicktoship-api:ci .
+      - name: Install, validate, lint and test on PostgreSQL and Redis
+        shell: bash
+        run: |
+          set -euo pipefail
+          api() {
+            docker run --rm --network host --user "$(id -u):$(id -g)" \
+              -e DB_HOST=127.0.0.1 -e REDIS_HOST=127.0.0.1 -e DB_PASSWORD= \
+              -v "$PWD/apps/api:/app" clicktoship-api:ci "$@"
+          }
+          cp apps/api/.env.example apps/api/.env
+          api composer install --no-interaction --prefer-dist
+          api composer validate --strict
+          api php artisan key:generate --no-interaction
+          api vendor/bin/pint --test
+          api php artisan test
+          api composer audit
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: python3 -m unittest discover -s scripts/tests -v
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx --workspace=@clicktoship/web playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm audit --omit=dev --audit-level=high
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: apps/web/test-results
+          retention-days: 7
