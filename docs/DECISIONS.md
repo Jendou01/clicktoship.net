@@ -42,3 +42,13 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 * Backup-code recovery is supported; assisted/admin MFA reset is explicitly unavailable pending identity-proof, dual-control and notification requirements. Loss of all factors is not grounds for a bypass.
 * Encrypted private-mail invitations expire after 72 hours, rotate on resend, recheck inviter privileges at acceptance and never overwrite an existing membership. Existing Phase 2 direct-add remains available for compatibility.
 * E2E administrators exist only in an opt-in testing database with generated private temporary credentials. Normal setup never seeds privileged accounts. The fixture refuses normal development/production targets.
+
+## Phase 4 approved policies and implementation decisions
+
+* SAR is the initial enabled currency; architecture remains currency-specific with explicit precision and no FX. All API amounts are minor-unit strings; no floating-point arithmetic.
+* Use immutable double-entry journals and mutable, database-checked posted/reserved projections. Reservations do not recognize revenue; captures use provisional service clearing. Chart/templates are database configuration under migration review, not arbitrary client-selected postings. Accountant approval remains outstanding.
+* No negative available balance, implicit credit facility, artificial opening payment, real PSP, funding, settlement, payout, withdrawal or shipping charges. DisabledPaymentProvider is the only runtime binding; synthetic adapter lives under autoload-dev Tests.
+* Financial corrections require a second independently authorized person plus existing target grants/recent MFA. All amounts use dual control conservatively. Approval expires within 15 minutes, binds immutable payload/reason and originating sessions, and rechecks current authority under locks. Normal correction execution remains hardcoded disabled pending professional review.
+* Request and permanent business-operation idempotency are separate. Outbox processing uses atomic local consumer receipts with SKIP LOCKED; no exactly-once network delivery claim. Financial history never expires with a response cache.
+* Unknown/protected reservations remain reserved past timeout and cannot be force-released by expiry/structural reconciliation. External resolution is blocked pending authoritative carrier evidence and an approved independent decision contract.
+* Initial financial writes serialize on the merchant root for consistency with Phase 3 revocations. Correctness precedes lock-granularity optimization; no measured production performance SLA is claimed.

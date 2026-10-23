@@ -24,3 +24,9 @@ No missing external detail authorizes invented endpoints or fabricated integrati
 ## Phase 3 remaining policy boundaries
 
 Business data can be manually reviewed without changing account activation; legal/KYC certification and country-specific statutory requirements are not claimed. Document collection remains deliberately absent until secure storage, malware scanning, authorized download and retention policies are approved. Assisted MFA reset is blocked until identity proof, independent approval and notification requirements are defined; supported recovery uses password plus one-use backup code. Closed-account reopening is not supported; active/suspended reactivation is supported. Production privileges, private delivery/domain/TLS configuration and privacy/retention remain launch gates. These do not block the approved non-financial Phase 3 workflows.
+
+## Phase 4 remaining accounting/operational gates
+
+SAR, integer money, no overdraft, immutable double entry, idempotency and independent correction approval are approved. Qualified accountant signoff is still required for the provisional configurable chart/templates (service clearing/revenue/tax/carrier liabilities/settlement), financial limits, accounting periods, refunds/debt and Saudi regulatory/safeguarding classification. Normal correction execution remains disabled. No real funding/settlement/withdrawal/payment/shipping charges exist.
+
+Unknown external-outcome resolution remains blocked pending an authoritative evidence source and approved independent reconciliation-decision contract. Structural matching is insufficient evidence of carrier rejection. Additional launch gates: purpose TTLs, suspended/closed financial correction policy, retention/export, daily reconciliation owners/alerts, restricted production DB principals/function owner and backup/restore/performance evidence. Independent approved ledger/test/read/review work is complete without resolving those gates.

@@ -42,3 +42,11 @@ Merchant changes use context-derived queries, permission/token intersection, roo
 No assisted MFA-reset capability is exposed: identity-proof rules, independent approval and notifications for that process remain undefined. Secure backup codes provide the supported recovery path. Production email/domain/TLS/cookies/proxy configuration, retention/legal review and restricted runtime DB privileges remain launch work. No deployment was performed.
 
 Generic platform business-profile reads omit contact and registration/tax identifiers even with a view grant. Full submitted business data is available only through an independently approved verification-review capability. MFA writes recheck the locked user/current session and password so concurrent credential revocation cannot complete a stale factor mutation.
+
+## Phase 4 financial controls
+
+Financial reads require live tenant context and specific wallet/history/hold/statement grants intersected with token abilities. Financial administration requires browser CSRF, recent MFA, current platform permission and independently approved exact-target grant; own-merchant conflicts are denied. Corrections additionally bind an immutable request to different maker/checker identities/session registries and expire after 15 minutes. Execution rechecks both authorities under sorted user/session locks, serializing against MFA and credential revocation. Administrative Super Admin has no implicit financial data access.
+
+Money commands use locked PostgreSQL state and permanent payload-bound request/business dedupe, not Redis locks. SQL prevents unbalanced/empty/cross-tenant journals, mutation or late appends to posted history, projection mismatch, over-reservation, over-capture and excess refund. cts_finance_runtime SET ROLE tests deny direct money writes; production login/function-owner restrictions still need provisioning outside development Compose. No current privilege can force-release an unknown outcome or activate funding via a browser/provider flag. Normal financial responses are private/no-store; reasons are encrypted and audits contain safe identifiers.
+
+Financial/regulatory/accounting policies remain unapproved for real-value operations. See finance/ACCOUNTING.md and finance/OPERATIONS.md for fail-closed activation/recovery gates; no production payment or carrier calls occur.

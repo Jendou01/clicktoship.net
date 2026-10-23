@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–3, including authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–4, including authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -81,7 +81,7 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Phase 3 is implemented on its feature branch; review [the Phase 3 report](docs/PHASE_3_REPORT.md). Phase 4 remains unstarted and requires a separate instruction and financial-policy decisions. Foundation does not activate shipping or payment by changing an environment flag. Production credentials and application keys belong in secure settings, never Git or NEXT_PUBLIC variables. Project licensing requires owner decision; framework components retain their original licenses.
+Phase 4 wallet/ledger work is delivered on feat/phase-4-wallet-ledger for review; see [Phase 4 report](docs/PHASE_4_REPORT.md), [accounting assumptions](docs/finance/ACCOUNTING.md) and [operations](docs/finance/OPERATIONS.md). Merchant funding, payments, settlement, withdrawals and shipping charges remain disabled. Do not activate finance or begin Phase 5 without separate approval. No production deployment occurred.
 
 ## Phase 2 workflows
 
@@ -100,3 +100,10 @@ For initial platform setup, two independently controlled existing users must ver
 `prepare-browser-tests.sh` uses `infrastructure/docker/compose.e2e.yml`, a separate PostgreSQL database named clicktoship_e2e, Redis prefix and session cookie. It preserves clicktoship and clicktoship_test, never drops data, and prepares synthetic accounts through a CLI fixture that refuses every database/environment except testing/clicktoship_e2e. Random test credentials are written only to `/tmp/clicktoship-e2e-credentials.json` with mode 0600, never Git or console. The browser runner reads this file; use E2E_FIXTURE_FILE to select another private path and mount it when running the supported container. Refresh fixtures before another complete cycle; this resets test-only MFA/recovery credentials, not application security policies. Existing public registration tests still obey real rate limits. Normal setup/start never seeds these accounts. Run `./scripts/start.sh` afterwards to restore the normal development API/worker configuration. Reload Nginx if replacing upstream containers outside these scripts.
 
 Two new multi-screen/multi-browser Phase 3 journeys cover real SMTP, MFA and independent approval; all tests retain the default timeouts. Full execution evidence is in PHASE_3_REPORT.md.
+
+
+## Phase 4 wallet workflows
+
+`/en/wallet` and `/ar/wallet` show currency-specific posted/reserved/available balances, reservations, transaction history and sequence-bounded statements. Authorized browser users can open an empty SAR wallet; no artificial payment is created. `/en/admin-finance` and Arabic equivalent require recent MFA and independently approved target financial grants. Request wallet.view plus finance.correct or finance.reconcile through admin-access. Corrections have an additional independent maker/checker approval; execution stays disabled pending qualified accountant review. There is no direct balance edit or real payment route.
+
+Run `docker compose exec api php artisan finance:outbox` and `finance:reconcile` for local durable monitor receipts and structural reconciliation. Scheduled equivalents run every minute/daily. They neither call a PSP nor release protected/unknown reservations. Migration owners must be able to provision the NOLOGIN cts_finance_runtime capability role; tests SET ROLE to verify direct money writes are denied. Full production application login/function-owner provisioning remains a launch gate.

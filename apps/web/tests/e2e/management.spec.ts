@@ -1,3 +1,4 @@
+import { selectMerchantOption, showMerchantCard } from "./merchant-directory";
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -63,7 +64,7 @@ test("business profile, country-aware addresses, defaults, immutable submission 
   await expect(page.getByLabel("Recovery codes — copy and store securely now", { exact: true })).toHaveCount(0);
 });
 
-test("real invitation email acceptance and independent platform approval before merchant access", async ({ page, browser, request }) => {
+test("real invitation email acceptance and independent platform approval before merchant access", async ({ page, browser, request }, testInfo) => {
   const name = `Access browser ${randomUUID()}`;
   await login(page, accounts.owner); await createMerchant(page, name);
   const mailbox = process.env.MAILPIT_URL || "http://127.0.0.1:8025";
@@ -88,19 +89,20 @@ test("real invitation email acceptance and independent platform approval before 
   await page.goto("/en/mfa");
   const challenge = page.getByRole("button", { name: "Verify MFA", exact: true }).locator("..");
   await challenge.getByLabel("Current password", { exact: true }).fill(accounts.adminA.password);
-  await challenge.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminA.recovery_codes!.shift()!);
+  // A retry starts a new worker and reloads this file; never reuse a consumed recovery code.
+  await challenge.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminA.recovery_codes![testInfo.retry]);
   await challenge.getByRole("button", { name: "Verify MFA", exact: true }).click(); await expect(page.getByRole("status")).toContainText("Changes saved");
-  await page.goto("/en/admin-access"); await page.getByLabel("Organization", { exact: true }).selectOption({ label: name });
+  await page.goto("/en/admin-access"); await selectMerchantOption(page, name);
   await page.getByLabel("Reason (at least 10 characters)", { exact: true }).fill(`Review ${name}`);
   await page.getByRole("button", { name: "Request merchant access", exact: true }).click(); await expect(page.getByRole("status")).toContainText("Changes saved");
   const approval = await browser.newContext({ baseURL: process.env.E2E_BASE_URL || "http://127.0.0.1:8080" }); const admin = await approval.newPage();
   await login(admin, accounts.adminB); await admin.goto("/en/mfa");
   const verify = admin.getByRole("button", { name: "Verify MFA", exact: true }).locator("..");
-  await verify.getByLabel("Current password", { exact: true }).fill(accounts.adminB.password); await verify.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminB.recovery_codes!.shift()!);
+  await verify.getByLabel("Current password", { exact: true }).fill(accounts.adminB.password); await verify.getByLabel("Authenticator or recovery code", { exact: true }).fill(accounts.adminB.recovery_codes![testInfo.retry]);
   await verify.getByRole("button", { name: "Verify MFA", exact: true }).click(); await expect(admin.getByRole("status")).toContainText("Changes saved");
-  await admin.goto("/en/admin-access");
+  await admin.goto("/en/admin-access"); await selectMerchantOption(admin, name);
   await admin.getByRole("article").filter({ has: admin.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Approve access", exact: true }).click(); await expect(admin.getByRole("status")).toContainText("Changes saved");
-  await page.goto("/en/admin-merchants"); await page.getByRole("article").filter({ has: page.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Open", exact: true }).click();
+  await page.goto("/en/admin-merchants"); await showMerchantCard(page, name); await page.getByRole("article").filter({ has: page.getByRole("heading", { name, exact: true }) }).getByRole("button", { name: "Open", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2, name, exact: true })).toHaveCount(2);
   await expect(page.getByText("Shipping is unavailable. Email or business verification alone does not enable shipping.")).toBeVisible(); await approval.close();
 });

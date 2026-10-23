@@ -4358,6 +4358,1620 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/VersionRequest'
+  /api/v1/wallets:
+    get:
+      summary: List current merchant wallets
+      operationId: phase4Operation1
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialWallet'
+                      funding_enabled:
+                        const: false
+                      shipping_charges_enabled:
+                        const: false
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      summary: Open an empty SAR wallet
+      operationId: phase4Operation2
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Session/CSRF and wallet.open permission required. Idempotent by unique merchant/currency. Creates
+        no journal or funded balance.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialWallet'
+                      funding_enabled:
+                        const: false
+                      shipping_charges_enabled:
+                        const: false
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency:
+                  const: SAR
+              required:
+              - currency
+  /api/v1/wallets/{wallet}:
+    get:
+      summary: Read scoped wallet balance
+      operationId: phase4Operation3
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/wallets/{wallet}/transactions:
+    get:
+      summary: Read wallet transactions
+      operationId: phase4Operation4
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/wallets/{wallet}/transactions/{entry}:
+    get:
+      summary: Read scoped transactions detail
+      operationId: phase4Operation5
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: entry
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/wallets/{wallet}/holds:
+    get:
+      summary: Read wallet holds
+      operationId: phase4Operation6
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      holds:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialHold'
+                      next_cursor:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        schema:
+          type: string
+          format: uuid
+  /api/v1/wallets/{wallet}/holds/{entry}:
+    get:
+      summary: Read scoped holds detail
+      operationId: phase4Operation7
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      hold:
+                        $ref: '#/components/schemas/FinancialHold'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: entry
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/wallets/{wallet}/statement:
+    get:
+      summary: Read wallet statement
+      operationId: phase4Operation8
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/admin/merchants/{merchant}/wallets:
+    get:
+      summary: Read target merchant wallets with approved grant
+      operationId: phase4Operation9
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialWallet'
+                      funding_enabled:
+                        const: false
+                      shipping_charges_enabled:
+                        const: false
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}:
+    get:
+      summary: Read scoped wallet balance
+      operationId: phase4Operation10
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}/transactions:
+    get:
+      summary: Read wallet transactions
+      operationId: phase4Operation11
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}/transactions/{entry}:
+    get:
+      summary: Read scoped transactions detail
+      operationId: phase4Operation12
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: entry
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}/holds:
+    get:
+      summary: Read wallet holds
+      operationId: phase4Operation13
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      holds:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialHold'
+                      next_cursor:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}/holds/{entry}:
+    get:
+      summary: Read scoped holds detail
+      operationId: phase4Operation14
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      hold:
+                        $ref: '#/components/schemas/FinancialHold'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: entry
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/wallets/{wallet}/statement:
+    get:
+      summary: Read wallet statement
+      operationId: phase4Operation15
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      wallet:
+                        $ref: '#/components/schemas/FinancialWallet'
+                      transactions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialTransaction'
+                      cutoff:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      opening:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      closing:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                        description: Exact integer minor units; never a JSON floating-point amount.
+                      next_after:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: wallet
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: cutoff
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+  /api/v1/admin/merchants/{merchant}/financial-requests:
+    get:
+      summary: List financial correction requests
+      operationId: phase4Operation16
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      requests:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialApproval'
+                      next_cursor:
+                        type:
+                        - string
+                        - 'null'
+                      execution_enabled:
+                        type: boolean
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Request independently approved financial correction
+      operationId: phase4Operation17
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Fresh MFA and exact target finance.correct grant required; own-merchant conflicts denied. Immutable
+        reason/payload, different approver and 15-minute lifetime. request_key supplies request idempotency; business_key
+        supplies permanent operation idempotency. Execution is disabled pending accountant acceptance. No funding,
+        settlement or withdrawal.
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialApprovalResult'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinancialCorrectionRequest'
+  /api/v1/admin/merchants/{merchant}/financial-requests/{approval}/approve:
+    post:
+      summary: Approve financial correction
+      operationId: phase4Operation18
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Browser-only; current MFA, permissions, exact merchant grant and live maker/checker authority rechecked
+        under transaction locks. Independent approval required. Execution disabled in normal configuration pending
+        professional accounting review; completed operations replay without extra money.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialApprovalResult'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: approval
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_grant:
+                  type: string
+                  format: uuid
+                version:
+                  type: integer
+                  minimum: 1
+                request_key:
+                  type: string
+                  minLength: 16
+                  maxLength: 150
+              required:
+              - access_grant
+              - version
+              - request_key
+  /api/v1/admin/merchants/{merchant}/financial-requests/{approval}/execute:
+    post:
+      summary: Execute financial correction
+      operationId: phase4Operation19
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Browser-only; current MFA, permissions, exact merchant grant and live maker/checker authority rechecked
+        under transaction locks. Independent approval required. Execution disabled in normal configuration pending
+        professional accounting review; completed operations replay without extra money.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialApprovalResult'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: approval
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_grant:
+                  type: string
+                  format: uuid
+                version:
+                  type: integer
+                  minimum: 1
+                request_key:
+                  type: string
+                  minLength: 16
+                  maxLength: 150
+              required:
+              - access_grant
+              - version
+              - request_key
+  /api/v1/admin/merchants/{merchant}/financial-requests/{approval}/revoke:
+    post:
+      summary: Revoke financial correction
+      operationId: phase4Operation20
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Browser-only; current MFA, permissions, exact merchant grant and live maker/checker authority rechecked
+        under transaction locks. Independent approval required. Execution disabled in normal configuration pending
+        professional accounting review; completed operations replay without extra money.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialApprovalResult'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: approval
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_grant:
+                  type: string
+                  format: uuid
+                version:
+                  type: integer
+                  minimum: 1
+                request_key:
+                  type: string
+                  minLength: 16
+                  maxLength: 150
+              required:
+              - access_grant
+              - version
+              - request_key
+  /api/v1/admin/merchants/{merchant}/reconciliation:
+    get:
+      summary: List immutable structural reconciliation runs
+      operationId: phase4Operation21
+      security:
+      - SessionCookie: []
+      description: Financial permission and tenant context required. Currency is explicit; SAR alone is enabled. Funding
+        and shipping charges remain unavailable. All monetary values are exact minor-unit strings. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      runs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FinancialReconciliation'
+                      next_cursor:
+                        type:
+                        - string
+                        - 'null'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        in: query
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Reconcile wallet ledger and reservations
+      operationId: phase4Operation22
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Fresh MFA and finance.reconcile target grant. Runs under wallet lock; discrepancy freezes new activity.
+        No bank/provider reconciliation, balancing plug or automatic unknown-outcome release.
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/FinancialReconciliation'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_grant:
+                  type: string
+                  format: uuid
+                wallet_id:
+                  type: string
+                  format: uuid
+              required:
+              - access_grant
+              - wallet_id
 components:
   headers:
     RequestId:
@@ -5351,6 +6965,9 @@ components:
             - platform.merchant.view
             - platform.merchant.status
             - platform.verification.review
+            - platform.wallet.view
+            - platform.finance.reconcile
+            - platform.finance.correct
           minItems: 1
           maxItems: 3
           uniqueItems: true
@@ -5639,6 +7256,320 @@ components:
         version: *id027
         legal_name: *id008
         country: *id009
+    FinancialWallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        exponent:
+          type: integer
+          minimum: 0
+          maximum: 3
+        posted:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        reserved:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        available:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        version:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        frozen:
+          type: boolean
+      required:
+      - id
+      - currency
+      - exponent
+      - posted
+      - reserved
+      - available
+      - version
+      - frozen
+    FinancialTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sequence:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        currency:
+          type: string
+        delta:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        posted_after:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        reserved_after:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        available_after:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - sequence
+      - delta
+      - posted_after
+    FinancialHoldEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        amount:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        created_at:
+          type: string
+          format: date-time
+    FinancialHold:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        original:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        captured:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        released:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        remaining:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        version:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        protected:
+          type: boolean
+        unknown:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancialHoldEvent'
+      required:
+      - id
+      - original
+      - captured
+      - released
+      - protected
+      - unknown
+    FinancialCorrectionPayload:
+      type: object
+      properties:
+        wallet_id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - adjust_credit
+          - adjust_debit
+          - refund
+          - reverse
+        amount:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+        reference:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        business_key:
+          type: string
+          maxLength: 150
+    FinancialCorrectionRequest:
+      type: object
+      properties:
+        access_grant:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum:
+          - adjust_credit
+          - adjust_debit
+          - refund
+          - reverse
+        amount:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,12})$
+          description: Maximum 1000000000000. Full reversal requires zero; all other commands require positive amounts.
+        reference:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        business_key:
+          type: string
+          maxLength: 150
+        request_key:
+          type: string
+          minLength: 16
+          maxLength: 150
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - access_grant
+      - wallet_id
+      - kind
+      - amount
+      - business_key
+      - request_key
+      - reason
+    FinancialApproval:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        maker_id:
+          type: string
+          format: uuid
+        checker_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        payload:
+          $ref: '#/components/schemas/FinancialCorrectionPayload'
+        reason:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        approved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        executed_operation:
+          type:
+          - string
+          - 'null'
+          format: uuid
+    FinancialOperation:
+      type: object
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        kind:
+          type: string
+        hold_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        transaction_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+    FinancialApprovalResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        operation:
+          anyOf:
+          - $ref: '#/components/schemas/FinancialOperation'
+          - type: 'null'
+    FinancialReconciliation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        wallet_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        cutoff:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        posted:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        reserved:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        ledger_posted:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        hold_reserved:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units; never a JSON floating-point amount.
+        matches:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
   securitySchemes:
     SessionCookie:
       type: apiKey
