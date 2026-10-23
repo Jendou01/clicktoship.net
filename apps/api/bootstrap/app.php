@@ -3,6 +3,7 @@
 use App\Http\Middleware\RequestId;
 use App\Modules\Identity\Http\ActiveIdentity;
 use App\Modules\Identity\Http\RequireSession;
+use App\Modules\Identity\Http\RequireVerifiedEmail;
 use App\Modules\Merchants\Http\ClearMerchantContext;
 use App\Modules\Merchants\Http\ResolveMerchant;
 use App\Support\ApiResponse;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn (Request $request) => null);
         $middleware->alias([
             'identity.active' => ActiveIdentity::class,
+            'verified' => RequireVerifiedEmail::class,
             'identity.session' => RequireSession::class,
             'merchant' => ResolveMerchant::class,
             'auth.throttle' => ThrottleRequestsWithRedis::class,

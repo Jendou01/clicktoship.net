@@ -125,3 +125,15 @@ erDiagram
   merchants ||--o{ personal_access_tokens : bounds
   users ||--o{ personal_access_tokens : owns
 ```
+
+## Installed Phase 3 schema
+
+Three additive migrations follow Phase 2:
+
+* `030000_create_merchant_management`: merchant version and independent verification status; extends account status with closed. Encrypted merchant_profiles/merchant_addresses; typed merchant_settings with composite merchant/address default FKs; immutable verification submissions and separate immutable decisions; encrypted-email invitations with keyed normalized-email digest, hashed token, 72-hour expiry, merchant-role scope FK and optimistic version; new grants on existing built-in roles only.
+* `040000_create_privileged_access_security`: encrypted confirmed/pending MFA secrets, expiring enrollment, TOTP last-step/version and hashed single-use recovery codes; auth_sessions gain MFA time/version and composite (user_id,id) identity; users gain admin_version. platform_access_grants bind actor+session and independent approver+approval session, target merchant, constrained capabilities, reason, expiry/revocation/version. PostgreSQL rejects self-approval, wrong session/user pairs, unsupported/wildcard capabilities and lifetimes over15 minutes.
+* `050000_harden_merchant_management`: immutable tenant IDs for profiles, addresses, settings and invitations, enforced by PostgreSQL trigger.
+
+Existing audit_logs and role-assignment tables remain authoritative. Submitted business snapshots and review reasons are encrypted; submissions/decisions reject UPDATE, DELETE and TRUNCATE. Contact/physical address/profile payloads use authenticated application encryption, not arbitrary unvalidated JSON: application fields are strictly validated and allowlisted. Database uniqueness is (merchant_id,id); all child/default relationships enforce the merchant component. Country-specific validation is deliberately limited and does not claim carrier validation. No wallet, currency/price, shipment or carrier tables.
+
+Migration rollback/reapply is verified against a populated Phase 2 fixture on clicktoship_test. Rolling back to the pre-Phase-3 account-status constraint intentionally refuses existing closed merchants rather than silently rewriting their status; production schema rollback would require a reviewed data migration. Normal development and isolated browser databases remain separate from the guarded PHPUnit database.

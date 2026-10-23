@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — implemented Phases 1–2
-  version: 0.2.0
-  description: Implemented Phase 1 health and Phase 2 identity, merchant tenancy and built-in RBAC. No shipping, wallet or
-    payment operations.
+  title: ClickToShip API — Phases 1–3
+  version: 0.3.0
+  description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
+    MFA and explicitly approved session-bound administration. Shipping remains unavailable.
 paths:
   /api/v1/health/live:
     get:
@@ -239,6 +239,73 @@ paths:
           $ref: '#/components/responses/Error429'
         '503':
           $ref: '#/components/responses/Error503'
+    patch:
+      summary: Patch auth me
+      operationId: phase3PatchAuthMe
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: &id006
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      active_merchant_id:
+                        type:
+                        - string
+                        - 'null'
+                        format: uuid
+                    required:
+                    - user
+                    - active_merchant_id
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalProfileRequest'
   /api/v1/auth/password/forgot:
     post:
       summary: Request recovery without exposing account existence
@@ -1545,6 +1612,2752 @@ paths:
               schema:
                 type: string
               description: Session cookie is HttpOnly; XSRF-TOKEN is readable for the CSRF header.
+  /api/v1/addresses:
+    get:
+      summary: Get addresses
+      operationId: phase3GetAddresses
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Saved postal data is not carrier validation. SA
+        requires five-digit postal code; US requires region and ZIP.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      addresses:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Address'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - addresses
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+    post:
+      summary: Post addresses
+      operationId: phase3PostAddresses
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Saved postal data is not carrier validation. SA
+        requires five-digit postal code; US requires region and ZIP.
+      responses:
+        '201':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                    required:
+                    - address
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressRequest'
+  /api/v1/addresses/{address}:
+    get:
+      summary: Get addresses address
+      operationId: phase3GetAddressesAddress
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                    required:
+                    - address
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: address
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+    patch:
+      summary: Patch addresses address
+      operationId: phase3PatchAddressesAddress
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                    required:
+                    - address
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: address
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressRequest'
+    delete:
+      summary: Delete addresses address
+      operationId: phase3DeleteAddressesAddress
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      archived:
+                        const: true
+                    required:
+                    - archived
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: address
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+  /api/v1/admin/access-grants/{grant}:
+    delete:
+      summary: Delete admin access-grants grant
+      operationId: phase3DeleteAdminAccessGrantsGrant
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      revoked:
+                        const: true
+                    required:
+                    - revoked
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+  /api/v1/admin/access-requests:
+    get:
+      summary: Get admin access-requests
+      operationId: phase3GetAdminAccessRequests
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      grants:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AccessGrant'
+                    required:
+                    - grants
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      summary: Post admin access-requests
+      operationId: phase3PostAdminAccessRequests
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '201':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - id
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessRequest'
+  /api/v1/admin/access-requests/{grant}/approve:
+    post:
+      summary: Post admin access-requests grant approve
+      operationId: phase3PostAdminAccessRequestsGrantApprove
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      approved:
+                        const: true
+                    required:
+                    - approved
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+  /api/v1/admin/audit-events:
+    get:
+      summary: Get admin audit-events
+      operationId: phase3GetAdminAuditEvents
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditEntry'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - events
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+  /api/v1/admin/merchants:
+    get:
+      summary: Get admin merchants
+      operationId: phase3GetAdminMerchants
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      merchants:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AccountMerchant'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - merchants
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+  /api/v1/admin/merchants/{merchant}:
+    get:
+      summary: Get admin merchants merchant
+      operationId: phase3GetAdminMerchantsMerchant
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      merchant:
+                        $ref: '#/components/schemas/AccountMerchant'
+                      profile:
+                        anyOf:
+                        - $ref: '#/components/schemas/PlatformBusinessProfile'
+                        - type: 'null'
+                      shipping_eligibility:
+                        $ref: '#/components/schemas/ShippingEligibility'
+                    required:
+                    - merchant
+                    - profile
+                    - shipping_eligibility
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/audit-events:
+    get:
+      summary: Get admin merchants merchant audit-events
+      operationId: phase3GetAdminMerchantsMerchantAuditEvents
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditEntry'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - events
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/status:
+    patch:
+      summary: Patch admin merchants merchant status
+      operationId: phase3PatchAdminMerchantsMerchantStatus
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - active
+                        - suspended
+                        - closed
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - status
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantStatusRequest'
+  /api/v1/admin/merchants/{merchant}/verification:
+    get:
+      summary: Get admin merchants merchant verification
+      operationId: phase3GetAdminMerchantsMerchantVerification
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass. Manual business-data review only; immutable submission/decision history. Account activation
+        and shipping eligibility are independent. No document uploads.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      submissions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VerificationSubmission'
+                    required:
+                    - submissions
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: access_grant
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/verification/{submission}/decision:
+    post:
+      summary: Post admin merchants merchant verification submission decision
+      operationId: phase3PostAdminMerchantsMerchantVerificationSubmissionDecision
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass. Manual business-data review only; immutable submission/decision history. Account activation
+        and shipping eligibility are independent. No document uploads.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - verified
+                        - rejected
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - status
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: merchant
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: submission
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationDecisionRequest'
+  /api/v1/admin/users:
+    get:
+      summary: Get admin users
+      operationId: phase3GetAdminUsers
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ManagedUser'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - users
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+  /api/v1/admin/users/{user}:
+    get:
+      summary: Get admin users user
+      operationId: phase3GetAdminUsersUser
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/ManagedUser'
+                      roles:
+                        type: array
+                        items:
+                          type: string
+                      mfa_enabled:
+                        type: boolean
+                    required:
+                    - user
+                    - roles
+                    - mfa_enabled
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: user
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/users/{user}/platform-roles:
+    patch:
+      summary: Patch admin users user platform-roles
+      operationId: phase3PatchAdminUsersUserPlatformRoles
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: user
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformRoleRequest'
+  /api/v1/admin/users/{user}/status:
+    patch:
+      summary: Patch admin users user status
+      operationId: phase3PatchAdminUsersUserStatus
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Every privileged operation requires confirmed fresh MFA. Merchant-private operations
+        additionally require a current, independently approved, session-bound grant for the exact merchant and capability.
+        No automatic platform bypass.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      version:
+                        type: integer
+                        minimum: 1
+                      suspended:
+                        type: boolean
+                    required:
+                    - version
+                    - suspended
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: user
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserStatusRequest'
+  /api/v1/auth/invitations/accept:
+    post:
+      summary: Post auth invitations accept
+      operationId: phase3PostAuthInvitationsAccept
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      membership_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - membership_id
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationAcceptRequest'
+  /api/v1/auth/mfa:
+    get:
+      summary: Get auth mfa
+      operationId: phase3GetAuthMfa
+      security:
+      - SessionCookie: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MfaStatus'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+    delete:
+      summary: Delete auth mfa
+      operationId: phase3DeleteAuthMfa
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      disabled:
+                        const: true
+                    required:
+                    - disabled
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaPasswordRequest'
+  /api/v1/auth/mfa/challenge:
+    post:
+      summary: Post auth mfa challenge
+      operationId: phase3PostAuthMfaChallenge
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      verified:
+                        const: true
+                    required:
+                    - verified
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaCodeRequest'
+  /api/v1/auth/mfa/confirm:
+    post:
+      summary: Post auth mfa confirm
+      operationId: phase3PostAuthMfaConfirm
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      recovery_codes:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                    - recovery_codes
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaConfirmRequest'
+  /api/v1/auth/mfa/enrollment:
+    post:
+      summary: Post auth mfa enrollment
+      operationId: phase3PostAuthMfaEnrollment
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '201':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      secret:
+                        type: string
+                      provisioning_uri:
+                        type: string
+                        format: uri
+                    required:
+                    - secret
+                    - provisioning_uri
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaPasswordRequest'
+  /api/v1/auth/mfa/recovery-codes:
+    post:
+      summary: Post auth mfa recovery-codes
+      operationId: phase3PostAuthMfaRecoveryCodes
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Browser session and CSRF required for mutations;
+        bearer-only access is denied. Current password required for security mutations; TOTP codes/recovery codes are single
+        use. Secrets/recovery plaintext are returned only by enrollment/creation operations, never lists. Six mutations per
+        account/minute and 20/IP/minute.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      recovery_codes:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                    - recovery_codes
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaPasswordRequest'
+  /api/v1/merchants/current/audit-events:
+    get:
+      summary: Get merchants current audit-events
+      operationId: phase3GetMerchantsCurrentAuditEvents
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditEntry'
+                      pagination:
+                        $ref: '#/components/schemas/PageInfo'
+                    required:
+                    - events
+                    - pagination
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          minimum: 1
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+  /api/v1/merchants/current/eligibility:
+    get:
+      summary: Get merchants current eligibility
+      operationId: phase3GetMerchantsCurrentEligibility
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      account_status:
+                        type: string
+                        enum:
+                        - active
+                        - suspended
+                        - closed
+                      verification_status:
+                        type: string
+                        enum:
+                        - unverified
+                        - pending
+                        - verified
+                        - rejected
+                      shipping_eligibility:
+                        type: object
+                        properties:
+                          eligible:
+                            const: false
+                          reasons:
+                            type: array
+                            items:
+                              type: string
+                        required:
+                        - eligible
+                        - reasons
+                    required:
+                    - account_status
+                    - verification_status
+                    - shipping_eligibility
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+  /api/v1/merchants/current/profile:
+    get:
+      summary: Get merchants current profile
+      operationId: phase3GetMerchantsCurrentProfile
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      profile:
+                        anyOf:
+                        - $ref: '#/components/schemas/BusinessProfile'
+                        - type: 'null'
+                    required:
+                    - profile
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+    patch:
+      summary: Patch merchants current profile
+      operationId: phase3PatchMerchantsCurrentProfile
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      profile:
+                        $ref: '#/components/schemas/BusinessProfile'
+                    required:
+                    - profile
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessProfileRequest'
+  /api/v1/merchants/current/settings:
+    get:
+      summary: Get merchants current settings
+      operationId: phase3GetMerchantsCurrentSettings
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      settings:
+                        $ref: '#/components/schemas/Settings'
+                    required:
+                    - settings
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+    patch:
+      summary: Patch merchants current settings
+      operationId: phase3PatchMerchantsCurrentSettings
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      settings:
+                        $ref: '#/components/schemas/Settings'
+                    required:
+                    - settings
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsRequest'
+  /api/v1/merchants/current/verification:
+    get:
+      summary: Get merchants current verification
+      operationId: phase3GetMerchantsCurrentVerification
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Manual business-data review only; immutable submission/decision
+        history. Account activation and shipping eligibility are independent. No document uploads.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: &id005
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - unverified
+                        - pending
+                        - verified
+                        - rejected
+                      submissions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VerificationSubmission'
+                    required:
+                    - status
+                    - submissions
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+  /api/v1/merchants/current/verification/submissions:
+    post:
+      summary: Post merchants current verification submissions
+      operationId: phase3PostMerchantsCurrentVerificationSubmissions
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store. Manual business-data review only; immutable submission/decision
+        history. Account activation and shipping eligibility are independent. No document uploads.
+      responses:
+        '201':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: *id005
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+  /api/v1/team/invitations:
+    get:
+      summary: Get team invitations
+      operationId: phase3GetTeamInvitations
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      invitations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/InvitationEntry'
+                    required:
+                    - invitations
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+    post:
+      summary: Post team invitations
+      operationId: phase3PostTeamInvitations
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '201':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - id
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationRequest'
+  /api/v1/team/invitations/{invitation}:
+    delete:
+      summary: Delete team invitations invitation
+      operationId: phase3DeleteTeamInvitationsInvitation
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: invitation
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+  /api/v1/team/invitations/{invitation}/resend:
+    post:
+      summary: Post team invitations invitation resend
+      operationId: phase3PostTeamInvitationsInvitationResend
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      description: Verified active identity required. Server-side permission checks and optimistic versions apply. Merchant
+        IDs never override authenticated context. Responses are no-store.
+      responses:
+        '200':
+          description: Success
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: no-store, private
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      version:
+                        type: integer
+                        minimum: 1
+                    required:
+                    - version
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      parameters:
+      - in: path
+        name: invitation
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: header
+        name: X-Merchant-ID
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Stale context guard only; does not select a merchant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
 components:
   headers:
     RequestId:
@@ -1750,19 +4563,7 @@ components:
     AuthResponse:
       type: object
       properties:
-        data:
-          type: object
-          properties:
-            user:
-              $ref: '#/components/schemas/User'
-            active_merchant_id:
-              type:
-              - string
-              - 'null'
-              format: uuid
-          required:
-          - user
-          - active_merchant_id
+        data: *id006
         meta:
           $ref: '#/components/schemas/Meta'
         error:
@@ -1781,14 +4582,14 @@ components:
           type: string
           format: email
           maxLength: 254
-        password: &id005
+        password: &id007
           type: string
           minLength: 12
           maxLength: 128
           format: password
           writeOnly: true
           description: Uppercase + lowercase + number + symbol. Never appears in URLs or logs.
-        password_confirmation: *id005
+        password_confirmation: *id007
         locale:
           type: string
           enum:
@@ -1837,8 +4638,8 @@ components:
           type: string
           maxLength: 200
           writeOnly: true
-        password: *id005
-        password_confirmation: *id005
+        password: *id007
+        password_confirmation: *id007
       required:
       - email
       - token
@@ -1874,6 +4675,22 @@ components:
       properties:
         id: *id003
         name: *id002
+        account_status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - closed
+        verification_status:
+          type: string
+          enum:
+          - unverified
+          - pending
+          - verified
+          - rejected
+        version:
+          type: integer
+          minimum: 1
       required:
       - id
       - name
@@ -1920,6 +4737,8 @@ components:
             permissions:
               type: array
               items: *id002
+            shipping_eligibility:
+              $ref: '#/components/schemas/ShippingEligibility'
           required:
           - merchant
           - permissions
@@ -2133,6 +4952,693 @@ components:
       - code
       - name
       - permissions
+    BusinessProfileRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        legal_name: &id008
+          type: string
+          maxLength: 160
+        country: &id009
+          type: string
+          pattern: ^[A-Z]{2}$
+          description: Assigned ISO 3166-1 alpha-2 code.
+        contact_name: &id010
+          type: string
+          maxLength: 120
+        contact_email: &id011
+          type: string
+          format: email
+          maxLength: 254
+        contact_phone: &id012
+          type: string
+          pattern: ^\+[1-9][0-9]{6,14}$
+        registration_number: &id013
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+        tax_number: &id014
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+      required:
+      - version
+      - legal_name
+      - country
+      - contact_name
+      - contact_email
+      - contact_phone
+    BusinessProfile:
+      type: object
+      properties:
+        id: &id026
+          type: string
+          format: uuid
+        version: &id027
+          type: integer
+          minimum: 1
+        legal_name: *id008
+        country: *id009
+        contact_name: *id010
+        contact_email: *id011
+        contact_phone: *id012
+        registration_number: *id013
+        tax_number: *id014
+      required:
+      - id
+      - version
+      - legal_name
+      - country
+      - contact_name
+      - contact_email
+      - contact_phone
+    AddressRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        label: &id015
+          type: string
+          maxLength: 100
+        contact_name: *id010
+        contact_phone: *id012
+        country: *id009
+        city: &id016
+          type: string
+          maxLength: 100
+        region: &id017
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+        postal_code: &id018
+          anyOf:
+          - type: string
+            maxLength: 20
+          - type: 'null'
+        line1: &id019
+          type: string
+          maxLength: 200
+        line2: &id020
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+      required:
+      - version
+      - label
+      - contact_name
+      - contact_phone
+      - country
+      - city
+      - line1
+      allOf:
+      - if:
+          properties:
+            country:
+              const: SA
+        then:
+          required:
+          - postal_code
+          properties:
+            postal_code:
+              type: string
+              pattern: ^[0-9]{5}$
+      - if:
+          properties:
+            country:
+              const: US
+        then:
+          required:
+          - postal_code
+          - region
+          properties:
+            postal_code:
+              type: string
+              pattern: ^[0-9]{5}(-[0-9]{4})?$
+            region:
+              type: string
+              minLength: 1
+              maxLength: 100
+    Address:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        label: *id015
+        contact_name: *id010
+        contact_phone: *id012
+        country: *id009
+        city: *id016
+        region: *id017
+        postal_code: *id018
+        line1: *id019
+        line2: *id020
+      required:
+      - id
+      - version
+      - label
+      - contact_name
+      - contact_phone
+      - country
+      - city
+      - line1
+    SettingsRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        locale: &id021
+          type: string
+          enum:
+          - en
+          - ar
+        timezone: &id022
+          type: string
+          description: Valid IANA timezone.
+        origin_address_id: &id023
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        return_address_id: &id024
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+      required:
+      - version
+      - locale
+      - timezone
+    Settings:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        locale: *id021
+        timezone: *id022
+        origin_address_id: *id023
+        return_address_id: *id024
+      required:
+      - version
+      - locale
+      - timezone
+      - origin_address_id
+      - return_address_id
+    PersonalProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        locale: *id021
+      required:
+      - name
+      - locale
+    MfaPasswordRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          format: password
+          maxLength: 128
+      required:
+      - current_password
+    MfaCodeRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          format: password
+          maxLength: 128
+        code:
+          type: string
+          maxLength: 80
+          description: Six-digit authenticator code or a single-use recovery code. Confirm only accepts six digits.
+      required:
+      - current_password
+      - code
+    MfaStatus:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        fresh:
+          type: boolean
+        platform_permissions:
+          type: array
+          items:
+            type: string
+      required:
+      - enabled
+      - fresh
+      - platform_permissions
+    InvitationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        role:
+          type: string
+          enum:
+          - merchant.owner
+          - merchant.admin
+          - merchant.shipping_manager
+          - merchant.shipping_operator
+          - merchant.finance_manager
+          - merchant.viewer
+      required:
+      - email
+      - role
+    InvitationAcceptRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 64
+          maxLength: 64
+          description: From private-email URL fragment; consume by POST only.
+      required:
+      - token
+    InvitationEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        expires_at:
+          type: string
+          format: date-time
+        accepted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+      required:
+      - id
+      - email
+      - role
+      - version
+      - expires_at
+      - accepted_at
+      - revoked_at
+    VerificationSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        profile_version:
+          type: integer
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+        snapshot:
+          type: object
+          properties:
+            legal_name: *id008
+            country: *id009
+            contact_name: *id010
+            contact_email: *id011
+            contact_phone: *id012
+            registration_number: *id013
+            tax_number: *id014
+          required:
+          - legal_name
+          - country
+          - contact_name
+          - contact_email
+          - contact_phone
+        outcome:
+          anyOf:
+          - type: string
+            enum:
+            - verified
+            - rejected
+          - type: 'null'
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - id
+      - profile_version
+      - created_at
+      - snapshot
+      - outcome
+      - reason
+    VerificationDecisionRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        access_grant:
+          type: string
+          format: uuid
+        outcome:
+          type: string
+          enum:
+          - verified
+          - rejected
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - version
+      - access_grant
+      - outcome
+      - reason
+    AccessRequest:
+      type: object
+      properties:
+        merchant_id:
+          type: string
+          format: uuid
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum: &id025
+            - platform.merchant.view
+            - platform.merchant.status
+            - platform.verification.review
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - merchant_id
+      - capabilities
+      - reason
+    AccessGrant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        merchant_id:
+          type: string
+          format: uuid
+        actor_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum: *id025
+        reason:
+          type: string
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        approval_session_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        version:
+          type: integer
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - merchant_id
+      - actor_id
+      - session_id
+      - capabilities
+      - reason
+      - approved_by
+      - approval_session_id
+      - approved_at
+      - expires_at
+      - revoked_at
+      - version
+      - created_at
+    MerchantStatusRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        access_grant:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - closed
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - version
+      - access_grant
+      - status
+      - reason
+    UserStatusRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        suspended:
+          type: boolean
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - version
+      - suspended
+      - reason
+    PlatformRoleRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        role:
+          type: string
+          enum:
+          - platform.super_admin
+          - platform.operations
+          - platform.finance
+          - platform.support
+        assigned:
+          type: boolean
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - version
+      - role
+      - assigned
+      - reason
+    AccountMerchant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+          - closed
+        verification_status:
+          type: string
+          enum:
+          - unverified
+          - pending
+          - verified
+          - rejected
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - name
+      - status
+      - verification_status
+      - version
+    ManagedUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        locale: *id021
+        suspended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+        admin_version:
+          type: integer
+          minimum: 1
+        email_verified_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+      required:
+      - id
+      - locale
+      - suspended_at
+      - admin_version
+      - email_verified_at
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        subject_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+            reason:
+              type: string
+            role:
+              type: string
+            outcome:
+              type: string
+            assigned:
+              type: boolean
+            suspended:
+              type: boolean
+            capabilities:
+              type: array
+              items:
+                type: string
+          required: []
+      required:
+      - id
+      - action
+      - created_at
+      - metadata
+    PageInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pages:
+          type: integer
+          minimum: 1
+      required:
+      - page
+      - pages
+    ShippingEligibility:
+      type: object
+      required:
+      - eligible
+      - reasons
+      properties:
+        eligible:
+          const: false
+        reasons:
+          type: array
+          items:
+            type: string
+    MfaConfirmRequest:
+      type: object
+      required:
+      - current_password
+      - code
+      properties:
+        current_password:
+          type: string
+          format: password
+          maxLength: 128
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+    PlatformBusinessProfile:
+      type: object
+      required:
+      - id
+      - version
+      - legal_name
+      - country
+      properties:
+        id: *id026
+        version: *id027
+        legal_name: *id008
+        country: *id009
   securitySchemes:
     SessionCookie:
       type: apiKey

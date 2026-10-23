@@ -88,7 +88,7 @@ jobs:
         run: |
           export LOCAL_UID="$(id -u)" LOCAL_GID="$(id -g)"
           ./scripts/setup.sh
-          ./scripts/start.sh
+          ./scripts/prepare-browser-tests.sh
       - run: npx --workspace=@clicktoship/web playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4

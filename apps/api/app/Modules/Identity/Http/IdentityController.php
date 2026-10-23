@@ -54,6 +54,19 @@ final class IdentityController
             ? $user->currentAccessToken()->merchant_id : $request->session()->get('active_merchant_id')], $status);
     }
 
+    public function update(Request $request): mixed
+    {
+        $data = $request->validate(['name' => 'required|string|max:120', 'locale' => ['required', Rule::in(['en', 'ar'])], 'email' => 'prohibited', 'suspended_at' => 'prohibited', 'role' => 'prohibited']);
+        DB::transaction(function () use ($request, $data): void {
+            $user = User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            $user->fill($data)->save();
+            Audit::record('identity.profile_updated', $user->id, subject: $user->id);
+            $request->setUserResolver(fn () => $user);
+        });
+
+        return $this->me($request);
+    }
+
     public function logout(Request $request, Sessions $sessions): mixed
     {
         $token = $request->user()->currentAccessToken();

@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–2, including authentication, merchant tenancy and RBAC.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–3, including authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -48,9 +48,10 @@ python3 scripts/smoke.py
 
 Backend tests force `clicktoship_test`, never the development database. Never point test credentials at production. Migration rollback/reapply can be verified with `php artisan migrate:rollback` and `php artisan migrate` in a disposable local database; rollback is destructive to the selected schema and is not a routine startup step.
 
-Browser tests require the running **full Compose stack**, including Horizon and Mailpit (install Chromium once):
+Browser tests require the opt-in **isolated E2E stack**, including Horizon/Mailpit and synthetic test administrators (install Chromium once). Prepare it before running Playwright:
 
 ```bash
+./scripts/prepare-browser-tests.sh
 npx --workspace=@clicktoship/web playwright install --with-deps chromium
 npm run test:e2e
 ```
@@ -63,7 +64,9 @@ BUILDX_CONFIG=/tmp/clicktoship-buildx docker build \
   -f infrastructure/docker/browser.Dockerfile -t clicktoship-browser:dev .
 docker run --rm --init --ipc=host --network clicktoship_default \
   -e NO_PROXY=nginx,web,mailpit,localhost,127.0.0.1 -e no_proxy=nginx,web,mailpit,localhost,127.0.0.1 \
-  -e E2E_BASE_URL=http://nginx -e MAILPIT_URL=http://mailpit:8025 -v "$PWD:/workspace" clicktoship-browser:dev
+  -e E2E_BASE_URL=http://nginx -e MAILPIT_URL=http://mailpit:8025 \
+  -v /tmp/clicktoship-e2e-credentials.json:/tmp/clicktoship-e2e-credentials.json:ro \
+  -v "$PWD:/workspace" clicktoship-browser:dev
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` is optional and only selects an explicitly installed system Chromium; CI normally uses Playwright's matching bundled browser. Never claim unexecuted browser tests passed. See [execution report](docs/FOUNDATION_REPORT.md) and [test strategy](docs/TESTING.md).
@@ -78,10 +81,22 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Phase 2 is implemented; review [the Phase 2 report](docs/PHASE_2_REPORT.md). Phase 3 remains planned: merchant profiles, verification, addresses and separately authorized platform administration. Foundation does not activate shipping or payment by changing an environment flag. Production credentials and application keys belong in secure settings, never Git or NEXT_PUBLIC variables. Project licensing requires owner decision; framework components retain their original licenses.
+Phase 3 is implemented on its feature branch; review [the Phase 3 report](docs/PHASE_3_REPORT.md). Phase 4 remains unstarted and requires a separate instruction and financial-policy decisions. Foundation does not activate shipping or payment by changing an environment flag. Production credentials and application keys belong in secure settings, never Git or NEXT_PUBLIC variables. Project licensing requires owner decision; framework components retain their original licenses.
 
 ## Phase 2 workflows
 
 Use `/en/register` or `/ar/register`, verify email through Mailpit, create/select an organization, then open dashboard, team or security. Team additions require an existing verified account; there is no invitation acceptance flow. Security lists/revokes browser sessions and creates merchant-bound tokens after current-password confirmation. Raw API tokens are displayed once. No default users or platform administrators are seeded.
 
 When CI runs Compose under a different user, export LOCAL_UID and LOCAL_GID to the runner's numeric IDs before setup. Stop the development web container before a production build to avoid concurrent writes to `.next`, then restart it. Tests fail before migrations unless the PostgreSQL database name is exactly `clicktoship_test`.
+
+## Phase 3 workflows and test isolation
+
+Merchant screens: `/en/business-profile`, `/en/addresses`, `/en/organization-settings`, `/en/business-verification`, `/en/invitations`, `/en/personal-profile`, `/en/mfa`, `/en/audit` and Arabic equivalents. Email-verified active merchants can use dashboards without business verification. Account status (active/suspended/closed), verification (unverified/pending/verified/rejected) and shipping eligibility are separate. Shipping is always unavailable in Phase 3. Closed accounts cannot reopen through the API; suspended accounts can reactivate. No documents are collected.
+
+Platform screens: `/en/admin-merchants`, `/en/admin-access`, `/en/admin-users`, `/en/admin-audit`. A platform role alone never grants merchant-private access. All admin operations require confirmed MFA challenged within 15 minutes. Merchant-private operations additionally need a target/capability-specific grant approved by another MFA-authenticated Super Admin. Grants expire within 15 minutes of request and bind to the requesting browser session. No impersonation. The limited platform directory shows organization metadata; user lists omit names/email/contact data.
+
+For initial platform setup, two independently controlled existing users must verify email and enroll MFA. An authorized operator then runs `docker compose exec api php artisan platform:bootstrap FIRST_USER_UUID SECOND_USER_UUID`. This one-time audited command refuses an existing platform assignment table and creates no account/password. It has not been executed against the normal development database by Phase 3 setup. Later built-in platform assignments require MFA-enrolled active verified targets, audited reasons and version checks. MFA recovery uses current password plus one-use backup codes; there is no administrative MFA-reset bypass.
+
+`prepare-browser-tests.sh` uses `infrastructure/docker/compose.e2e.yml`, a separate PostgreSQL database named clicktoship_e2e, Redis prefix and session cookie. It preserves clicktoship and clicktoship_test, never drops data, and prepares synthetic accounts through a CLI fixture that refuses every database/environment except testing/clicktoship_e2e. Random test credentials are written only to `/tmp/clicktoship-e2e-credentials.json` with mode 0600, never Git or console. The browser runner reads this file; use E2E_FIXTURE_FILE to select another private path and mount it when running the supported container. Refresh fixtures before another complete cycle; this resets test-only MFA/recovery credentials, not application security policies. Existing public registration tests still obey real rate limits. Normal setup/start never seeds these accounts. Run `./scripts/start.sh` afterwards to restore the normal development API/worker configuration. Reload Nginx if replacing upstream containers outside these scripts.
+
+Two new multi-screen/multi-browser Phase 3 journeys cover real SMTP, MFA and independent approval; all tests retain the default timeouts. Full execution evidence is in PHASE_3_REPORT.md.

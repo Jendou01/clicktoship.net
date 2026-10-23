@@ -156,7 +156,9 @@ class MerchantTenancyTest extends IdentityTestCase
         $id = $this->bearer($ownerToken, 'POST', '/api/v1/team', ['email' => $member->email, 'role' => 'merchant.viewer'])->assertCreated()->json('data.membership.id');
         $memberToken = $this->token($member, $merchant);
         $this->bearer($ownerToken, 'PATCH', '/api/v1/team/'.$id, ['version' => 1, 'status' => 'suspended'])->assertOk()->assertJsonPath('data.membership.version', 2);
-        $this->bearer($memberToken, 'GET', '/api/v1/merchants/current')->assertForbidden();
+        $this->bearer($memberToken, 'GET', '/api/v1/merchants/current')->assertUnauthorized();
+        $this->bearer($ownerToken, 'PATCH', '/api/v1/team/'.$id, ['version' => 2, 'status' => 'active'])->assertOk();
+        $this->bearer($memberToken, 'GET', '/api/v1/merchants/current')->assertUnauthorized();
         $this->bearer($ownerToken, 'PATCH', '/api/v1/team/'.$id, ['version' => 1, 'status' => 'active'])->assertConflict();
     }
 

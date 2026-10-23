@@ -1,0 +1,12 @@
+# Opt-in browser-test runtime. Normal setup/start never loads these fixtures.
+services:
+  api:
+    environment: &e2e
+      APP_ENV: testing
+      DB_DATABASE: clicktoship_e2e
+      REDIS_PREFIX: clicktoship_e2e_
+      SESSION_COOKIE: clicktoship_e2e_session
+  worker:
+    environment: *e2e
+  scheduler:
+    environment: *e2e
