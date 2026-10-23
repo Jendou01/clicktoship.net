@@ -13,9 +13,12 @@ test("English workspace switches to Arabic with document-level RTL", async ({ pa
   await page.getByRole("link", { name: "Switch to English" }).click();
   await expect(page).toHaveURL(/\/en$/);
 });
-test("default route redirects and unsupported locales are unavailable", async ({ page, request }) => {
+test("default route redirects and unsupported locales are unavailable", async ({ page, request, baseURL }) => {
+  const redirect = await request.get("/", { maxRedirects: 0 });
+  expect(redirect.status()).toBe(307);
+  expect(redirect.headers()["location"]).toBe("/en");
   await page.goto("/");
-  await expect(page).toHaveURL(/\/en$/);
+  await expect(page).toHaveURL(new URL("/en", baseURL!).href);
   const response = await request.get("/fr");
   expect(response.status()).toBe(404);
 });

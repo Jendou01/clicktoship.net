@@ -1,2 +1,4 @@
-import { NextResponse } from "next/server";
-export function GET(request: Request) { return NextResponse.redirect(new URL("/en", request.url), 307); }
+export function GET() {
+  // Preserve the browser's public origin behind the reverse proxy.
+  return new Response(null, { status: 307, headers: { Location: "/en" } });
+}

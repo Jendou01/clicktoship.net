@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   poweredByHeader: false,
+  allowedDevOrigins: ["nginx", "web", "localhost", "127.0.0.1"],
   experimental: { cpus: 2 },
   async headers() {
     return [{ source: "/:path*", headers: [

@@ -7,6 +7,7 @@ x-api: &api
     dockerfile: infrastructure/docker/api.Dockerfile
   working_dir: /app
   init: true
+  user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
   volumes:
     - ./apps/api:/app
   environment:
@@ -19,13 +20,24 @@ x-api: &api
     DB_PASSWORD: ${DB_PASSWORD:?Run scripts/setup.sh first}
     REDIS_HOST: redis
     REDIS_CLIENT: predis
+    MAIL_MAILER: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: "1025"
+    MAIL_FROM_ADDRESS: noreply@clicktoship.test
+    SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-localhost:8080,127.0.0.1:8080,nginx}
   depends_on:
     postgres:
       condition: service_healthy
     redis:
       condition: service_healthy
+    mailpit:
+      condition: service_started
 
 services:
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
   postgres:
     image: postgres:17-bookworm
     environment:
@@ -72,7 +84,7 @@ services:
         condition: service_healthy
   web:
     image: node:24-bookworm-slim
-    user: "1000:1000"
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     working_dir: /workspace
     init: true
     volumes:

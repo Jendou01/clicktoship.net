@@ -14,6 +14,9 @@ final class RequestId
         $request->attributes->set('request_id', (string) Str::uuid());
         $response = $next($request);
         $response->headers->set('X-Request-ID', $request->attributes->get('request_id'));
+        if ($request->is('api/v1/auth/*', 'api/v1/merchants*', 'api/v1/team*', 'api/v1/tokens*')) {
+            $response->headers->set('Cache-Control', 'no-store, private');
+        }
 
         return $response;
     }

@@ -1,6 +1,6 @@
 # Development roadmap
 
-The first change is deliberately Phase 0 plus initial Phase 1 infrastructure. Auth/tenancy, money and shipping remain separate reviewable phases. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–2 are implemented in bounded changes. Money and shipping remain separate reviewable phases. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -38,7 +38,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Auth/onboarding/team context; CSRF-safe session handling.
 * Automated tests: Cross-tenant/IDOR, token abuse, CSRF, suspension, jobs context reset.
 * Acceptance criteria: Every tenant access checked server-side; no privilege escalation.
-* Completion report: Planned.
+* Completion report: Implemented on the Phase 2 feature branch; see [PHASE_2_REPORT.md](PHASE_2_REPORT.md). Follow-up: root redirects preserve the public origin behind Nginx; the existing browser regression checks the redirect header and exact destination. Authentication, six merchant/four platform role definitions, isolation, onboarding and security tests are complete. Platform administrative workflows and actual MFA enrollment/challenge remain gated and unexposed for later administrative scope.
 
 ## Phase 3 — Merchant and admin management
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Phase 2: active merchant membership model, role/permission policies and tenant isolation tests before business endpoints. Add same-origin Sanctum auth, email verification/reset, token lifecycle and suspension. Resolve legal/carrier/PSP questions in parallel; do not request credentials merely to build authentication.
+Review and merge the Phase 2 feature branch through normal review. Phase 3 remains planned; no automatic implementation or production deployment. Resolve legal/carrier/PSP prerequisites independently.
