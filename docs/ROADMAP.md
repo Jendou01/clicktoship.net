@@ -38,7 +38,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Auth/onboarding/team context; CSRF-safe session handling.
 * Automated tests: Cross-tenant/IDOR, token abuse, CSRF, suspension, jobs context reset.
 * Acceptance criteria: Every tenant access checked server-side; no privilege escalation.
-* Completion report: Implemented on the Phase 2 feature branch; see [PHASE_2_REPORT.md](PHASE_2_REPORT.md). Authentication, six merchant/four platform role definitions, isolation, onboarding and security tests are complete. Platform administrative workflows and actual MFA enrollment/challenge remain gated and unexposed for later administrative scope.
+* Completion report: Implemented on the Phase 2 feature branch; see [PHASE_2_REPORT.md](PHASE_2_REPORT.md). Follow-up: root redirects preserve the public origin behind Nginx; the existing browser regression checks the redirect header and exact destination. Authentication, six merchant/four platform role definitions, isolation, onboarding and security tests are complete. Platform administrative workflows and actual MFA enrollment/challenge remain gated and unexposed for later administrative scope.
 
 ## Phase 3 — Merchant and admin management
 
