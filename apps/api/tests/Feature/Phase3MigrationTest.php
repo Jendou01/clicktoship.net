@@ -16,6 +16,7 @@ class Phase3MigrationTest extends ManagementTestCase
         $u = $this->user();
         $m = $this->organization($u);
         $token = $this->token($u, $m);
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2, '--force' => true])); // Additive Phase 5 first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2, '--force' => true])); // Additive Phase 4 first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 3, '--force' => true]));
         $this->assertFalse(Schema::hasTable('merchant_profiles'));

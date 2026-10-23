@@ -30,3 +30,11 @@ Business data can be manually reviewed without changing account activation; lega
 SAR, integer money, no overdraft, immutable double entry, idempotency and independent correction approval are approved. Qualified accountant signoff is still required for the provisional configurable chart/templates (service clearing/revenue/tax/carrier liabilities/settlement), financial limits, accounting periods, refunds/debt and Saudi regulatory/safeguarding classification. Normal correction execution remains disabled. No real funding/settlement/withdrawal/payment/shipping charges exist.
 
 Unknown external-outcome resolution remains blocked pending an authoritative evidence source and approved independent reconciliation-decision contract. Structural matching is insufficient evidence of carrier rejection. Additional launch gates: purpose TTLs, suspended/closed financial correction policy, retention/export, daily reconciliation owners/alerts, restricted production DB principals/function owner and backup/restore/performance evidence. Independent approved ledger/test/read/review work is complete without resolving those gates.
+
+## Phase 5 — blocked external assumptions
+
+1. Owner-supplied verified Aramex tariffs by service/route/weight/package/effective period, currency, divisor and rounding; additional carriers remain configuration-ready, not integrated.
+2. Authoritative city identifiers/aliases and remote-area classifications, COD/declared-value capabilities and charge bases, compound fuel/other charge policy.
+3. Qualified approval of country/jurisdiction tax treatment, inclusive/multiple-tax/customs handling and margin interpretation. Explicit exemption also needs evidence.
+4. Future quote acceptance/contract revocation, carrier account availability and shipment orchestration policy before Phase 7 wallet reservations. No quote is currently a shipment charge.
+5. FX source, conversion/rounding policy and currencies remain separately blocked; no implicit conversion.

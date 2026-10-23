@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–4, including authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–5, including static pricing estimates, immutable quotes, authentication, merchant tenancy/RBAC, business management, MFA and explicitly approved administration.** Business shipments, payments, carrier adapters and store integrations remain future scope. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -81,7 +81,7 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Phase 4 wallet/ledger work is delivered on feat/phase-4-wallet-ledger for review; see [Phase 4 report](docs/PHASE_4_REPORT.md), [accounting assumptions](docs/finance/ACCOUNTING.md) and [operations](docs/finance/OPERATIONS.md). Merchant funding, payments, settlement, withdrawals and shipping charges remain disabled. Do not activate finance or begin Phase 5 without separate approval. No production deployment occurred.
+Phase 4 wallet/ledger work is delivered on feat/phase-4-wallet-ledger for review; see [Phase 4 report](docs/PHASE_4_REPORT.md), [accounting assumptions](docs/finance/ACCOUNTING.md) and [operations](docs/finance/OPERATIONS.md). Merchant funding, payments, settlement, withdrawals and shipping charges remain disabled. Do not activate finance or begin Phase 6 without separate approval. No production deployment occurred.
 
 ## Phase 2 workflows
 
@@ -107,3 +107,11 @@ Two new multi-screen/multi-browser Phase 3 journeys cover real SMTP, MFA and ind
 `/en/wallet` and `/ar/wallet` show currency-specific posted/reserved/available balances, reservations, transaction history and sequence-bounded statements. Authorized browser users can open an empty SAR wallet; no artificial payment is created. `/en/admin-finance` and Arabic equivalent require recent MFA and independently approved target financial grants. Request wallet.view plus finance.correct or finance.reconcile through admin-access. Corrections have an additional independent maker/checker approval; execution stays disabled pending qualified accountant review. There is no direct balance edit or real payment route.
 
 Run `docker compose exec api php artisan finance:outbox` and `finance:reconcile` for local durable monitor receipts and structural reconciliation. Scheduled equivalents run every minute/daily. They neither call a PSP nor release protected/unknown reservations. Migration owners must be able to provision the NOLOGIN cts_finance_runtime capability role; tests SET ROLE to verify direct money writes are denied. Full production application login/function-owner provisioning remains a launch gate.
+
+## Phase 5 static pricing workflows
+
+Merchant calculator/service discovery/history: `/en/rates`, `/en/available-rates`, `/en/quote-history` and Arabic equivalents. Pricing administration: `/en/admin-pricing`, `/en/carrier-costs`, `/en/merchant-pricing`, `/en/pricing-tiers`, `/en/shipping-zones`, `/en/pricing-fees`, `/en/pricing-rules`, `/en/pricing-audit`. Quotes are configured estimates, never verified carrier availability or wallet charges. Normal migrations seed no tariffs, services or tax policies.
+
+Authorized platform personnel must enter evidenced service/zone/tariff/selling/tax definitions, then obtain independent publication with recent MFA. Merchant-specific configuration/private quote access also requires independent session-bound target grants. Currency is SAR only; amounts use integer minor units and percentages use basis points. Missing assumptions fail closed. [Calculation/security architecture](docs/architecture/PHASE_5_PRICING.md), [completion report](docs/PHASE_5_REPORT.md) and [OpenAPI](docs/api/openapi.yaml).
+
+`./scripts/prepare-browser-tests.sh` also prepares a strictly isolated, clearly synthetic pricing fixture at `/tmp/clicktoship-pricing-e2e.json` (0600). It refuses normal development/production databases. Never commit, print or publish either browser credentials file. No live carrier API, shipping, funding or production deployment is enabled.

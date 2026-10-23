@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–3 are implemented in bounded changes. Money and shipping remain separate reviewable phases. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–4 are merged; Phase 5 static pricing is implemented on its review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -74,7 +74,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Rate estimate/expired quote states/admin editor.
 * Automated tests: Rule boundaries, currency exponent, expiry, historical snapshot invariance.
 * Acceptance criteria: Deterministic approved sell price; no implicit FX.
-* Completion report: Planned.
+* Completion report: [Phase 5 report](PHASE_5_REPORT.md); implementation on feature branch, no live rate/payment/shipment activation.
 
 ## Phase 6 — Aramex carrier integration
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review the Phase 4 feature PR and accounting assumptions. No automatic merge, production activation or Phase 5 implementation. Real payments, shipping charges and quarantined external-outcome resolution remain separately gated.
+Review the Phase 5 pricing feature branch and verified contract/tax/city-classification assumptions. No automatic merge, live activation, production deployment or Phase 6 implementation. Phase 7 must separately authorize quote acceptance and wallet orchestration.

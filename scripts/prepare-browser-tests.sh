@@ -18,6 +18,9 @@ p=Path(sys.argv[1]);p.chmod(0o600)
 accounts=json.loads(p.read_text())
 assert set(accounts)=={'adminA','adminB','owner','member','financeOwner','adminC','adminD'}
 PY
+pricing_fixture="${E2E_PRICING_FIXTURE_FILE:-/tmp/clicktoship-pricing-e2e.json}"
+"${compose_e2e[@]}" run --rm --no-deps -T api php tests/Fixtures/pricing-browser.php > "$pricing_fixture"
+chmod 600 "$pricing_fixture"
 "${compose_e2e[@]}" up -d --wait api worker scheduler web nginx
 # Reload upstream DNS after replacing backend containers; no test triggers restarts.
 "${compose_e2e[@]}" exec -T nginx nginx -s reload
