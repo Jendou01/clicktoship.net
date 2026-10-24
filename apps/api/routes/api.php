@@ -66,3 +66,5 @@ require __DIR__.'/pricing.php';
 require __DIR__.'/carriers.php';
 
 require __DIR__.'/shipping.php';
+
+require __DIR__.'/bulk.php';

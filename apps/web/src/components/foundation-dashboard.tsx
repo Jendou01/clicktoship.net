@@ -35,7 +35,7 @@ export function FoundationDashboard({ locale }: { locale: Locale }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {t.modules.map(([number, title, description]) => (
               <article key={number} className="rounded-2xl border border-slate-200 bg-white p-6">
-                <div className="mb-8 flex items-center justify-between gap-3"><span aria-hidden="true" className="text-sm font-medium text-teal-700">{number}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{["01", "03"].includes(number) ? t.available : t.planned}</span></div>
+                <div className="mb-8 flex items-center justify-between gap-3"><span aria-hidden="true" className="text-sm font-medium text-teal-700">{number}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{["01", "02", "03"].includes(number) ? t.available : t.planned}</span></div>
                 <h3 className="font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
               </article>
             ))}

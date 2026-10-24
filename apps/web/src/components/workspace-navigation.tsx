@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
+  ["bulk", "bulk.read", "Bulk shipping", "الشحن الجماعي"],
   ["shipments", "shipments.read", "Shipments", "الشحنات"],
   ["shipment-create", "shipments.write", "Create shipment", "إنشاء شحنة"],
   ["pickups", "pickups.read", "Pickups", "طلبات الاستلام"],
@@ -33,6 +34,8 @@ const platformLinks = [
 
 /** Only a public shipment identifier is carried across locales; never tokens, grants or PII. */
 export function localeHref(locale: Locale, screen: string, search = "") {
+  const batch = new URLSearchParams(search).get("batch");
+  if (batch && /^[0-9a-f-]{36}$/i.test(batch) && ["bulk", "bulk-import", "bulk-results", "bulk-history"].includes(screen)) return `/${locale}/${screen}?batch=${encodeURIComponent(batch)}`;
   const id = new URLSearchParams(search).get("shipment");
   return `/${locale}/${screen}${id && /^[0-9a-f-]{36}$/i.test(id) && ["shipment-details", "shipment-create", "shipment-documents"].includes(screen) ? `?shipment=${encodeURIComponent(id)}` : ""}`;
 }

@@ -2,6 +2,7 @@ import { shippingCopy } from "./shipping";
 import type { Locale } from "./i18n";
 const aliases: Record<string, string> = { service_id: "service", goods_origin_country: "manufacture", items: "customs", weight_grams: "weight", length_mm: "length", width_mm: "width", height_mm: "height", declared_value_minor: "declared", value_minor: "value", hs_code: "hs" };
 export function shipmentFieldLabel(key: string, locale: Locale) {
+  if (key === "packages_json_or_items_json") return locale === "ar" ? "الطرود والبنود الدولية بصيغة JSON" : "Packages and international items JSON";
   const t: Record<string, string> = shippingCopy[locale];
   return key.replace(/^draft\./, "").split(".").map((p) => /^\d+$/.test(p) ? String(Number(p) + 1) : t[aliases[p] || p] || (locale === "ar" ? "حقل الشحنة" : "Shipment field")).join(" — ");
 }
@@ -18,6 +19,7 @@ export function shipmentFieldStep(key: string) {
 }
 export function shipmentFieldHint(key: string, locale: Locale) {
   const en = locale === "en";
+  if (key === "packages_json_or_items_json") return en ? "Enter a valid JSON array matching the package or international item fields." : "أدخل مصفوفة JSON صالحة تطابق حقول الطرود أو البنود الدولية.";
   if (/service/.test(key)) return en ? "Choose a configured service available to this organization." : "اختر خدمة مهيأة ومتاحة لهذه المنشأة.";
   if (/phone/.test(key)) return en ? "Enter an international phone number, starting with + and 7–15 digits." : "أدخل هاتفًا دوليًا يبدأ بعلامة + ويتبعه من ٧ إلى ١٥ رقمًا.";
   if (/email/.test(key)) return en ? "Enter a valid email address or leave this optional field empty." : "أدخل بريدًا إلكترونيًا صالحًا أو اترك الحقل الاختياري فارغًا.";

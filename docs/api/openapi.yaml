@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–7
-  version: 0.7.0
+  title: ClickToShip API — Phases 1–8
+  version: 0.8.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
-    MFA, approved session-bound administration and gated shipment management. Live shipping and real charges remain disabled.
+    MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:
   /api/v1/health/live:
     get:
@@ -9417,6 +9417,824 @@ paths:
               - access_grant
               additionalProperties: false
 
+  /api/v1/bulk/templates/{locale}/{format}:
+    get:
+      operationId: bulkTemplate
+      summary: Download blank English/Arabic CSV or XLSX template
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: locale
+        in: path
+        required: true
+        schema:
+          enum:
+          - en
+          - ar
+      - name: format
+        in: path
+        required: true
+        schema:
+          enum:
+          - csv
+          - xlsx
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports:
+    get:
+      operationId: bulkIndex
+      summary: Merchant import history
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 1
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      batches:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BulkBatch'
+                      page:
+                        type: integer
+                      last_page:
+                        type: integer
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+    post:
+      operationId: bulkInitialize
+      summary: Initialize an idempotent private import
+      description: bulk.upload. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkInitialize'
+  /api/v1/bulk/imports/{batch}:
+    get:
+      operationId: bulkShow
+      summary: Import details, current mapping, counts and public totals
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports/{batch}/progress:
+    get:
+      operationId: bulkProgress
+      summary: Durable import progress; user-controlled refresh
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports/{batch}/rows:
+    get:
+      operationId: bulkRows
+      summary: Paginated source/validation/duplicate/pricing/draft results
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 1
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      rows:
+                        type: array
+                        maxItems: 50
+                        items:
+                          $ref: '#/components/schemas/BulkRow'
+                      page:
+                        type: integer
+                      last_page:
+                        type: integer
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports/{batch}/events:
+    get:
+      operationId: bulkEvents
+      summary: Immutable import audit history
+      description: bulk.read. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 1
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        maxItems: 50
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            kind:
+                              type: string
+                            metadata:
+                              type: object
+                            created_at:
+                              type: string
+                              format: date-time
+                      page:
+                        type: integer
+                      last_page:
+                        type: integer
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports/{batch}/errors:
+    get:
+      operationId: bulkErrorReport
+      summary: Audited streaming formula-safe error CSV; original files are never downloadable
+      description: bulk.export. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: locale
+        in: query
+        schema:
+          enum:
+          - en
+          - ar
+          default: en
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+  /api/v1/bulk/imports/{batch}/file:
+    post:
+      operationId: bulkUploadFile
+      summary: Upload immutable file bytes using multipart form data
+      description: bulk.upload. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/BulkCommand'
+              - type: object
+                properties:
+                  file:
+                    type: string
+                    format: binary
+                    description: UTF-8 CSV or restricted single-sheet XLSX, maximum
+                      10 MiB. Uploaded file is quarantined and inspected asynchronously.
+                required:
+                - file
+  /api/v1/bulk/imports/{batch}/mapping:
+    post:
+      operationId: bulkMapping
+      summary: Create immutable mapping revision and enqueue validation
+      description: bulk.map. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/BulkCommand'
+              - type: object
+                properties:
+                  mapping:
+                    type: object
+                    minProperties: 1
+                    maxProperties: 96
+                    additionalProperties:
+                      type: string
+                required:
+                - mapping
+  /api/v1/bulk/imports/{batch}/rows/{row}/decision:
+    post:
+      operationId: bulkDuplicateDecision
+      summary: Explicit immutable duplicate review decision
+      description: bulk.map. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: row
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/BulkCommand'
+              - type: object
+                properties:
+                  decision:
+                    enum:
+                    - keep
+                    - skip
+                  reason:
+                    type: string
+                    minLength: 3
+                    maxLength: 500
+                required:
+                - decision
+                - reason
+  /api/v1/bulk/imports/{batch}/pricing:
+    post:
+      operationId: bulkPricing
+      summary: Calculate informational public estimates; no accepted quotes or financial
+        operations
+      description: bulk.price + rates.quote. Tenant context comes only from authentication;
+        no platform bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCommand'
+  /api/v1/bulk/imports/{batch}/prepare:
+    post:
+      operationId: bulkPrepare
+      summary: Approve valid resolved rows for draft creation only
+      description: bulk.prepare + shipments.write. Tenant context comes only from authentication;
+        no platform bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/BulkCommand'
+              - type: object
+                properties:
+                  include_unpriced:
+                    type: boolean
+                    default: false
+                    description: Explicit acknowledgement permitting valid unpriced
+                      drafts; no price is accepted or charged.
+  /api/v1/bulk/imports/{batch}/cancel:
+    post:
+      operationId: bulkCancel
+      summary: Cancel before any draft commits; retained history is never deleted
+      description: bulk.cancel. Tenant context comes only from authentication; no platform
+        bypass. Session mutations require CSRF.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: batch
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCommand'
 components:
   headers:
     RequestId:
@@ -9492,6 +10310,259 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    BulkBatch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum:
+          - initialized
+          - parsing
+          - mapping
+          - validating
+          - review
+          - pricing
+          - preparing
+          - completed
+          - partial
+          - cancelled
+          - blocked
+          - failed
+        version:
+          type: integer
+          minimum: 1
+        mapping_version:
+          type: integer
+          minimum: 0
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        row_count:
+          type: integer
+          minimum: 0
+        repeat_of:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        failure_code:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - state
+      - version
+      - mapping_version
+      - format
+      - row_count
+    BulkCommand:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+        version:
+          type: integer
+          minimum: 1
+      required:
+      - idempotency_key
+      - version
+    BulkInitialize:
+      type: object
+      properties:
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        delimiter:
+          type: string
+          enum:
+          - ','
+          - ;
+          - tab
+          default: ','
+      required:
+      - idempotency_key
+      - format
+    BulkRow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source_row:
+          type: integer
+          minimum: 2
+        source:
+          type: array
+          maxItems: 96
+          items:
+            type: string
+            description: Untrusted source text; never HTML or formulas to execute.
+        errors:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+            description: Phase 7 field path or stable validation code; localize on client.
+        duplicate_of:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        decision:
+          type:
+          - string
+          - 'null'
+          enum:
+          - keep
+          - skip
+          - null
+        pricing:
+          oneOf:
+          - $ref: '#/components/schemas/BulkPrice'
+          - type: 'null'
+        pricing_error:
+          type:
+          - string
+          - 'null'
+        quote_valid:
+          type: boolean
+          description: Informational preview validity; never a shipment quote acceptance
+            or dispatch authorization.
+        shipment_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - id
+      - source_row
+      - source
+      - errors
+      - quote_valid
+    BulkPrice:
+      type: object
+      description: Allowlisted Phase 5 public estimate. No carrier costs/margins. Currency-specific
+        integer minor units; SAR currently enabled only.
+      properties:
+        service_id:
+          type: string
+          format: uuid
+        service_name:
+          type: object
+          properties:
+            en:
+              type: string
+            ar:
+              type: string
+        currency:
+          const: SAR
+        total_minor:
+          type: string
+          pattern: ^[0-9]+$
+        expires_at:
+          type: string
+          format: date-time
+        shipping_enabled:
+          const: false
+      required:
+      - service_id
+      - currency
+      - total_minor
+      - expires_at
+    BulkDetail:
+      type: object
+      properties:
+        batch:
+          $ref: '#/components/schemas/BulkBatch'
+        file:
+          type:
+          - object
+          - 'null'
+          properties:
+            filename:
+              type: string
+            size_bytes:
+              type: integer
+        headers:
+          type: array
+          maxItems: 96
+          items:
+            type: string
+        mapping:
+          type: object
+          additionalProperties:
+            type: string
+          description: Zero-based source column index to canonical field. Unmapped columns
+            are retained as source text only.
+        columns:
+          type: object
+          additionalProperties:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: string
+          description: Canonical field -> English and Arabic labels.
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+        progress:
+          type: object
+          properties:
+            phase:
+              type: string
+            processed_rows:
+              type: integer
+            total_rows:
+              type:
+              - integer
+              - 'null'
+        totals_minor:
+          type: object
+          additionalProperties:
+            type: string
+            pattern: ^[0-9]+$
+          description: Priced rows only, partitioned by currency. No implicit FX or charge.
+        submission_enabled:
+          const: false
+        limits:
+          type: object
+          properties:
+            max_bytes:
+              type: integer
+            max_rows:
+              type: integer
+            chunk_rows:
+              type: integer
+      required:
+      - batch
+      - headers
+      - mapping
+      - columns
+      - counts
+      - totals_minor
+      - limits
+      - submission_enabled
     Meta:
       type: object
       additionalProperties: false

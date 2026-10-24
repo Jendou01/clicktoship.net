@@ -110,3 +110,7 @@ Carriers owns encrypted versioned operator accounts, candidate routes, request-o
 ## Phase 7 shipment orchestration
 
 See [shipment architecture](PHASE_7_SHIPPING.md). Verified carrier observations commit before local financial settlement; accepted/capture-pending cannot be resubmitted. Protected/unknown evidence resolution is additive, independently approved where required, and isolated-test-only. Existing external carrier and real-money gates remain unchanged.
+
+## Implemented Phase 8 bulk preparation
+
+Bulk owns private encrypted imports, streamed validation/mapping/duplicate review, public pricing previews and durable work. It delegates actual draft writes to Shipping and estimates to Pricing; no wallet/carrier/pickup/label execution path. Existing actor/session/token scope is rechecked at each chunk/row, and PostgreSQL work/cursor/reference state survives Redis loss. See [Phase 8 architecture and operational gates](PHASE_8_BULK.md).

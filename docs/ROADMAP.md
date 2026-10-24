@@ -102,15 +102,13 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Phase 8 — Bulk shipment processing
 
-* Scope: Bulk shipment processing.
-* Dependencies: Phase 7; private storage.
-* Implementation tasks: CSV/Excel templates, bounded upload/parse, preview, dedupe, queued execution, progress, partial retry/labels.
-* Database changes: bulk_imports/rows.
-* API changes: /shipments/bulk, bulk jobs/rows/retry.
-* Frontend changes: Upload/map/preview/errors/progress/history.
-* Automated tests: 1k rows, parser abuse, formula-safe export, retries with no duplicate AWB.
-* Acceptance criteria: Async bounded processing and row-level idempotent partial success.
-* Completion report: Planned.
+* Scope: Private CSV/XLSX import, templates/mapping, validation, explicit duplicate review, informational pricing and approved shipment draft preparation only.
+* Dependencies: Phase 5 Pricing and Phase 7 Shipping, merged through PR #7 QA remediation.
+* Database: Additive bulk batch/file/row/mapping/validation/decision/price/approval/work/reference/command/event tables with merchant composite constraints and immutable history.
+* APIs/UI: Versioned merchant-scoped import lifecycle, paginated inspection/progress/history, formula-safe error export and EN/AR responsive workflow screens.
+* Security/recovery: Encrypted private sources, bounded structural parsers, fail-closed production scanner gate, per-row authorization/idempotency, leases and PostgreSQL recovery, cancellation before first committed draft.
+* Acceptance: 1,000-row mixed/retry workloads, spreadsheet security, tenant/scope/revocation and actual PostgreSQL concurrency fences; all prior regression/build/audit checks. See [Phase 8 report](PHASE_8_REPORT.md) for executed outcomes.
+* No live carrier/financial operations, merge or production deployment. Phase 9 remains separately authorized.
 
 ## Phase 9 — Tracking and webhooks
 
@@ -221,7 +219,8 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review the Phase 6 connector feature branch and obtain current V2 response/error/status schemas, secure sandbox authorization/credentials, explicit route/account entitlements and webhook authenticity specification. Phase 7 independently testable shipment foundation is now implemented on its feature branch; see PHASE_7_REPORT.md. No automatic merge, external activation, deployment or Phase 8 implementation.
+
+Review the Phase 8 bulk-import feature branch and its completion/security report. Production import processing remains blocked pending approved malware scanning, shared storage and retention/operations policy. Existing carrier/financial activation gates remain closed. No automatic merge, deployment or Phase 9 work.
 
 ## Post-Phase 7 QA remediation
 

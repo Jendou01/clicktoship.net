@@ -2,6 +2,8 @@
 
 namespace App\Modules\Shipping\Application;
 
+use App\Models\PersonalAccessToken;
+use App\Models\User;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Shipping\Domain\ShipmentInput;
@@ -30,7 +32,7 @@ final class Shipments
         $s = $this->row($merchant, $id);
         $acceptance = DB::table('pricing_quote_acceptances')->where('merchant_id', $merchant)->where('shipment_id', $id)->where('revision', $s->revision)->first();
 
-        return ['shipment' => $s, 'draft' => $this->revision($s), 'quote' => $acceptance ? json_decode($acceptance->snapshot, true) : null, 'validation' => ShipmentInput::report($this->revision($s)), 'submission_enabled' => false];
+        return ['shipment' => $s, 'draft' => $this->revision($s), 'quote' => $acceptance ? json_decode($acceptance->snapshot, true) : null, 'validation' => app(DraftReadiness::class)->report($this->revision($s)), 'submission_enabled' => false];
     }
 
     /** Minimal merchant-authorized directory context; no addresses, phone or carrier credentials. */
@@ -73,22 +75,48 @@ final class Shipments
             app(ShippingAccess::class)->lock($r, $c, 'shipments.write');
 
             return $this->replay($r, $c, $id ? 'draft:'.$id : 'draft.create', $d, function () use ($c, $id, $d, $draft) {
-                $merchant = $c->id();
-                $revision = 1;
-                if ($id) {
-                    $s = $this->row($merchant, $id);
-                    abort_unless(in_array($s->state, ['draft', 'ready']) && $s->version === $d['version'], 409);
-                    $revision = $s->revision + 1;
-                    DB::table('shipments')->where('id', $id)->update(['revision' => $revision, 'version' => $s->version + 1, 'state' => 'draft', 'updated_at' => now()]);
-                } else {
-                    $id = (string) Str::uuid();
-                    DB::table('shipments')->insert(['id' => $id, 'merchant_id' => $merchant]);
-                }
-                DB::table('shipment_revisions')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $merchant, 'shipment_id' => $id, 'revision' => $revision, 'payload' => Crypt::encryptString(json_encode($draft)), 'input_hash' => ShipmentInput::digest($draft), 'pricing_hash' => ShipmentInput::digest(ShipmentInput::pricing($draft)), 'actor_id' => $c->actorId()]);
-                $this->event($merchant, $id, 'draft_saved', $c->actorId(), ['revision' => $revision]);
-
-                return $this->show($merchant, $id);
+                return $this->persistDraft($c->id(), $c->actorId(), $draft, $id, $d['version'] ?? null);
             });
+        });
+    }
+
+    private function persistDraft(string $merchant, string $actor, array $draft, ?string $id = null, ?int $version = null): array
+    {
+        $revision = 1;
+        if ($id) {
+            $s = $this->row($merchant, $id);
+            abort_unless(in_array($s->state, ['draft', 'ready']) && $s->version === $version, 409);
+            $revision = $s->revision + 1;
+            DB::table('shipments')->where('id', $id)->update(['revision' => $revision, 'version' => $s->version + 1, 'state' => 'draft', 'updated_at' => now()]);
+        } else {
+            $id = (string) Str::uuid();
+            DB::table('shipments')->insert(['id' => $id, 'merchant_id' => $merchant]);
+        }
+        DB::table('shipment_revisions')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $merchant, 'shipment_id' => $id, 'revision' => $revision, 'payload' => Crypt::encryptString(json_encode($draft)), 'input_hash' => ShipmentInput::digest($draft), 'pricing_hash' => ShipmentInput::digest(ShipmentInput::pricing($draft)), 'actor_id' => $actor]);
+        $this->event($merchant, $id, 'draft_saved', $actor, ['revision' => $revision]);
+
+        return $this->show($merchant, $id);
+    }
+
+    /** Internal import boundary: origin is persisted server-side, never an HTTP-provided actor. */
+    public function importDraft(object $origin, array $draft, string $businessKey): array
+    {
+        return DB::transaction(function () use ($origin, $draft, $businessKey) {
+            DB::table('merchants')->where('id', $origin->merchant_id)->lockForUpdate()->firstOrFail();
+            app(ShippingAccess::class)->worker($origin, 'shipments.write');
+            $c = app(MerchantContext::class);
+            try {
+                $user = User::findOrFail($origin->actor_id);
+                $token = $origin->origin_token_id ? PersonalAccessToken::findOrFail($origin->origin_token_id) : null;
+                $c->establish($user, $origin->merchant_id, $token);
+                $draft = ShipmentInput::draft($draft);
+                abort_unless(app(DraftReadiness::class)->report($draft)['valid'], 422);
+                $r = Request::create('/internal/import-draft', 'POST', ['idempotency_key' => $businessKey]);
+
+                return $this->replay($r, $c, 'bulk.draft', ['draft' => $draft, 'source' => $businessKey], fn () => $this->persistDraft($c->id(), $c->actorId(), $draft));
+            } finally {
+                $c->clear();
+            }
         });
     }
 
@@ -100,7 +128,7 @@ final class Shipments
             app(ShippingAccess::class)->lock($r, $c, 'shipments.write');
             $s = $this->row($c->id(), $id);
             abort_unless(in_array($s->state, ['draft', 'ready']) && $s->version === $d['version'], 409);
-            $report = ShipmentInput::report($this->revision($s));
+            $report = app(DraftReadiness::class)->report($this->revision($s));
             DB::table('shipment_validations')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $c->id(), 'shipment_id' => $id, 'revision' => $s->revision, 'valid' => $report['valid'], 'report' => json_encode($report)]);
             DB::table('shipments')->where('id', $id)->update(['state' => $report['valid'] ? 'ready' : 'draft', 'version' => $s->version + 1, 'updated_at' => now()]);
             $this->event($c->id(), $id, 'validated', $c->actorId(), ['valid' => $report['valid']]);

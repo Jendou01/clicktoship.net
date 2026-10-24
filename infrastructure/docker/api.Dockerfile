@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 RUN groupadd -g 1000 app && useradd -u 1000 -g app -m app
 ENV COMPOSER_HOME=/tmp/composer
+COPY infrastructure/docker/bulk.ini /usr/local/etc/php/conf.d/bulk.ini
 WORKDIR /app
 USER app
 EXPOSE 8000
