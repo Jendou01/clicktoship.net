@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
+  ["international", "customs.read", "International customs", "الجمارك الدولية"],
   ["tracking", "tracking.read", "Shipment tracking", "تتبع الشحنات"],
   ["bulk", "bulk.read", "Bulk shipping", "الشحن الجماعي"],
   ["shipments", "shipments.read", "Shipments", "الشحنات"],
@@ -25,6 +26,7 @@ export const merchantLinks = [
   ["business-profile", "profile.view", "Organization", "المنشأة"],
 ] as const;
 const platformLinks = [
+  ["admin-customs", "platform.customs.view", "Customs administration", "إدارة الجمارك"],
   ["admin-tracking", "platform.tracking.health", "Tracking administration", "إدارة التتبع"],
   ["admin-merchants", "platform.directory", "Merchant administration", "إدارة التجار"],
   ["admin-access", "platform.access.request", "Access requests", "طلبات الوصول"],
@@ -39,7 +41,7 @@ export function localeHref(locale: Locale, screen: string, search = "") {
   const batch = new URLSearchParams(search).get("batch");
   if (batch && /^[0-9a-f-]{36}$/i.test(batch) && ["bulk", "bulk-import", "bulk-results", "bulk-history"].includes(screen)) return `/${locale}/${screen}?batch=${encodeURIComponent(batch)}`;
   const id = new URLSearchParams(search).get("shipment");
-  return `/${locale}/${screen}${id && /^[0-9a-f-]{36}$/i.test(id) && ["shipment-details", "shipment-create", "shipment-documents", "tracking", "tracking-details", "tracking-exceptions"].includes(screen) ? `?shipment=${encodeURIComponent(id)}` : ""}`;
+  return `/${locale}/${screen}${id && /^[0-9a-f-]{36}$/i.test(id) && ["shipment-details", "shipment-create", "shipment-documents", "tracking", "tracking-details", "tracking-exceptions", "international", "customs-declaration", "customs-products", "commercial-invoice", "packing-list", "customs-readiness", "customs-documents", "international-history"].includes(screen) ? `?shipment=${encodeURIComponent(id)}` : ""}`;
 }
 
 type Context = { merchant: string; permissions: string[]; platform?: string[] };

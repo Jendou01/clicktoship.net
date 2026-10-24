@@ -46,3 +46,11 @@ Independent connector/configuration/request/queue/security work is implemented. 
 ## Phase 7 activation blockers
 
 Verified V2 response/lookup/label/pickup contracts, account/service mapping and route entitlements, authorized sandbox policy, storage/scanning/retention, customs/Incoterms/COD/insurance/DG policy, financial settlement during suspension/freeze, conflicting-evidence resolution standards and qualified accounting/regulatory/runtime-role signoff remain unresolved. Independently testable orchestration proceeds; real carrier/financial/document activation stays disabled.
+
+## Phase 10 external approvals still required
+
+* Verified country/lane/product customs evidence, commodity/HS applicability, restricted-goods and dangerous-goods legal/carrier policies. Reviewed proposal metadata is not legal verification.
+* Authorized current Aramex customs item/document/response contracts and sandbox contract evidence; route/payer/Incoterm (including DDP) and account eligibility. No transport is enabled by normalized DTOs.
+* Approved fee/tax/duty/insurance sources and accounting/regulatory policies before prices or collection. No implicit FX or new wallet ledger.
+* Approved commercial invoice/packing-list legal wording, draft-to-official workflow, numbering, signatures/certificates and authority filing mechanism. Current PDFs are preparation drafts only.
+* Production private/shared encrypted storage, malware scanning, backup/access/retention/deletion/privacy controls. Default quarantine and hard production generation/download gates cannot be overridden by merchant/admin review.

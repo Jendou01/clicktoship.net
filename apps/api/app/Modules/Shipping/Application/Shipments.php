@@ -73,6 +73,10 @@ final class Shipments
 
         return DB::transaction(function () use ($r, $c, $id, $d, $draft) {
             app(ShippingAccess::class)->lock($r, $c, 'shipments.write');
+            $prior = $id ? $this->revision($this->row($c->id(), $id)) : [];
+            if (isset($draft['customs']) || isset($prior['customs'])) {
+                $c->require('customs.write');
+            }
 
             return $this->replay($r, $c, $id ? 'draft:'.$id : 'draft.create', $d, function () use ($c, $id, $d, $draft) {
                 return $this->persistDraft($c->id(), $c->actorId(), $draft, $id, $d['version'] ?? null);
@@ -98,12 +102,21 @@ final class Shipments
         return $this->show($merchant, $id);
     }
 
+    /** Called only after the merchant root/current credentials are locked by Customs. */
+    public function customsDraft(string $merchant, string $actor, array $draft, string $id, int $version): array
+    {
+        return $this->persistDraft($merchant, $actor, ShipmentInput::draft($draft), $id, $version);
+    }
+
     /** Internal import boundary: origin is persisted server-side, never an HTTP-provided actor. */
     public function importDraft(object $origin, array $draft, string $businessKey): array
     {
         return DB::transaction(function () use ($origin, $draft, $businessKey) {
             DB::table('merchants')->where('id', $origin->merchant_id)->lockForUpdate()->firstOrFail();
             app(ShippingAccess::class)->worker($origin, 'shipments.write');
+            if (isset($draft['customs'])) {
+                app(ShippingAccess::class)->worker($origin, 'customs.write');
+            }
             $c = app(MerchantContext::class);
             try {
                 $user = User::findOrFail($origin->actor_id);

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Shipping\Domain;
 
+use App\Modules\Customs\Domain\CustomsInput;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -24,7 +25,7 @@ final class ShipmentInput
 
     public static function draft(array $input): array
     {
-        $rules = ['service_id' => 'nullable|uuid', 'currency' => 'required|in:SAR', 'description' => 'required|string|max:500', 'origin' => 'required|array:country,city,line1,postal,state,name,phone,email', 'destination' => 'required|array:country,city,line1,postal,state,name,phone,email', 'return_address' => 'nullable|array:country,city,line1,postal,state,name,phone,email', 'packages' => 'required|array|min:1|max:100', 'packages.*' => 'required|array:weight_grams,length_mm,width_mm,height_mm', 'declared_value_minor' => ['required', 'string', 'regex:/^(0|[1-9][0-9]{0,11})$/'], 'cod_minor' => 'required|in:0', 'goods_origin_country' => 'nullable|regex:/^[A-Z]{2}$/', 'items' => 'present|array|max:100', 'items.*' => 'required|array:description,quantity,value_minor,country,hs_code', 'items.*.description' => 'required|string|max:200', 'items.*.quantity' => 'required|integer|min:1|max:100000', 'items.*.value_minor' => ['required', 'string', 'regex:/^(0|[1-9][0-9]{0,11})$/'], 'items.*.country' => 'required|regex:/^[A-Z]{2}$/', 'items.*.hs_code' => 'nullable|regex:/^[0-9]{6,12}$/'];
+        $rules = ['customs' => 'sometimes|array', 'service_id' => 'nullable|uuid', 'currency' => 'required|in:SAR', 'description' => 'required|string|max:500', 'origin' => 'required|array:country,city,line1,postal,state,name,phone,email', 'destination' => 'required|array:country,city,line1,postal,state,name,phone,email', 'return_address' => 'nullable|array:country,city,line1,postal,state,name,phone,email', 'packages' => 'required|array|min:1|max:100', 'packages.*' => 'required|array:weight_grams,length_mm,width_mm,height_mm', 'declared_value_minor' => ['required', 'string', 'regex:/^(0|[1-9][0-9]{0,11})$/'], 'cod_minor' => 'required|in:0', 'goods_origin_country' => 'nullable|regex:/^[A-Z]{2}$/', 'items' => 'present|array|max:100', 'items.*' => 'required|array:description,quantity,value_minor,country,hs_code', 'items.*.description' => 'required|string|max:200', 'items.*.quantity' => 'required|integer|min:1|max:100000', 'items.*.value_minor' => ['required', 'string', 'regex:/^(0|[1-9][0-9]{0,11})$/'], 'items.*.country' => 'required|regex:/^[A-Z]{2}$/', 'items.*.hs_code' => 'nullable|regex:/^[0-9]{6,12}$/'];
         foreach (['origin', 'destination', 'return_address'] as $side) {
             foreach (['country' => 'required|regex:/^[A-Z]{2}$/', 'city' => 'required|string|max:100', 'line1' => 'nullable|string|max:200', 'postal' => 'nullable|string|max:20', 'state' => 'nullable|string|max:100', 'name' => 'nullable|string|max:100', 'phone' => 'nullable|regex:/^\+[1-9][0-9]{6,14}$/', 'email' => 'nullable|email|max:254'] as $key => $rule) {
                 $rules["$side.$key"] = $side === 'return_address' ? str_replace('required|', 'required_with:return_address|', $rule) : $rule;
@@ -45,6 +46,15 @@ final class ShipmentInput
             foreach ($package as &$v) {
                 $v = (int) $v;
             }
+        }
+
+        if (isset($data['customs'])) {
+            $data['customs'] = CustomsInput::normalize(CustomsInput::input($data['customs']), $data);
+            $legacy = CustomsInput::legacy($data['customs']);
+            if ($data['items'] && self::digest($data['items']) !== self::digest($legacy)) {
+                throw ValidationException::withMessages(['items' => 'Legacy/customs items must agree.']);
+            }
+            $data['items'] = $legacy;
         }
 
         return $data;

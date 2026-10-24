@@ -119,19 +119,17 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Disabled notification outbox readiness with explicit consent and event/recipient uniqueness. No sender, real carrier polling, provider webhook activation or financial resolution.
 * New OpenAPI contracts and additive migration/security/concurrency coverage. See [Phase 9 report](PHASE_9_REPORT.md) and [architecture](architecture/PHASE_9_TRACKING.md).
 * Aramex V2 response/event and webhook authenticity/replay/ACK contracts and authorized sandbox access remain missing. Adapter flags cannot bypass Phase 6 evidence gates.
-* No merge, deployment or Phase 10 implementation is authorized.
+* Historical Phase 9 boundary: its delivery did not authorize a merge, deployment or Phase 10. Phase 10 preparation was subsequently authorized separately.
 
-## Phase 10 — International shipping
+## Phase 10 — International shipping and customs (implemented preparation)
 
-* Scope: International shipping.
-* Dependencies: Phases 5–9; lane/customs approval.
-* Implementation tasks: Feature-gated countries/routes/customs/commodities/invoices/multi-package/currency.
-* Database changes: customs/items/route constraints.
-* API changes: Country/city/validation only with verified capabilities.
-* Frontend changes: International fields, restrictions and invoice document flow.
-* Automated tests: Blocked lane before hold, truthful origin, customs validation, currency isolation.
-* Acceptance criteria: Enabled lane/service/account combinations only.
-* Completion report: Planned.
+* Reuses Shipping revisions, Pricing estimates, Carrier evidence gates, private storage/scanning and Bulk imports. No second shipment state machine or ledger.
+* Typed exporter/importer and bilingual item declarations; exact minor units, ISO countries, package allocations, merchant HS codes, Incoterms and informational category flags.
+* Versioned evidence-backed country proposals require independent MFA review; external verification/enablement remain false.
+* Immutable declarations/readiness/history, merchant profiles and encrypted durable invoice/packing-list work. Native Unicode PDF drafts, private authenticated delivery and quarantine remain subject to storage/scanning/privacy gates; production rendering/download disabled.
+* Nine bilingual merchant/admin screens, 16 API paths (18 operations), international CSV/XLSX variants and additive PostgreSQL constraints/rollback/schema-integrity tests.
+* Complete regression and security results: [Phase 10 report](PHASE_10_REPORT.md); [architecture and external approvals](architecture/PHASE_10_CUSTOMS.md).
+* No live carrier, financial, authority filing or legal-clearance capability enabled. Phase 11 requires separate authorization.
 
 ## Phase 11 — Merchant dashboard
 
@@ -219,4 +217,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 9 tracking/webhook feature branch and its completion/security report. All external carrier/financial/notification gates remain closed. No automatic merge, production deployment or Phase 10 work.
+Review the Phase 10 international/customs feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 11 work.

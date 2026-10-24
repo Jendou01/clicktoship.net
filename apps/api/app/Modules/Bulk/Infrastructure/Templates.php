@@ -6,16 +6,20 @@ use App\Modules\Bulk\Domain\Columns;
 
 final class Templates
 {
-    public function download(string $locale, string $format): mixed
+    public function download(string $locale, string $format, string $variant = 'standard'): mixed
     {
-        $labels = array_map(fn ($v) => $v[$locale === 'ar' ? 1 : 0], Columns::labels());
+        $columns = Columns::labels();
+        if ($variant === 'international') {
+            unset($columns['items_json']);
+        }
+        $labels = array_map(fn ($v) => $v[$locale === 'ar' ? 1 : 0], $columns);
         if ($format === 'csv') {
             return response()->streamDownload(function () use ($labels) {
                 $f = fopen('php://output', 'wb');
                 fwrite($f, "\xEF\xBB\xBF");
                 fputcsv($f, $labels, ',', '"', '');
                 fclose($f);
-            }, 'bulk-'.$locale.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+            }, 'bulk-'.($variant === 'international' ? 'international-' : '').$locale.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
         }
         $path = tempnam(sys_get_temp_dir(), 'bulk-template-');
         $zip = new \ZipArchive;
@@ -38,6 +42,6 @@ final class Templates
         $zip->addFromString('xl/worksheets/sheet1.xml', '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">'.$cells.'</row></sheetData></worksheet>');
         $zip->close();
 
-        return response()->download($path, 'bulk-'.$locale.'.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])->deleteFileAfterSend();
+        return response()->download($path, 'bulk-'.($variant === 'international' ? 'international-' : '').$locale.'.xlsx', ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])->deleteFileAfterSend();
     }
 }

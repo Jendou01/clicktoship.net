@@ -161,3 +161,11 @@ The logical bulk sketches above are implemented by bulk_batches/files/rows/mappi
 ## Phase 9 tracking
 
 `2026_10_24_150000_create_tracking` adds tracking_bindings, tracking_endpoints, tracking_work, tracking_commands, tracking_event_details, tracking_attempts, tracking_cases, tracking_reviews, tracking_account_health, tracking_preferences, tracking_notifications, tracking_scan_cursors and tracking_receipts. Reuses carrier_webhook_deliveries, carrier_tracking_events and carrier_tracking_projections; no second shipment status or ledger. Composite tenant/account/submission/event FKs, immutable history, guarded projections, unique replay/event/command/notification identities and one active poll per binding enforce isolation. Runtime retained history prevents downgrade.
+
+## Phase 10 international customs
+
+`2026_10_24_170000_create_international_customs` executes `database/sql/phase10.sql`. Its 16 tables are `customs_declarations`, `customs_versions`, `customs_items`, `customs_profiles`, `customs_country_rules`, `customs_rule_versions`, `customs_rule_reviews`, `customs_readiness`, `customs_reviews`, `customs_commands`, `customs_events`, `customs_document_counters`, `customs_documents`, `customs_document_work`, `customs_document_results`, `customs_document_revocations`.
+
+UUID identities and composite merchant/shipment/revision/version FKs prevent tenant/source substitution. Append-only histories and document results/revocations are protected by PostgreSQL triggers. Deferred item arithmetic/currency checks bind canonical totals to the declaration; root version guards, independent reviewer constraints and work identity/terminal guards complement application locks. Document counters and unique source-version/kind/locale identities prevent number collisions; durable work leases and idempotency survive Redis loss. PII/evidence/source payloads are encrypted; no mutable duplicate shipment or ledger is introduced.
+
+Rollback refuses retained customs history or active Phase 10 grant references. Disposable preservation tests remove only their own test references before rollback/reapply, retaining prior-phase assertions. `schema:verify` independently checks critical columns, enabled history/arithmetic/review/work/version triggers and source relationships; disabling a trigger is a tested failure even with migration history present.

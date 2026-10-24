@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–9
-  version: 0.9.0
+  title: ClickToShip API — Phases 1–10
+  version: 0.10.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:
@@ -9427,6 +9427,10 @@ paths:
       - SessionCookie: []
       - BearerAuth: []
       parameters:
+      - name: variant
+        in: query
+        required: false
+        schema: {type: string, enum: [standard, international], default: standard}
       - name: locale
         in: path
         required: true
@@ -10785,6 +10789,946 @@ paths:
             schema:
               type: object
               description: Provider-owned unverified contract; no runtime parser available
+  /api/v1/customs/declarations:
+    get:
+      operationId: customsHistory
+      x-required-permissions: [customs.read]
+      summary: Tenant declaration history (25 per page)
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/customs/profile:
+    get:
+      operationId: customsProfile
+      x-required-permissions: [customs.read]
+      summary: Versioned merchant customs defaults; no automatic application
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+    put:
+      operationId: customsProfileSave
+      x-required-permissions: [customs.write]
+      summary: Optimistic, immutable profile version
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsProfileCommand'
+  /api/v1/customs/countries/{country}:
+    get:
+      operationId: customsCountry
+      x-required-permissions: [customs.read]
+      summary: Reviewed informational requirements remain externally unverified
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: country
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{2}$
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsCountry'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/customs/shipments/{shipment}:
+    get:
+      operationId: customsDetail
+      x-required-permissions: [customs.read]
+      summary: International declaration/items/readiness/documents bound to tenant and revision
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: declaration_version
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsDetail'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/customs/shipments/{shipment}/declaration:
+    put:
+      operationId: customsDeclarationSave
+      x-required-permissions: [customs.write, shipments.write]
+      summary: Atomically replace the complete item aggregate and create a Shipping-owned draft revision; no torn item
+        totals
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsDetail'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsSave'
+  /api/v1/customs/shipments/{shipment}/sync:
+    post:
+      operationId: customsSync
+      x-required-permissions: [customs.write]
+      summary: Explicitly bind typed customs already present in an imported Shipping revision
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsDetail'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsCommand'
+  /api/v1/customs/shipments/{shipment}/validate:
+    post:
+      operationId: customsValidate
+      x-required-permissions: [customs.write]
+      summary: Record immutable local readiness; never legal clearance
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsReadiness'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsCommand'
+  /api/v1/customs/shipments/{shipment}/pricing:
+    get:
+      operationId: customsPricing
+      x-required-permissions: [customs.read, rates.quote]
+      summary: Phase 5 public preview or explicit unavailable; no inferred duties, taxes, FX or quote acceptance
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/customs/shipments/{shipment}/documents:
+    post:
+      operationId: customsDocumentPrepare
+      x-required-permissions: [customs.documents, shipments.documents]
+      summary: Versioned draft PDF work; default scanner quarantines; production disabled
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      document_id:
+                        type: string
+                        format: uuid
+                      work_id:
+                        type: string
+                        format: uuid
+                      state:
+                        type: string
+                    required: []
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsDocumentRequest'
+  /api/v1/customs/documents/{document}/download:
+    get:
+      operationId: customsDocumentDownload
+      x-required-permissions: [customs.documents, shipments.documents]
+      summary: Current tenant/scopes; scanned private draft only; historical revision header; audited integrity check
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      parameters:
+      - name: document
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/customs/documents/{document}/revoke:
+    post:
+      operationId: customsDocumentRevoke
+      x-required-permissions: [customs.documents, shipments.documents]
+      summary: Idempotently revoke download without deleting immutable document history
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      parameters:
+      - name: document
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - idempotency_key
+  /api/v1/admin/customs/rules:
+    get:
+      operationId: customsRules
+      x-required-permissions: [platform.customs.rules.manage]
+      summary: Current MFA + platform.customs.rules.manage; encrypted evidence redacted from merchant APIs
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      parameters: []
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+    post:
+      operationId: customsRulePropose
+      x-required-permissions: [platform.customs.rules.manage]
+      summary: Evidence-backed proposed local completeness policy; external activation impossible
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      parameters: []
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsRuleProposal'
+  /api/v1/admin/customs/rules/{country}/review:
+    post:
+      operationId: customsRuleReview
+      x-required-permissions: [platform.customs.rules.approve]
+      summary: Independent recent-MFA reviewer plus current maker session; reviewed remains externally unverified
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      parameters:
+      - name: country
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[A-Z]{2}$
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsCommand'
+  /api/v1/admin/merchants/{merchant}/customs:
+    get:
+      operationId: customsDiagnostics
+      x-required-permissions: [platform.customs.view]
+      summary: Redacted target declarations/documents/readiness/audit; recent MFA and independent target grant
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+  /api/v1/admin/merchants/{merchant}/customs/declarations/{declaration}/reviews:
+    post:
+      operationId: customsComplianceReview
+      x-required-permissions: [platform.customs.review]
+      summary: Immutable annotation only; cannot approve customs/regulated goods or enable a carrier
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: declaration
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '201':
+          description: Prepared draft / informational result only; no clearance, carrier execution or financial charge
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Authentication required
+        '403':
+          description: Current permission, scope, MFA or exact approved target grant missing
+        '404':
+          description: Tenant-owned record unavailable
+        '409':
+          description: Expected version/idempotency conflict, revoked or unscanned document
+        '422':
+          description: Field/arithmetic/currency/package validation failed
+        '429':
+          description: Rate limit
+        '503':
+          description: Production/storage/scanning/evidence gate or integrity failure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomsReview'
+  /api/v1/admin/merchants/{merchant}/customs/declarations/{declaration}:
+    get:
+      operationId: customsPrivateReviewData
+      x-required-permissions: [platform.customs.review]
+      summary: Audited structured private declaration review; current MFA and independent
+        platform.customs.review target grant; no public storage keys
+      tags:
+      - Customs
+      security:
+      - SessionCookie: []
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: declaration
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Private authorized structured declaration only; Cache-Control
+            private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CustomsDetail'
+                  meta:
+                    type: object
+                  error:
+                    type: 'null'
+        '403':
+          description: Fresh MFA or independently approved exact merchant review grant
+            missing
+        '404':
+          description: Declaration unavailable in this merchant
 components:
   headers:
     RequestId:
@@ -10860,6 +11804,729 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    CustomsItem:
+      type: object
+      properties:
+        description_en:
+          type: string
+          maxLength: 200
+        description_ar:
+          type: string
+          maxLength: 200
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 100000
+        uom:
+          enum:
+          - piece
+          - set
+          - box
+          - kg
+        unit_value_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,11})$
+        currency:
+          type: string
+          description: Must equal shipment currency; only SAR currently enabled
+        origin_country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        hs_code:
+          type:
+          - string
+          - 'null'
+          pattern: ^[0-9]{6,12}$
+        sku:
+          type:
+          - string
+          - 'null'
+          maxLength: 200
+        material:
+          type:
+          - string
+          - 'null'
+          maxLength: 200
+        intended_use:
+          type:
+          - string
+          - 'null'
+          maxLength: 200
+        category:
+          type:
+          - string
+          - 'null'
+          maxLength: 200
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 200
+        net_grams:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+        gross_grams:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+        allocations:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            properties:
+              package:
+                type: integer
+                minimum: 1
+                maximum: 100
+              quantity:
+                type: integer
+                minimum: 1
+                maximum: 100000
+              weight_grams:
+                type:
+                - integer
+                - 'null'
+                minimum: 0
+            required:
+            - package
+            - quantity
+      required:
+      - description_en
+      - description_ar
+      - quantity
+      - uom
+      - unit_value_minor
+      - currency
+      - origin_country
+      - allocations
+    CustomsDeclaration:
+      type: object
+      properties:
+        purpose:
+          enum:
+          - commercial
+          - non_commercial
+          - gift
+          - sample
+          - documents
+          - null
+        exporter:
+          type: object
+          properties:
+            name:
+              type: string
+              maxLength: 200
+            country:
+              type: string
+              maxLength: 200
+            city:
+              type: string
+              maxLength: 200
+            line1:
+              type: string
+              maxLength: 200
+            postal:
+              type: string
+              maxLength: 200
+            state:
+              type: string
+              maxLength: 200
+            phone:
+              type: string
+              maxLength: 200
+            email:
+              type: string
+              maxLength: 200
+            business_id:
+              type: string
+              maxLength: 200
+            tax_id:
+              type: string
+              maxLength: 200
+          required: []
+        importer:
+          type: object
+          properties:
+            name:
+              type: string
+              maxLength: 200
+            country:
+              type: string
+              maxLength: 200
+            city:
+              type: string
+              maxLength: 200
+            line1:
+              type: string
+              maxLength: 200
+            postal:
+              type: string
+              maxLength: 200
+            state:
+              type: string
+              maxLength: 200
+            phone:
+              type: string
+              maxLength: 200
+            email:
+              type: string
+              maxLength: 200
+            business_id:
+              type: string
+              maxLength: 200
+            tax_id:
+              type: string
+              maxLength: 200
+          required: []
+        invoice_date:
+          type:
+          - string
+          - 'null'
+          format: date
+        incoterm:
+          enum:
+          - EXW
+          - FCA
+          - FAS
+          - FOB
+          - CFR
+          - CIF
+          - CPT
+          - CIP
+          - DAP
+          - DPU
+          - DDP
+          - null
+        duty_payer:
+          enum:
+          - sender
+          - recipient
+          - third_party
+          - unverified
+          - null
+        merchant_reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 1000
+        customs_reference:
+          type:
+          - string
+          - 'null'
+          maxLength: 1000
+        notes:
+          type:
+          - string
+          - 'null'
+          maxLength: 1000
+        instructions:
+          type:
+          - string
+          - 'null'
+          maxLength: 1000
+        restricted_acknowledgement:
+          type:
+          - string
+          - 'null'
+          maxLength: 1000
+        country_fields:
+          type: object
+          maxProperties: 20
+          additionalProperties:
+            type:
+            - string
+            - 'null'
+            maxLength: 200
+        categories:
+          type: array
+          maxItems: 9
+          uniqueItems: true
+          items:
+            enum:
+            - dangerous_goods
+            - batteries
+            - liquids
+            - food
+            - cosmetics
+            - medicines
+            - chemicals
+            - high_value
+            - restricted_destination
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/CustomsItem'
+      required:
+      - items
+    CustomsReadiness:
+      type: object
+      properties:
+        international:
+          type: boolean
+        local_valid:
+          type: boolean
+        customs_cleared:
+          const: false
+        shipping_enabled:
+          const: false
+        legal_approval:
+          const: false
+        duties_calculated:
+          const: false
+        document_generation_eligible:
+          type: boolean
+        findings:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              classification:
+                enum:
+                - validated
+                - missing_information
+                - requires_merchant_review
+                - requires_external_verification
+                - unsupported
+                - blocked
+            required:
+            - field
+            - code
+            - classification
+        country_rule:
+          $ref: '#/components/schemas/CustomsCountry'
+      required:
+      - international
+      - local_valid
+      - customs_cleared
+      - shipping_enabled
+      - findings
+    CustomsCountry:
+      type: object
+      properties:
+        country:
+          type: string
+        version:
+          type:
+          - integer
+          - 'null'
+        required_fields:
+          type: array
+          items:
+            type: string
+        incoterms:
+          type: array
+          items:
+            enum:
+            - EXW
+            - FCA
+            - FAS
+            - FOB
+            - CFR
+            - CIF
+            - CPT
+            - CIP
+            - DAP
+            - DPU
+            - DDP
+        informational_flags:
+          type: array
+          items:
+            enum:
+            - dangerous_goods
+            - batteries
+            - liquids
+            - food
+            - cosmetics
+            - medicines
+            - chemicals
+            - high_value
+            - restricted_destination
+        externally_verified:
+          const: false
+        enabled:
+          const: false
+        state:
+          enum:
+          - reviewed_unverified
+          - requirements_unverified
+      required:
+      - country
+      - externally_verified
+      - enabled
+    CustomsSave:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        declaration_version:
+          type: integer
+          minimum: 0
+        declaration:
+          $ref: '#/components/schemas/CustomsDeclaration'
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - declaration_version
+      - declaration
+      - idempotency_key
+    CustomsCommand:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - idempotency_key
+    CustomsDocumentRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        declaration_version:
+          type: integer
+          minimum: 1
+        kind:
+          enum:
+          - invoice
+          - packing_list
+        locale:
+          enum:
+          - en
+          - ar
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - declaration_version
+      - kind
+      - locale
+      - idempotency_key
+    CustomsRuleProposal:
+      type: object
+      properties:
+        country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        version:
+          type: integer
+          minimum: 0
+        proposal:
+          type: object
+          properties:
+            required_fields:
+              type: array
+              maxItems: 20
+              uniqueItems: true
+              items:
+                type: string
+                pattern: ^[a-z][a-z0-9_]{0,49}$
+            incoterms:
+              type: array
+              uniqueItems: true
+              items:
+                enum:
+                - EXW
+                - FCA
+                - FAS
+                - FOB
+                - CFR
+                - CIF
+                - CPT
+                - CIP
+                - DAP
+                - DPU
+                - DDP
+            flags:
+              type: array
+              uniqueItems: true
+              items:
+                enum:
+                - dangerous_goods
+                - batteries
+                - liquids
+                - food
+                - cosmetics
+                - medicines
+                - chemicals
+                - high_value
+                - restricted_destination
+            evidence:
+              type: string
+              minLength: 20
+              maxLength: 2000
+          required:
+          - required_fields
+          - incoterms
+          - flags
+          - evidence
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - country
+      - version
+      - proposal
+      - idempotency_key
+    CustomsReview:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        note:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        access_grant:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - note
+      - access_grant
+      - idempotency_key
+    CustomsDocumentMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          enum:
+          - invoice
+          - packing_list
+        version:
+          type: integer
+          minimum: 1
+        revision:
+          type: integer
+          minimum: 1
+        number:
+          type: string
+        locale:
+          enum:
+          - en
+          - ar
+        state:
+          enum:
+          - ready
+          - quarantined
+          - null
+        work_state:
+          enum:
+          - pending
+          - processing
+          - completed
+          - blocked
+          - failed
+        revoked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - id
+      - kind
+      - version
+      - revision
+      - number
+    CustomsDetail:
+      type: object
+      properties:
+        shipment:
+          type: object
+        draft:
+          $ref: '#/components/schemas/ShipmentDraft'
+        declaration:
+          type:
+          - object
+          - 'null'
+        declaration_version:
+          type: integer
+        customs:
+          type:
+          - object
+          - 'null'
+          description: Normalized declaration includes computed integer-string totals, currency/exponent and per-line total_value_minor.
+            Derived from immutable shipment revision.
+        historical_declaration:
+          type:
+          - object
+          - 'null'
+          description: Authorized historical snapshot selected by declaration_version; never silently applied to current
+            shipping state.
+        versions:
+          type: array
+          maxItems: 25
+          items:
+            type: object
+            properties:
+              version:
+                type: integer
+                minimum: 1
+              revision:
+                type: integer
+                minimum: 1
+              created_at:
+                type: string
+                format: date-time
+            required: []
+        documents:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/CustomsDocumentMetadata'
+        readiness:
+          $ref: '#/components/schemas/CustomsReadiness'
+        live_enabled:
+          const: false
+        documents_download_enabled:
+          type: boolean
+      required:
+      - shipment
+      - declaration_version
+      - readiness
+      - documents
+      - live_enabled
+    CustomsProfileCommand:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        profile:
+          type: object
+          properties:
+            exporter:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                country:
+                  type: string
+                  maxLength: 200
+                city:
+                  type: string
+                  maxLength: 200
+                line1:
+                  type: string
+                  maxLength: 200
+                postal:
+                  type: string
+                  maxLength: 200
+                state:
+                  type: string
+                  maxLength: 200
+                phone:
+                  type: string
+                  maxLength: 200
+                email:
+                  type: string
+                  maxLength: 200
+                business_id:
+                  type: string
+                  maxLength: 200
+                tax_id:
+                  type: string
+                  maxLength: 200
+              required: []
+            importer:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 200
+                country:
+                  type: string
+                  maxLength: 200
+                city:
+                  type: string
+                  maxLength: 200
+                line1:
+                  type: string
+                  maxLength: 200
+                postal:
+                  type: string
+                  maxLength: 200
+                state:
+                  type: string
+                  maxLength: 200
+                phone:
+                  type: string
+                  maxLength: 200
+                email:
+                  type: string
+                  maxLength: 200
+                business_id:
+                  type: string
+                  maxLength: 200
+                tax_id:
+                  type: string
+                  maxLength: 200
+              required: []
+            incoterm:
+              enum:
+              - EXW
+              - FCA
+              - FAS
+              - FOB
+              - CFR
+              - CIF
+              - CPT
+              - CIP
+              - DAP
+              - DPU
+              - DDP
+              - null
+            duty_payer:
+              enum:
+              - sender
+              - recipient
+              - third_party
+              - unverified
+              - null
+            notes:
+              type:
+              - string
+              - 'null'
+              maxLength: 1000
+          required: []
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - profile
+      - idempotency_key
     TrackingRefreshCommand:
       type: object
       properties:
@@ -11313,6 +12980,10 @@ components:
     BulkRow:
       type: object
       properties:
+        customs_readiness:
+          anyOf:
+          - $ref: '#/components/schemas/CustomsReadiness'
+          - type: 'null'
         id:
           type: string
           format: uuid
@@ -14978,6 +16649,8 @@ components:
     ShipmentDraft:
       type: object
       properties:
+        customs:
+          $ref: '#/components/schemas/CustomsDeclaration'
         service_id:
           type:
           - string

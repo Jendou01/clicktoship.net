@@ -5,6 +5,7 @@ namespace App\Modules\Bulk\Http;
 use App\Modules\Bulk\Application\Imports;
 use App\Modules\Bulk\Domain\Columns;
 use App\Modules\Bulk\Infrastructure\Templates;
+use App\Modules\Customs\Application\Readiness;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Pricing\Application\AvailableServices;
@@ -69,7 +70,9 @@ final class BulkController
             $v = $valid[$row->id] ?? null;
             $price = $prices[$row->id] ?? null;
             $public = $price?->public_snapshot ? json_decode($price->public_snapshot, true) : null;
-            $items[] = ['id' => $row->id, 'source_row' => $row->source_row, 'source' => json_decode(Crypt::decryptString($row->raw), true), 'errors' => $v ? json_decode($v->errors, true) : null, 'duplicate_of' => $v?->duplicate_of, 'decision' => $decisions[$row->id]->decision ?? null, 'pricing' => $public, 'pricing_error' => $price?->error_code, 'quote_valid' => $public ? now()->lt($public['expires_at']) && app(AvailableServices::class)->contains($public['service_id']) : false, 'shipment_id' => $drafts[$row->id]->shipment_id ?? null];
+            $draft = $v?->draft ? json_decode(Crypt::decryptString($v->draft), true) : null;
+            $customs = $draft && isset($draft['customs']) ? app(Readiness::class)->report($draft) : null;
+            $items[] = ['customs_readiness' => $customs, 'id' => $row->id, 'source_row' => $row->source_row, 'source' => json_decode(Crypt::decryptString($row->raw), true), 'errors' => $v ? json_decode($v->errors, true) : null, 'duplicate_of' => $v?->duplicate_of, 'decision' => $decisions[$row->id]->decision ?? null, 'pricing' => $public, 'pricing_error' => $price?->error_code, 'quote_valid' => $public ? now()->lt($public['expires_at']) && app(AvailableServices::class)->contains($public['service_id']) : false, 'shipment_id' => $drafts[$row->id]->shipment_id ?? null];
         }
 
         return ApiResponse::success(['rows' => $items, 'page' => $p->currentPage(), 'last_page' => $p->lastPage()]);
@@ -110,6 +113,8 @@ final class BulkController
         $c->require('bulk.read');
         abort_unless(in_array($locale, ['en', 'ar']) && in_array($format, ['csv', 'xlsx']), 404);
 
-        return app(Templates::class)->download($locale, $format);
+        $d = $r->validate(['variant' => 'sometimes|in:standard,international']);
+
+        return app(Templates::class)->download($locale, $format, $d['variant'] ?? 'standard');
     }
 }

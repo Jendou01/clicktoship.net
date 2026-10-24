@@ -118,3 +118,9 @@ Bulk owns private encrypted imports, streamed validation/mapping/duplicate revie
 ## Implemented Phase 9 tracking foundations
 
 Tracking reuses the carrier event store/projection, binds exact merchant/submission/account identity and owns encrypted durable ingress/poll work, conservative projection decisions, redacted monitoring, reconciliation annotations and a disabled notification outbox. No Shipping/financial state mutation. [Evidence boundaries, scheduling, replay policy and launch gates](PHASE_9_TRACKING.md).
+
+## Phase 10 international/customs preparation
+
+Customs owns immutable tenant-bound declaration/profile/country-rule/readiness/review history and durable encrypted draft document work; Shipping still owns the canonical shipment revision and lifecycle. The application boundary writes customs changes through Shipping, invalidating prior revision applicability. Bulk delegates typed customs rows through the same boundary with per-row current permissions. Pricing supplies its existing public preview, not duties or fabricated fees. The Carrier DTO maps only verified base request fields and reports unmapped customs content explicitly. Tracking and the financial ledger are unchanged.
+
+[Customs architecture](PHASE_10_CUSTOMS.md) documents exact arithmetic, composite FKs, maker/checker review, encrypted document leases/commit fences, scanner quarantine and production/external gates. The stronger target-specific `platform.customs.review` grant is required to read private structured declarations; global rule permissions never grant merchant data access.
