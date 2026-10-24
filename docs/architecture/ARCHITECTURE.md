@@ -114,3 +114,7 @@ See [shipment architecture](PHASE_7_SHIPPING.md). Verified carrier observations 
 ## Implemented Phase 8 bulk preparation
 
 Bulk owns private encrypted imports, streamed validation/mapping/duplicate review, public pricing previews and durable work. It delegates actual draft writes to Shipping and estimates to Pricing; no wallet/carrier/pickup/label execution path. Existing actor/session/token scope is rechecked at each chunk/row, and PostgreSQL work/cursor/reference state survives Redis loss. See [Phase 8 architecture and operational gates](PHASE_8_BULK.md).
+
+## Implemented Phase 9 tracking foundations
+
+Tracking reuses the carrier event store/projection, binds exact merchant/submission/account identity and owns encrypted durable ingress/poll work, conservative projection decisions, redacted monitoring, reconciliation annotations and a disabled notification outbox. No Shipping/financial state mutation. [Evidence boundaries, scheduling, replay policy and launch gates](PHASE_9_TRACKING.md).

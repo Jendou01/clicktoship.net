@@ -14,6 +14,8 @@ use App\Modules\Pricing\Application\StaticCarrierRates;
 use App\Modules\Pricing\Domain\CarrierRates;
 use App\Modules\Shipping\Domain\DocumentScanner;
 use App\Modules\Shipping\Infrastructure\DisabledDocumentScanner;
+use App\Modules\Tracking\Domain\TrackingProviderAdapter;
+use App\Modules\Tracking\Infrastructure\DisabledTrackingAdapter;
 use App\Modules\WalletBilling\Domain\PaymentProvider;
 use App\Modules\WalletBilling\Infrastructure\DisabledPaymentProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(TrackingProviderAdapter::class, DisabledTrackingAdapter::class);
         $this->app->bind(DocumentScanner::class, DisabledDocumentScanner::class);
         $this->app->bind(ShipmentGateway::class, EvidenceGatedShipmentGateway::class);
         $this->app->bind(CarrierTransport::class, DisabledAramexTransport::class);
@@ -61,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('auth-actions', fn (Request $request) => Limit::perMinute(120)->by('actions:'.$request->user()?->id.'|'.$request->ip()));
         RateLimiter::for('auth-mfa', fn (Request $request) => [Limit::perMinute(6)->by('mfa-user:'.$request->user()?->id), Limit::perMinute(20)->by('mfa-ip:'.$request->ip())]);
         RateLimiter::for('auth-invite', fn (Request $request) => Limit::perMinute(20)->by('invite:'.$request->user()?->id.'|'.$request->ip()));
+        RateLimiter::for('tracking-inbound', fn (Request $request) => Limit::perMinute(60)->by('tracking:'.$request->ip()));
         RateLimiter::for('health', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
     }
 }

@@ -53,6 +53,31 @@ final class SchemaIntegrity
             $missing[] = 'bulk_batches';
         }
 
+        if (Schema::hasTable('tracking_bindings')) {
+            foreach (['tracking_bindings' => ['merchant_id', 'observation_id', 'operation_id', 'reference_hash'], 'tracking_work' => ['merchant_id', 'lease_token', 'replay_hash'], 'tracking_event_details' => ['fact_hash', 'outcome', 'validation']] as $table => $columns) {
+                foreach ($columns as $column) {
+                    if (! Schema::hasColumn($table, $column)) {
+                        $missing[] = "$table.$column";
+                    }
+                }
+            }
+            foreach (['tracking_bindings', 'tracking_commands', 'tracking_event_details', 'tracking_attempts', 'tracking_cases', 'tracking_reviews', 'tracking_notifications', 'tracking_receipts'] as $table) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=?::regclass AND tgname='tracking_history_immutable' AND tgenabled IN ('O','A')", [$table])) {
+                    $missing[] = "$table.tracking_history_immutable";
+                }
+            }
+            foreach (['tracking_bindings' => 'tracking_binding_guard', 'tracking_work' => 'tracking_work_guard', 'carrier_tracking_projections' => 'tracking_projection_guard'] as $table => $name) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=?::regclass AND tgname=? AND tgenabled IN ('O','A')", [$table, $name])) {
+                    $missing[] = "$table.$name";
+                }
+            }
+            if (! DB::selectOne("SELECT 1 FROM pg_constraint WHERE conrelid='tracking_work'::regclass AND conname='tracking_work_binding_account_scope' AND contype='f' AND convalidated")) {
+                $missing[] = 'tracking_work binding/account foreign key';
+            }
+        } elseif (DB::table('migrations')->where('migration', '2026_10_24_150000_create_tracking')->exists()) {
+            $missing[] = 'tracking_bindings';
+        }
+
         return $missing;
     }
 }
