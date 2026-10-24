@@ -67,3 +67,7 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 * Version and encrypt master account secrets and candidate route terms; independent current MFA-authenticated approval changes configuration only, never capability verification or merchant eligibility.
 * No automatic retry of uncertain mutations, unknown-state reset, client-reference resolver, label URL download or webhook authentication protocol. Scope/deduplicate persistent intents and retain encrypted append-only facts; verified mappings and full workflow await evidence/later phases.
 * [Evidence matrix](integrations/PHASE_6_EVIDENCE.md), [architecture](architecture/PHASE_6_CARRIERS.md). No changes to financial posting or pricing invariants.
+
+## Phase 7 approved decisions
+
+Single-use quote acceptance binds full revision and canonical pricing inputs; valid at reserve and dispatch, fixed thereafter. Carrier evidence persists before finance. Unknown outcomes retain protected funds without external retries or timeout release. Independent reconciliation appends an effective decision without editing terminal carrier evidence. Typed encrypted revision snapshots avoid duplicate mutable PII tables. Default carrier and document scanner are disabled; synthetic adapters remain autoload-dev and isolated-database guarded. No real charges or deployment.

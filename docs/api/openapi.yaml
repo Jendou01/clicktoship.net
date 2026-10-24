@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–6
-  version: 0.6.0
+  title: ClickToShip API — Phases 1–7
+  version: 0.7.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
-    MFA and explicitly approved session-bound administration. Shipping remains unavailable.
+    MFA, approved session-bound administration and gated shipment management. Live shipping and real charges remain disabled.
 paths:
   /api/v1/health/live:
     get:
@@ -7619,6 +7619,1804 @@ paths:
           description: WEBHOOK_DISABLED; authenticity specification missing
         '429':
           description: Rate limited
+  /api/v1/shipments:
+    get:
+      operationId: listShipments
+      summary: List merchant shipments
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDirectory'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+    post:
+      operationId: createShipmentDraft
+      summary: Create encrypted immutable draft revision
+      description: version must be omitted. Idempotency key is scoped to merchant, actor and command. Changed-payload
+        replay returns409.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '201':
+          description: Authorized result in the standard data/meta/error envelope. version must be omitted. Idempotency
+            key is scoped to merchant, actor and command. Changed-payload replay returns409.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentWrite'
+  /api/v1/shipments/{shipment}:
+    get:
+      operationId: showShipment
+      summary: Read shipment draft and public quote snapshot
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: reviseShipment
+      summary: Append draft revision with optimistic locking
+      description: version is required. Only draft/ready shipments can change; every revision invalidates prior quote
+        acceptance.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Authorized result in the standard data/meta/error envelope. version is required. Only draft/ready
+            shipments can change; every revision invalidates prior quote acceptance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentWrite'
+  /api/v1/shipments/{shipment}/validate:
+    post:
+      operationId: validateShipment
+      summary: Validate local draft; carrier readiness remains false
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+              required:
+              - version
+              additionalProperties: false
+  /api/v1/shipments/{shipment}/quote-acceptance:
+    post:
+      operationId: acceptShipmentQuote
+      summary: Bind a single-use quote to exact revision and canonical pricing hash
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentQuoteAcceptance'
+  /api/v1/shipments/{shipment}/submit:
+    post:
+      operationId: submitShipment
+      summary: Disabled normal-runtime shipment submission
+      description: Normal gateway returns503 before reservation. 202 is exercised only by guarded test adapters in
+        isolated test databases; no real shipping or charges are enabled.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '202':
+          description: Authorized result in the standard data/meta/error envelope. Normal gateway returns503 before
+            reservation. 202 is exercised only by guarded test adapters in isolated test databases; no real shipping
+            or charges are enabled.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      submission_id:
+                        type: string
+                        format: uuid
+                      shipment_id:
+                        type: string
+                        format: uuid
+                      state:
+                        const: queued
+                    required:
+                    - submission_id
+                    - shipment_id
+                    - state
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingVersionCommand'
+  /api/v1/shipments/{shipment}/cancel:
+    post:
+      operationId: cancelShipmentDraft
+      summary: Cancel only before submission
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDetail'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingVersionCommand'
+  /api/v1/shipments/{shipment}/events:
+    get:
+      operationId: shipmentEvents
+      summary: Read paginated immutable lifecycle history
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentEventDirectory'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+  /api/v1/shipments/{shipment}/documents:
+    get:
+      operationId: shipmentDocuments
+      summary: Read safe private document metadata
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShipmentDocumentDirectory'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: shipment
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/shipment-documents/{document}/download:
+    get:
+      operationId: downloadShipmentDocument
+      summary: Authorized private document download; real downloads disabled
+      description: Only isolated synthetic documents can download. Private no-store, attachment and nosniff headers;
+        every request reauthorizes. No public URLs, redirects or URL-fetch endpoint.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Authorized result in the standard data/meta/error envelope. Only isolated synthetic documents
+            can download. Private no-store, attachment and nosniff headers; every request reauthorizes. No public
+            URLs, redirects or URL-fetch endpoint.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: document
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/shipment-documents/{document}/revoke:
+    post:
+      operationId: revokeShipmentDocument
+      summary: Revoke document access
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      revoked:
+                        const: true
+                    required:
+                    - revoked
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: document
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/pickups:
+    get:
+      operationId: listPickups
+      summary: List merchant pickup drafts
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupDirectory'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100000
+    post:
+      operationId: createPickupDraft
+      summary: Create pickup draft and tenant-safe associations
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '201':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupProjection'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupDraft'
+  /api/v1/pickups/{pickup}:
+    get:
+      operationId: showPickup
+      summary: Read pickup and status history
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupProjection'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: pickup
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/pickups/{pickup}/submit:
+    post:
+      operationId: submitPickup
+      summary: Pickup submit
+      description: Local draft cancellation is available. External creation/cancellation remains gated. Cancellation
+        never refunds shipping or cancels a shipment.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Authorized result in the standard data/meta/error envelope. Local draft cancellation is available.
+            External creation/cancellation remains gated. Cancellation never refunds shipping or cancels a shipment.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupProjection'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: pickup
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingVersionCommand'
+  /api/v1/pickups/{pickup}/cancel:
+    post:
+      operationId: cancelPickup
+      summary: Pickup cancel
+      description: Local draft cancellation is available. External creation/cancellation remains gated. Cancellation
+        never refunds shipping or cancels a shipment.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Authorized result in the standard data/meta/error envelope. Local draft cancellation is available.
+            External creation/cancellation remains gated. Cancellation never refunds shipping or cancels a shipment.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PickupProjection'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: pickup
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingVersionCommand'
+  /api/v1/admin/merchants/{merchant}/shipping/exceptions:
+    get:
+      operationId: shippingExceptions
+      summary: Read exact-target operational exception queue
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+      responses:
+        '200':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShippingExceptions'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/admin/merchants/{merchant}/shipping/submissions/{submission}/reconciliations:
+    post:
+      operationId: requestShipmentReconciliation
+      summary: Propose evidence-linked independent reconciliation
+      description: Merchant scope derives from authenticated context. No automatic platform bypass.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '201':
+          description: 'Authorized result in the standard data/meta/error envelope. '
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                    required:
+                    - id
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: submission
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShippingReconciliationRequest'
+  /api/v1/admin/merchants/{merchant}/shipping/reconciliations/{reconciliation}/approve:
+    post:
+      operationId: approveShipmentReconciliation
+      summary: Independently approve reconciliation; real execution disabled
+      description: Rechecks maker/checker sessions, MFA, target grants and current permissions. Checker additionally
+        requires platform.finance.reconcile. Only isolated synthetic evidence can execute. Conflicting definitive
+        evidence blocks resolution; original terminal carrier operation remains immutable.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      responses:
+        '200':
+          description: Authorized result in the standard data/meta/error envelope. Rechecks maker/checker sessions,
+            MFA, target grants and current permissions. Checker additionally requires platform.finance.reconcile.
+            Only isolated synthetic evidence can execute. Conflicting definitive evidence blocks resolution; original
+            terminal carrier operation remains immutable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      effective_outcome:
+                        type: string
+                        enum:
+                        - accepted
+                        - rejected
+                      financial_state:
+                        type: string
+                        enum:
+                        - captured
+                        - released
+                    required:
+                    - effective_outcome
+                    - financial_state
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '401':
+          description: Missing or revoked authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission, token scope, current membership, MFA or exact target grant denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource unavailable in the authorized merchant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Stale version, mismatched idempotency payload, state conflict or financial constraint
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '419':
+          description: Invalid CSRF token for a browser mutation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Carrier evidence, real labels or financial activation unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/Throttled'
+      parameters:
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: reconciliation
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_grant:
+                  type: string
+                  format: uuid
+              required:
+              - access_grant
+              additionalProperties: false
+
 components:
   headers:
     RequestId:
@@ -11146,6 +12944,513 @@ components:
       required:
       - country
       - prefix
+    ShipmentParty:
+      type: object
+      properties:
+        country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        city:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        line1:
+          type: string
+        postal:
+          type: string
+        state:
+          type: string
+      required:
+      - country
+      - city
+      additionalProperties: false
+    ShipmentPackage:
+      type: object
+      properties:
+        weight_grams:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        length_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        width_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+        height_mm:
+          type: integer
+          minimum: 1
+          maximum: 200000
+      required:
+      - weight_grams
+      - length_mm
+      - width_mm
+      - height_mm
+      additionalProperties: false
+    ShipmentDraft:
+      type: object
+      properties:
+        service_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        currency:
+          const: SAR
+        description:
+          type: string
+          maxLength: 500
+        origin:
+          $ref: '#/components/schemas/ShipmentParty'
+        destination:
+          $ref: '#/components/schemas/ShipmentParty'
+        return_address:
+          oneOf:
+          - $ref: '#/components/schemas/ShipmentParty'
+          - type: 'null'
+        packages:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ShipmentPackage'
+        cod_minor:
+          const: '0'
+        declared_value_minor:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,11})$
+        goods_origin_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        items:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+                maximum: 100000
+              value_minor:
+                type: string
+                pattern: ^(0|[1-9][0-9]{0,11})$
+              country:
+                type: string
+                pattern: ^[A-Z]{2}$
+              hs_code:
+                type:
+                - string
+                - 'null'
+                pattern: ^[0-9]{6,12}$
+            required:
+            - description
+            - quantity
+            - value_minor
+            - country
+            additionalProperties: false
+      required:
+      - currency
+      - description
+      - origin
+      - destination
+      - packages
+      - cod_minor
+      - declared_value_minor
+      - items
+      additionalProperties: false
+    ShipmentWrite:
+      type: object
+      properties:
+        draft:
+          $ref: '#/components/schemas/ShipmentDraft'
+        version:
+          type: integer
+          minimum: 1
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - draft
+      - idempotency_key
+      additionalProperties: false
+    ShippingVersionCommand:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - idempotency_key
+      additionalProperties: false
+    ShipmentQuoteAcceptance:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        quote_id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - version
+      - quote_id
+      - idempotency_key
+      additionalProperties: false
+    PickupDraft:
+      type: object
+      properties:
+        shipment_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+      - shipment_ids
+      - window_start
+      - window_end
+      - timezone
+      - idempotency_key
+      additionalProperties: false
+    ShippingReconciliationRequest:
+      type: object
+      properties:
+        access_grant:
+          type: string
+          format: uuid
+        observation_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required:
+      - access_grant
+      - observation_id
+      - reason
+      additionalProperties: false
+    ShipmentProjection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        revision:
+          type: integer
+          minimum: 1
+        state:
+          type: string
+          enum:
+          - draft
+          - ready
+          - queued
+          - sending
+          - accepted
+          - rejected
+          - unknown
+          - cancelled
+          - blocked
+        financial_state:
+          type: string
+          enum:
+          - none
+          - reserved
+          - protected
+          - capture_pending
+          - captured
+          - release_pending
+          - released
+          - review
+        document_state:
+          type: string
+          enum:
+          - not_requested
+          - pending
+          - quarantined
+          - ready
+          - failed
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - version
+      - revision
+      - state
+      - financial_state
+      - document_state
+      - created_at
+      additionalProperties: true
+    ShipmentReadiness:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        missing:
+          type: array
+          items:
+            type: string
+        carrier_ready:
+          const: false
+        shipping_enabled:
+          const: false
+        reason:
+          const: CARRIER_EVIDENCE_AND_FINANCIAL_ACTIVATION_REQUIRED
+      required:
+      - valid
+      - missing
+      - carrier_ready
+      - shipping_enabled
+      - reason
+    ShipmentDetail:
+      type: object
+      properties:
+        shipment:
+          $ref: '#/components/schemas/ShipmentProjection'
+        draft:
+          $ref: '#/components/schemas/ShipmentDraft'
+        quote:
+          oneOf:
+          - $ref: '#/components/schemas/PricingPublicQuote'
+          - type: 'null'
+        validation:
+          $ref: '#/components/schemas/ShipmentReadiness'
+        submission_enabled:
+          const: false
+      required:
+      - shipment
+      - draft
+      - quote
+      - validation
+      - submission_enabled
+    PickupProjection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        state:
+          type: string
+          enum:
+          - draft
+          - sending
+          - confirmed
+          - rejected
+          - unknown
+          - cancel_pending
+          - cancelled
+        window_start:
+          type: string
+          format: date-time
+        window_end:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        shipment_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        events:
+          type: array
+          items:
+            type: object
+        external_enabled:
+          const: false
+      required:
+      - id
+      - version
+      - state
+      - window_start
+      - window_end
+    ShipmentDirectory:
+      type: object
+      properties:
+        shipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentProjection'
+        page:
+          type: integer
+          minimum: 1
+        last_page:
+          type: integer
+          minimum: 1
+      required:
+      - shipments
+      - page
+      - last_page
+    PickupDirectory:
+      type: object
+      properties:
+        pickups:
+          type: array
+          items:
+            $ref: '#/components/schemas/PickupProjection'
+        page:
+          type: integer
+          minimum: 1
+        last_page:
+          type: integer
+          minimum: 1
+      required:
+      - pickups
+      - page
+      - last_page
+    ShipmentDocumentMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        mime:
+          const: application/pdf
+        size_bytes:
+          type: integer
+          minimum: 1
+          maximum: 5242880
+        state:
+          type: string
+          enum:
+          - quarantined
+          - ready
+          - revoked
+          - failed
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - mime
+      - size_bytes
+      - state
+      - created_at
+    ShipmentEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - kind
+      - metadata
+      - created_at
+    ShipmentEventDirectory:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentEvent'
+        page:
+          type: integer
+          minimum: 1
+        last_page:
+          type: integer
+          minimum: 1
+      required:
+      - events
+      - page
+      - last_page
+    ShipmentDocumentDirectory:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentDocumentMetadata'
+        real_labels_enabled:
+          const: false
+      required:
+      - documents
+      - real_labels_enabled
+    ShippingExceptions:
+      type: object
+      properties:
+        shipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentProjection'
+        submissions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              shipment_id:
+                type: string
+                format: uuid
+            required:
+            - id
+            - shipment_id
+        observations:
+          type: array
+          items:
+            type: object
+        requests:
+          type: array
+          items:
+            type: object
+        execution_enabled:
+          const: false
+      required:
+      - shipments
+      - submissions
+      - observations
+      - requests
+      - execution_enabled
   securitySchemes:
     SessionCookie:
       type: apiKey

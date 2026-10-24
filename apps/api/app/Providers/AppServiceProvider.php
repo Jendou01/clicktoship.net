@@ -4,12 +4,16 @@ namespace App\Providers;
 
 use App\Models\PersonalAccessToken;
 use App\Modules\Carriers\Domain\CarrierTransport;
+use App\Modules\Carriers\Domain\ShipmentGateway;
 use App\Modules\Carriers\Infrastructure\DisabledAramexTransport;
+use App\Modules\Carriers\Infrastructure\EvidenceGatedShipmentGateway;
 use App\Modules\Merchants\Domain\MembershipPolicy;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Merchants\Infrastructure\Membership;
 use App\Modules\Pricing\Application\StaticCarrierRates;
 use App\Modules\Pricing\Domain\CarrierRates;
+use App\Modules\Shipping\Domain\DocumentScanner;
+use App\Modules\Shipping\Infrastructure\DisabledDocumentScanner;
 use App\Modules\WalletBilling\Domain\PaymentProvider;
 use App\Modules\WalletBilling\Infrastructure\DisabledPaymentProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -27,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(DocumentScanner::class, DisabledDocumentScanner::class);
+        $this->app->bind(ShipmentGateway::class, EvidenceGatedShipmentGateway::class);
         $this->app->bind(CarrierTransport::class, DisabledAramexTransport::class);
         $this->app->bind(CarrierRates::class, StaticCarrierRates::class);
         $this->app->bind(PaymentProvider::class, DisabledPaymentProvider::class);

@@ -98,7 +98,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Frontend changes: Create wizard, lists/detail, secure labels, pickup scheduling.
 * Automated tests: Crash boundaries, duplicate creates, ambiguity, tenant authorization, document access.
 * Acceptance criteria: Carrier acceptance distinct from money capture; no blind create retries.
-* Completion report: Planned.
+* Completion report: Implemented independently testable foundation; see [Phase 7 report](PHASE_7_REPORT.md). Live shipping, real charges and real labels remain evidence-gated and disabled.
 
 ## Phase 8 — Bulk shipment processing
 
@@ -221,4 +221,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Completion report: Planned; not deployed.
 
 ## Immediate next increment
-Review the Phase 6 connector feature branch and obtain current V2 response/error/status schemas, secure sandbox authorization/credentials, explicit route/account entitlements and webhook authenticity specification. No automatic merge, external activation, deployment or Phase 7 implementation.
+Review the Phase 6 connector feature branch and obtain current V2 response/error/status schemas, secure sandbox authorization/credentials, explicit route/account entitlements and webhook authenticity specification. Phase 7 independently testable shipment foundation is now implemented on its feature branch; see PHASE_7_REPORT.md. No automatic merge, external activation, deployment or Phase 8 implementation.

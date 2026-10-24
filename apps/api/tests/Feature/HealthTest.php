@@ -74,9 +74,10 @@ class HealthTest extends TestCase
         $this->assertArrayNotHasKey('exception', $response->json());
     }
 
-    public function test_business_and_dashboard_routes_are_not_exposed(): void
+    public function test_shipments_require_authentication_and_unreleased_finance_dashboard_routes_are_not_exposed(): void
     {
-        $this->postJson('/api/v1/shipments')->assertNotFound();
+        // Phase 7 now exposes authenticated drafts; live submission stays gated separately.
+        $this->postJson('/api/v1/shipments')->assertUnauthorized();
         $this->postJson('/api/v1/wallet/topups')->assertNotFound();
         $this->get('/horizon')->assertNotFound();
         $this->assertFalse(config('platform.carrier_operations_enabled'));

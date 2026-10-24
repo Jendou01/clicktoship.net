@@ -81,7 +81,7 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Phase 4 wallet/ledger work is delivered on feat/phase-4-wallet-ledger for review; see [Phase 4 report](docs/PHASE_4_REPORT.md), [accounting assumptions](docs/finance/ACCOUNTING.md) and [operations](docs/finance/OPERATIONS.md). Merchant funding, payments, settlement, withdrawals and shipping charges remain disabled. Do not activate finance or begin Phase 6 without separate approval. No production deployment occurred.
+Phase 7 shipment management is delivered on feat/phase-7-shipment-management for review; see [Phase 4 report](docs/PHASE_4_REPORT.md), [accounting assumptions](docs/finance/ACCOUNTING.md) and [operations](docs/finance/OPERATIONS.md). Merchant funding, payments, settlement, withdrawals and shipping charges remain disabled. Do not activate live finance/carriers or begin Phase 8 without separate approval. No production deployment occurred.
 
 ## Phase 2 workflows
 
@@ -121,3 +121,7 @@ Authorized platform personnel must enter evidenced service/zone/tariff/selling/t
 Platform-only EN/AR screens: `carriers`, `aramex`, `carrier-services`, `carrier-capabilities`, `carrier-health`, `carrier-errors`, `carrier-webhooks`, `carrier-mappings`. Configure encrypted candidate master accounts/routes and obtain independent recent-MFA approval; approval never enables outbound calls or claims a successful sandbox connection. No merchant command route, webhook authentication invention, wallet effect or shipping eligibility activation.
 
 [Evidence matrix](docs/integrations/PHASE_6_EVIDENCE.md), [architecture](docs/architecture/PHASE_6_CARRIERS.md), [report](docs/PHASE_6_REPORT.md). All current V2 responses/status/webhook contracts remain missing; legacy SOAP structure tests and request-only Postman shapes do not prove live integration. The normal transport is hard disabled. No carrier request or billable shipment has been sent.
+
+## Phase 7 shipment management
+
+Drafts, immutable revisions, quote acceptance, merchant shipment history, pickup drafts and EN/AR screens are available on the Phase 7 branch. Open `/en/shipments`, `/en/shipment-create`, `/en/shipment-details`, `/en/pickups`, `/en/shipment-documents`, `/en/admin-shipping` or Arabic equivalents. `shipping:outbox` publishes encrypted one-try jobs; scheduled `shipping:recover` recovers PostgreSQL work independently of Redis. The default gateway refuses before reserve; real carrier requests, shipping charges and labels remain disabled. Complete reserve/submit/capture/release/reconcile workflows are verified only with guarded synthetic adapters and isolated PostgreSQL test databases. See [architecture](docs/architecture/PHASE_7_SHIPPING.md) and [report](docs/PHASE_7_REPORT.md). No Phase 8 or production deployment.

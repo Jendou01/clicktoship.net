@@ -188,6 +188,7 @@ final class PricingTest extends PricingTestCase
     {
         $u = $this->user();
         $m = $this->organization($u);
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Additive Phase 7 first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Additive Phase 6 first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2, '--force' => true]));
         $this->assertDatabaseHas('users', ['id' => $u->id]);

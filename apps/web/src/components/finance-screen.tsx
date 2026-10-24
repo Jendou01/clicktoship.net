@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { requestKey } from "@/lib/request-key";
 import { api } from "@/lib/api";
 import { financeCopy, formatMinor, parseMinor, type FinanceScreen } from "@/lib/finance";
 import type { Locale } from "@/lib/i18n";
@@ -30,7 +31,7 @@ export function FinanceScreen({ locale, screen }: { locale: Locale; screen: Fina
   async function perform(action: () => Promise<void>) { setBusy(true); setMessage(""); try { await action(); } catch { setMessage(t.error); } finally { setBusy(false); } }
   async function loadWallets(prefix = base, query = suffix) { const data = await api<{ wallets: Wallet[] }>(`${prefix}/wallets${query ? `?${query}` : ""}`); setWallets(data.wallets); setWalletId((current) => data.wallets.some((w) => w.id === current) ? current : data.wallets[0]?.id || ""); }
   useEffect(() => {
-    if (admin) { Promise.all([api<{ grants: Grant[] }>("/admin/access-requests"), api<{ user: { id: string } }>("/auth/me")]).then(([d, me]) => { setKeys({ business: crypto.randomUUID(), request: crypto.randomUUID() }); setGrants(d.grants.filter((g) => g.actor_id === me.user.id && g.approved_by && !g.revoked_at && new Date(g.expires_at).getTime() > Date.now() && g.capabilities.includes("platform.wallet.view"))); }).catch(() => setMessage(t.error)).finally(() => setLoaded(true)); }
+    if (admin) { Promise.all([api<{ grants: Grant[] }>("/admin/access-requests"), api<{ user: { id: string } }>("/auth/me")]).then(([d, me]) => { setKeys({ business: requestKey(), request: requestKey() }); setGrants(d.grants.filter((g) => g.actor_id === me.user.id && g.approved_by && !g.revoked_at && new Date(g.expires_at).getTime() > Date.now() && g.capabilities.includes("platform.wallet.view"))); }).catch(() => setMessage(t.error)).finally(() => setLoaded(true)); }
     else { api<{ wallets: Wallet[] }>("/wallets").then((d) => { setWallets(d.wallets); setWalletId(d.wallets[0]?.id || ""); }).catch(() => setMessage(t.error)).finally(() => setLoaded(true)); }
   }, [admin, t.error]);
   async function loadHistory(after?: string) {
@@ -51,7 +52,7 @@ export function FinanceScreen({ locale, screen }: { locale: Locale; screen: Fina
       if (!wallet || !keys) throw new Error("No wallet");
       const amount = kind === "reverse" ? "0" : parseMinor(String(values.get("amount")), wallet.exponent);
       await api(`${base}/financial-requests`, "POST", { access_grant: grantId, wallet_id: wallet.id, kind, amount, reference: values.get("reference") || null, reason: values.get("reason"), business_key: keys.business, request_key: keys.request });
-      setKeys({ business: crypto.randomUUID(), request: crypto.randomUUID() }); form.reset(); setKind("adjust_credit"); await loadAdmin(); setMessage(t.done);
+      setKeys({ business: requestKey(), request: requestKey() }); form.reset(); setKind("adjust_credit"); await loadAdmin(); setMessage(t.done);
     });
   }
   const money = (value: string) => formatMinor(value, wallet?.currency || "SAR", wallet?.exponent ?? 2);

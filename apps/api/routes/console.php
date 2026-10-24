@@ -3,6 +3,9 @@
 use App\Models\User;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Operations\Application\PlatformSecurity;
+use App\Modules\Pickups\Application\Pickups;
+use App\Modules\Shipping\Application\Recovery;
+use App\Modules\Shipping\Jobs\ProcessShipment;
 use App\Modules\WalletBilling\Application\Reconciliation;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -48,3 +51,17 @@ Artisan::command('finance:reconcile', function (): void {
     $this->info('Structural reconciliation completed; no payment or settlement performed.');
 })->purpose('Reconcile ledger and reservation projections without changing financial history');
 Schedule::command('finance:reconcile')->daily()->withoutOverlapping();
+
+Artisan::command('shipping:recover', function (): void {
+    $this->info((string) app(Recovery::class)->run());
+    app(Pickups::class)->recover();
+})->purpose('Recover durable shipping work; quarantine uncertain dispatches without external retry');
+Schedule::command('shipping:recover')->everyMinute()->withoutOverlapping();
+
+Artisan::command('shipping:outbox', function (): void {
+    DB::table('shipping_outbox as o')->leftJoin('shipping_deliveries as d', 'd.event_id', '=', 'o.id')->whereNull('d.event_id')->select('o.*')->orderBy('o.created_at')->chunk(100, function ($rows): void {
+        foreach ($rows as $row) {
+            ProcessShipment::dispatch($row->merchant_id, $row->submission_id);
+        }
+    });
+})->purpose('Publish encrypted shipment jobs; PostgreSQL recovery remains authoritative');
