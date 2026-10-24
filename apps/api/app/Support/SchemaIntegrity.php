@@ -78,6 +78,28 @@ final class SchemaIntegrity
             $missing[] = 'tracking_bindings';
         }
 
+        if (Schema::hasTable('customs_declarations')) {
+            foreach (['customs_versions' => ['merchant_id', 'revision', 'payload_ciphertext', 'input_hash'], 'customs_items' => ['unit_minor', 'quantity', 'total_minor'], 'customs_document_work' => ['origin_token_id', 'lease_token'], 'customs_documents' => ['revision', 'number']] as $table => $columns) {
+                foreach ($columns as $column) {
+                    if (! Schema::hasColumn($table, $column)) {
+                        $missing[] = "$table.$column";
+                    }
+                }
+            }
+            foreach (['customs_versions', 'customs_items', 'customs_profiles', 'customs_rule_versions', 'customs_rule_reviews', 'customs_readiness', 'customs_reviews', 'customs_commands', 'customs_events', 'customs_documents', 'customs_document_results', 'customs_document_revocations'] as $table) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=?::regclass AND tgname='customs_history_immutable' AND tgenabled IN ('O','A')", [$table])) {
+                    $missing[] = "$table.customs_history_immutable";
+                }
+            }
+            foreach (['customs_items' => 'customs_item_totals', 'customs_versions' => 'customs_item_totals', 'customs_declarations' => 'customs_version_guard', 'customs_document_work' => 'customs_work_guard', 'customs_rule_reviews' => 'customs_rule_review_guard'] as $table => $trigger) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=?::regclass AND tgname=? AND tgenabled IN ('O','A')", [$table, $trigger])) {
+                    $missing[] = "$table.$trigger";
+                }
+            }
+        } elseif (DB::table('migrations')->where('migration', '2026_10_24_170000_create_international_customs')->exists()) {
+            $missing[] = 'customs_declarations';
+        }
+
         return $missing;
     }
 }

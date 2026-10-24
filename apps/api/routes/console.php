@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Modules\Bulk\Application\Processor;
+use App\Modules\Customs\Application\DocumentWork;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Operations\Application\PlatformSecurity;
 use App\Modules\Pickups\Application\Pickups;
@@ -108,3 +109,8 @@ Schedule::command('tracking:schedule')->everyMinute()->withoutOverlapping();
 Artisan::command('tracking:retention-candidates', function (): void {
     $this->info((string) app(TrackingHealthMonitor::class)->retentionCandidates());
 })->purpose('Count retention review candidates without deleting encrypted history');
+
+Artisan::command('customs:recover', function (): void {
+    $this->info((string) app(DocumentWork::class)->recover());
+})->purpose('Recover durable draft document work without external filings or charges');
+Schedule::command('customs:recover')->everyMinute()->withoutOverlapping();

@@ -70,3 +70,5 @@ require __DIR__.'/shipping.php';
 require __DIR__.'/bulk.php';
 
 require __DIR__.'/tracking.php';
+
+require __DIR__.'/customs.php';

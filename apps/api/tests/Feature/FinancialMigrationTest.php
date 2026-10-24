@@ -18,6 +18,7 @@ class FinancialMigrationTest extends ManagementTestCase
         $u = $this->user();
         $m = $this->organization($u);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 10 before the original rollback target.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 9 before the existing preservation assertions.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 8 before exercising the original rollback target.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Additive Phase 7 first.

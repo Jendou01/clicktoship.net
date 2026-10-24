@@ -2,6 +2,7 @@
 
 namespace App\Modules\Bulk\Domain;
 
+use App\Modules\Customs\Domain\CustomsInput;
 use App\Modules\Shipping\Domain\ShipmentInput;
 
 final class Columns
@@ -17,6 +18,8 @@ final class Columns
         foreach (['weight_grams' => ['Weight grams', 'الوزن بالغرام'], 'length_mm' => ['Length mm', 'الطول بالملليمتر'], 'width_mm' => ['Width mm', 'العرض بالملليمتر'], 'height_mm' => ['Height mm', 'الارتفاع بالملليمتر']] as $key => $label) {
             $labels[$key] = $label;
         }
+
+        $labels['customs_json'] = ['International customs JSON', 'بيانات الجمارك الدولية JSON'];
 
         return $labels;
     }
@@ -76,6 +79,23 @@ final class Columns
         $draft = ['service_id' => $v['service_id'] ?? null, 'currency' => strtoupper($v['currency'] ?? ''), 'description' => $v['description'] ?? '', 'origin' => $party('origin'), 'destination' => $party('destination'), 'packages' => ! empty($v['packages_json']) ? $json($v['packages_json']) : [array_combine(['weight_grams', 'length_mm', 'width_mm', 'height_mm'], array_map(fn ($k) => $numeric($v[$k] ?? ''), ['weight_grams', 'length_mm', 'width_mm', 'height_mm']))], 'declared_value_minor' => $numeric(($v['declared_value_minor'] ?? '') ?: '0'), 'cod_minor' => $numeric(($v['cod_minor'] ?? '') ?: '0'), 'goods_origin_country' => empty($v['goods_origin_country']) ? null : strtoupper($v['goods_origin_country']), 'items' => empty($v['items_json']) ? [] : $json($v['items_json'])];
         if ($return = $party('return_address')) {
             $draft['return_address'] = $return;
+        }
+
+        if (! empty($v['customs_json'])) {
+            try {
+                $customs = json_decode($v['customs_json'], true, 16, JSON_THROW_ON_ERROR);
+            } catch (\JsonException) {
+                throw new ImportFailure('INVALID_JSON');
+            }
+            if (! is_array($customs) || array_is_list($customs)) {
+                throw new ImportFailure('INVALID_JSON');
+            }
+            $customs = CustomsInput::normalize($customs, $draft, false);
+            if (($v['declared_value_minor'] ?? '') !== '' && $draft['declared_value_minor'] !== $customs['declared_total_minor']) {
+                CustomsInput::fail('declared_value_minor', 'Declared value must equal item totals.');
+            }
+            $draft['declared_value_minor'] = $customs['declared_total_minor'];
+            $draft['customs'] = $customs;
         }
 
         return ShipmentInput::draft($draft);
