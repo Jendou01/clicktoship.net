@@ -7,6 +7,7 @@ use App\Modules\Pickups\Application\Pickups;
 use App\Modules\Shipping\Application\Recovery;
 use App\Modules\Shipping\Jobs\ProcessShipment;
 use App\Modules\WalletBilling\Application\Reconciliation;
+use App\Support\SchemaIntegrity;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -65,3 +66,25 @@ Artisan::command('shipping:outbox', function (): void {
         }
     });
 })->purpose('Publish encrypted shipment jobs; PostgreSQL recovery remains authoritative');
+
+Artisan::command('schema:verify', function (): int {
+    $failures = app(SchemaIntegrity::class)->failures();
+    if ($failures !== []) {
+        $this->error('Schema drift: '.implode(', ', $failures));
+
+        return 1;
+    }
+    $this->info('Security-critical shipment schema verified.');
+
+    return 0;
+})->purpose('Read-only verification of critical schema independently of migration history');
+
+Artisan::command('e2e:rebuild', function (): int {
+    if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== 'clicktoship_e2e') {
+        $this->error('Refusing reset outside testing/clicktoship_e2e.');
+
+        return 1;
+    }
+
+    return $this->call('migrate:fresh', ['--force' => true, '--no-interaction' => true]);
+})->purpose('Rebuild only the explicitly disposable browser database');

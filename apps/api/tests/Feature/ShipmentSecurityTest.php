@@ -19,6 +19,19 @@ final class ShipmentSecurityTest extends ShippingTestCase
 {
     use DatabaseMigrations;
 
+    public function test_directory_summary_is_tenant_scoped_and_excludes_private_addresses(): void
+    {
+        $f = $this->setupShipment(false);
+        $this->bearer($f['token'], 'GET', '/api/v1/shipments')->assertOk()
+            ->assertJsonPath('data.shipments.0.summary.description', 'Synthetic goods')
+            ->assertJsonPath('data.shipments.0.summary.recipient', 'Synthetic contact')
+            ->assertJsonMissingPath('data.shipments.0.summary.phone')
+            ->assertJsonMissingPath('data.shipments.0.summary.line1');
+        $other = $this->user();
+        $merchant = $this->organization($other);
+        $this->bearer($this->token($other, $merchant), 'GET', '/api/v1/shipments')->assertOk()->assertJsonCount(0, 'data.shipments');
+    }
+
     public function test_idor_scope_intersection_and_mass_assignment_fail_closed(): void
     {
         $f = $this->setupShipment(false);

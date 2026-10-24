@@ -222,3 +222,7 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 Review the Phase 6 connector feature branch and obtain current V2 response/error/status schemas, secure sandbox authorization/credentials, explicit route/account entitlements and webhook authenticity specification. Phase 7 independently testable shipment foundation is now implemented on its feature branch; see PHASE_7_REPORT.md. No automatic merge, external activation, deployment or Phase 8 implementation.
+
+## Post-Phase 7 QA remediation
+
+Focused follow-up on `fix/post-phase-7-qa-ux`: disposable browser schema integrity/rebuild, permission-aware shared workspace navigation, bilingual shipment field errors and persisted locale context, RTL identifiers, mobile team cards, safe availability copy and clearer empty/admin/list states. Execution evidence: [QA report](POST_PHASE_7_QA_REPORT.md). Phase 8 and live carrier/financial activation remain separately gated.

@@ -1,0 +1,57 @@
+import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+const fixture = JSON.parse(readFileSync(process.env.E2E_PRICING_FIXTURE_FILE || "/tmp/clicktoship-pricing-e2e.json", "utf8")) as { qaOwner: { email: string; password: string }; service: string };
+
+test("merchant navigation, bilingual validation, shipment locale context and mobile team cards", async ({ page }, info) => {
+ await page.goto("/en/login");
+ await page.getByLabel("Email address", { exact: true }).fill(fixture.qaOwner.email);
+ await page.getByLabel("Password", { exact: true }).fill(fixture.qaOwner.password);
+ await page.getByRole("button", { name: "Continue", exact: true }).click();
+ await expect(page).toHaveURL(/\/en\/organizations$/);
+ const organizationName = `QA synthetic ${randomUUID()}`;
+ await page.goto("/en/onboarding"); await page.getByLabel("Organization name", { exact: true }).fill(organizationName);
+ await page.getByRole("button", { name: "Create organization", exact: true }).click(); await expect(page).toHaveURL(/\/en\/dashboard$/);
+ for (const name of ["Shipments", "Create shipment", "Pickups", "Shipping rates"]) await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
+ await page.screenshot({ path: info.outputPath("en-desktop-dashboard.png"), fullPage: true });
+ await page.getByRole("link", { name: "Create shipment", exact: true }).click();
+ await expect(page.getByRole("link", { name: "Finance administration", exact: true })).toHaveCount(0);
+ await expect(page.getByRole("link", { name: "Carrier configuration", exact: true })).toHaveCount(0);
+ await page.getByRole("button", { name: "Next", exact: true }).click(); await page.getByRole("button", { name: "Next", exact: true }).click();
+ await page.getByRole("button", { name: "Save draft", exact: true }).click();
+ await expect(page.getByRole("alert", { name: "Fields requiring attention" })).toContainText("Country code");
+ await expect(page.getByLabel("Sender — Country code", { exact: true })).toBeFocused();
+ await page.screenshot({ path: info.outputPath("en-desktop-validation.png"), fullPage: true });
+ for (const side of ["Sender", "Recipient"]) {
+  for (const [label, value] of [["Country code", "SA"], ["City", side === "Sender" ? "Synthetic Origin" : "Synthetic Destination"], ["Contact name", "QA synthetic contact"], ["International phone", "+966501234567"], ["Street address", "Synthetic street"], ["Postal code", "12345"]]) await page.getByLabel(`${side} — ${label}`, { exact: true }).fill(value);
+ }
+ await page.getByRole("button", { name: "Next", exact: true }).click(); await page.getByLabel("Contents description", { exact: true }).fill("QA synthetic goods");
+ for (const label of ["Weight (grams) 1", "Length (mm) 1", "Width (mm) 1", "Height (mm) 1"]) await page.getByLabel(label, { exact: true }).fill("100");
+ await page.getByRole("button", { name: "Next", exact: true }).click();
+ const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/shipments") && r.request().method() === "POST");
+ await page.getByRole("button", { name: "Save draft", exact: true }).click(); const saved = await response; expect(saved.status()).toBe(201);
+ const id = (await saved.json()).data.shipment.id as string;
+ await expect(page.getByRole("status")).toHaveText("Changes saved");
+ await page.goto(`/en/shipment-details?shipment=${id}`);
+ await expect(page.getByText("Fields requiring attention: Configured service", { exact: true })).toBeVisible();
+ await expect(page.locator(".workspace-header p")).toContainText(organizationName);
+ await page.screenshot({ path: info.outputPath("en-desktop-shipment-details.png"), fullPage: true });
+ await page.getByRole("link", { name: "Switch to Arabic", exact: true }).click();
+ await expect(page).toHaveURL(new RegExp(`/ar/shipment-details\\?shipment=${id}$`));
+ await expect(page.getByText("حقول تحتاج مراجعة: الخدمة المهيأة", { exact: true })).toBeVisible();
+ await expect(page.locator(".workspace-header p")).toContainText(organizationName);
+ await page.reload(); await expect(page.getByText("حقول تحتاج مراجعة: الخدمة المهيأة", { exact: true })).toBeVisible();
+ await page.screenshot({ path: info.outputPath("ar-desktop-shipment-details.png"), fullPage: true });
+ await page.setViewportSize({ width: 390, height: 844 });
+ await page.screenshot({ path: info.outputPath("ar-mobile-shipment-details.png"), fullPage: true });
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+ await page.goto("/ar/shipment-create");
+ await page.getByRole("button", { name: "التالي", exact: true }).click(); await page.getByRole("button", { name: "التالي", exact: true }).click(); await page.getByRole("button", { name: "حفظ المسودة", exact: true }).click();
+ await expect(page.getByRole("alert", { name: "حقول تحتاج مراجعة" })).toContainText("رمز الدولة");
+ await page.screenshot({ path: info.outputPath("ar-mobile-validation.png"), fullPage: true });
+ await page.goto("/ar/team"); await expect(page.locator(".team-table tbody tr")).toHaveCount(1);
+ await expect(page.locator(".workspace-menu")).toHaveJSProperty("open", false);
+ expect(await page.locator(".team-table td").first().evaluate((e) => getComputedStyle(e).display)).toBe("block");
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+ await page.screenshot({ path: info.outputPath("ar-mobile-team.png"), fullPage: true });
+});

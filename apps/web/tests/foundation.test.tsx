@@ -8,7 +8,9 @@ describe("foundation workspace", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("One place for every delivery.");
     expect(screen.getByRole("note")).toHaveTextContent("Shipping and payments are not available yet");
     expect(screen.getByRole("link", { name: "Switch to Arabic" })).toHaveAttribute("href", "/ar");
-    expect(screen.getAllByText("Planned")).toHaveLength(4);
+    expect(screen.getAllByText("Planned")).toHaveLength(2);
+    expect(screen.getAllByText("Available foundation")).toHaveLength(2);
+    expect(screen.getByText("Your merchant workspace")).toBeInTheDocument();
     expect(container.firstChild).toHaveAttribute("dir", "ltr");
   });
   it("renders the Arabic workspace with RTL direction and English navigation", () => {

@@ -39,3 +39,9 @@ OpenAPI describes all REST resources. EN/AR screens cover draft wizard, listing/
 
 ## Remaining launch requirements
 Current V2 schemas/scrubbed responses, approved sandbox access and non-billable test policy, account/service mappings and entitlements, reference lookup semantics, international/COD/customs policies, storage/scanning/retention, suspended-obligation policy, accountant/regulatory acceptance and least-privilege runtime role deployment. None is inferred from legacy SOAP or successful synthetic tests.
+
+## Post-Phase 7 UI and QA follow-up
+
+Shipment directory read projections now add only current-tenant description and recipient name. Full addresses, phone, private pricing and carrier credentials remain excluded. Detail selection uses a shipment UUID query parameter and always reloads through existing tenant authorization; locale links allowlist this identifier only, retaining merchant selection in the server session. This is not an access grant or cross-tenant selector. No financial or carrier execution rules changed.
+
+Read-only `schema:verify` checks critical shipment bindings and history guards before browser fixtures. Disposable browser rebuild is explicitly restricted to testing/clicktoship_e2e; applied migration names cannot substitute for integrity verification. See the [QA report](../POST_PHASE_7_QA_REPORT.md).

@@ -4,3 +4,23 @@
 body { margin: 0; font-family: Arial, "Noto Sans Arabic", Tahoma, sans-serif; }
 a { text-underline-offset: 4px; }
 ::selection { background: #99f6e4; color: #134e4a; }
+
+/* Shared operational rhythm and readable mixed-direction identifiers. */
+main { min-width: 0; }
+main h1 { line-height: 1.25; }
+main button, .workspace-header a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+main button + button { margin-inline-start: .5rem; }
+main input, main select, main textarea { max-width: 100%; }
+bdi { unicode-bidi: isolate; overflow-wrap: anywhere; }
+.workspace-header a { border-radius: .5rem; padding: .35rem .65rem; }
+.workspace-header a[aria-current="page"] { background: #ccfbf1; font-weight: bold; }
+.workspace-header summary { cursor: pointer; padding-block: .5rem; }
+main [role="alert"] { border-inline-start: 4px solid #b91c1c; padding: 1rem; background: #fef2f2; }
+@media (max-width: 639px) {
+  .team-table, .team-table tbody, .team-table tr, .team-table td { display: block; width: 100%; }
+  .team-table thead { display: none; }
+  .team-table tr { padding: 1rem; }
+  .team-table td { padding: .4rem 0; overflow-wrap: anywhere; }
+  .team-table td::before { content: attr(data-label); display: block; font-weight: 600; }
+  .team-table select { width: 100%; }
+}
