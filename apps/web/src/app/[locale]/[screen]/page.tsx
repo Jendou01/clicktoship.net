@@ -1,3 +1,4 @@
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { ShippingScreen } from "@/components/shipping-screen";
 import { shippingScreens, type ShippingView } from "@/lib/shipping";
 import { CarrierScreen } from "@/components/carrier-screen";
@@ -17,10 +18,11 @@ export function generateStaticParams() { return [...screenNames, ...managementSc
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
   if (!isLocale(locale) || ![...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
-  if (shippingScreens.includes(screen as ShippingView)) return <ShippingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ShippingView} />;
-  if (carrierScreens.includes(screen as CarrierView)) return <CarrierScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CarrierView} />;
-  if (pricingScreens.includes(screen as PricingView)) return <PricingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PricingView} />;
-  if (financeScreens.includes(screen as FinanceView)) return <FinanceScreen key={`${locale}:${screen}`} locale={locale} screen={screen as FinanceView} />;
-  if (managementScreens.includes(screen as ManagementView)) return <ManagementScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ManagementView} />;
+  if (shippingScreens.includes(screen as ShippingView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><ShippingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ShippingView} /></>;
+  if (carrierScreens.includes(screen as CarrierView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><CarrierScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CarrierView} /></>;
+  if (pricingScreens.includes(screen as PricingView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><PricingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PricingView} /></>;
+  if (financeScreens.includes(screen as FinanceView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><FinanceScreen key={`${locale}:${screen}`} locale={locale} screen={screen as FinanceView} /></>;
+  if (managementScreens.includes(screen as ManagementView)) return <><ManagementScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ManagementView} /></>;
+  if (["dashboard", "team", "security", "organizations", "onboarding"].includes(screen)) return <><IdentityScreen sharedShell key={`${locale}:${screen}`} locale={locale} screen={screen as Screen} /></>;
   return <IdentityScreen key={`${locale}:${screen}`} locale={locale} screen={screen as Screen} />;
 }

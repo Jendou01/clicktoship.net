@@ -33,6 +33,15 @@ final class Shipments
         return ['shipment' => $s, 'draft' => $this->revision($s), 'quote' => $acceptance ? json_decode($acceptance->snapshot, true) : null, 'validation' => ShipmentInput::report($this->revision($s)), 'submission_enabled' => false];
     }
 
+    /** Minimal merchant-authorized directory context; no addresses, phone or carrier credentials. */
+    public function summary(string $merchant, object $shipment): array
+    {
+        $payload = DB::table('shipment_revisions')->where('merchant_id', $merchant)->where('shipment_id', $shipment->id)->where('revision', $shipment->revision)->value('payload');
+        $draft = json_decode(Crypt::decryptString($payload), true, flags: JSON_THROW_ON_ERROR);
+
+        return ['description' => $draft['description'], 'recipient' => $draft['destination']['name'] ?? null];
+    }
+
     public function event(string $merchant, string $shipment, string $kind, ?string $actor = null, array $metadata = []): void
     {
         DB::table('shipment_events')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $merchant, 'shipment_id' => $shipment, 'kind' => $kind, 'actor_id' => $actor, 'metadata' => json_encode($metadata)]);

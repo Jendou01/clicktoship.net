@@ -7,7 +7,16 @@ if ! docker compose exec -T postgres psql -U clicktoship -d postgres -Atc "SELEC
   docker compose exec -T postgres createdb -U clicktoship clicktoship_e2e
 fi
 compose_e2e=(docker compose -f docker-compose.yml -f infrastructure/docker/compose.e2e.yml)
+# Explicit reset is restricted to the disposable browser database by both shell and Laravel.
+if [[ "${1:-}" == "--rebuild" ]]; then
+  "${compose_e2e[@]}" stop api worker scheduler
+  "${compose_e2e[@]}" run --rm --no-deps api php artisan e2e:rebuild
+elif [[ $# -gt 0 ]]; then
+  echo 'Usage: prepare-browser-tests.sh [--rebuild]' >&2
+  exit 2
+fi
 "${compose_e2e[@]}" run --rm --no-deps api php artisan migrate --no-interaction --force
+"${compose_e2e[@]}" run --rm --no-deps api php artisan schema:verify
 umask 077
 fixture_file="${E2E_FIXTURE_FILE:-/tmp/clicktoship-e2e-credentials.json}"
 "${compose_e2e[@]}" run --rm --no-deps -T api php tests/Fixtures/browser-accounts.php > "$fixture_file"

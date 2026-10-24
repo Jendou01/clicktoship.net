@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
-import { carrierCopy, carrierScreens, credentialFields, type CarrierScreen as View, type ServiceMapping } from "@/lib/carriers";
+import { carrierCopy, credentialFields, type CarrierScreen as View, type ServiceMapping } from "@/lib/carriers";
 import type { Locale } from "@/lib/i18n";
 type Account = { id: string; code: string; environment: string; name_en: string; name_ar: string; evidence: string; version: number; state_version: number; active_version: number | null; credentials_configured: boolean; services: ServiceMapping[] };
 type Capability = { operation: string; request_documented: boolean; external_enabled: boolean };
@@ -10,6 +10,7 @@ type History = { events: { id: string; version: number; action: string; created_
 const field = "w-full rounded border border-slate-400 bg-white p-2 text-slate-900";
 const button = "rounded bg-teal-800 px-4 py-2 text-white disabled:opacity-50";
 export function CarrierScreen({ locale, screen }: { locale: Locale; screen: View }) {
+  const [search, setSearch] = useState("");
   const t = carrierCopy[locale]; const [accounts, setAccounts] = useState<Account[]>([]); const [capabilities, setCapabilities] = useState<Capability[]>([]); const [busy, setBusy] = useState(false); const [loaded, setLoaded] = useState(false); const [message, setMessage] = useState(""); const [edit, setEdit] = useState<Account | null>(null); const [serviceCount, setServiceCount] = useState(0); const [history, setHistory] = useState<History | null>(null);
   async function load() { const d = await api<{ accounts: Account[]; capabilities: Capability[] }>("/admin/carriers"); setAccounts(d.accounts); setCapabilities(d.capabilities); }
   async function perform(work: () => Promise<void>) { setBusy(true); setMessage(""); try { await work(); } catch { setMessage(t.error); } finally { setBusy(false); } }
@@ -25,9 +26,10 @@ export function CarrierScreen({ locale, screen }: { locale: Locale; screen: View
   }
   const operationNames: Record<string, string> = { CalculateRate: "حساب السعر", CreateShipments: "إنشاء الشحنات", CreatePickup: "إنشاء استلام", CancelPickup: "إلغاء الاستلام", PrintLabel: "طباعة الملصق", TrackShipments: "تتبع الشحنات", TrackPickup: "تتبع الاستلام", FetchCities: "المدن", FetchCountries: "الدول", CountryDetails: "تفاصيل الدولة", ValidateAddress: "التحقق من العنوان", ValidatePostalCode: "التحقق من الرمز البريدي", SuggestCities: "اقتراح المدن", OfficeLocations: "مواقع المكاتب", Webhook: "الإشعارات", LookupByClientReference: "الاستعلام بمرجع العميل" };
   return <main dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-6 p-6 text-slate-900">
-    <nav className="flex flex-wrap gap-3"><a href={`/${locale}/dashboard`}>{t.dashboard}</a><a href={`/${locale}/mfa`}>{t.mfa}</a>{carrierScreens.map((v) => <a key={v} href={`/${locale}/${v}`}>{t[v]}</a>)}<a href={`/${locale === "en" ? "ar" : "en"}/${screen}`}>{locale === "en" ? "العربية" : "English"}</a></nav>
+
     <h1 className="text-3xl font-bold">{t[screen]}</h1><p className="rounded border border-amber-400 bg-amber-50 p-4">{t.blocked}</p><p>{t.noLive}</p>{!loaded && <p>{t.loading}</p>}{message && <p role="status">{message}</p>}
     <button className={button} disabled={busy} onClick={() => void perform(load)}>{t.refresh}</button>
+    <label className="block">{locale === "ar" ? "بحث في حسابات الناقل المحملة" : "Search loaded carrier accounts"}<input type="search" className={field} value={search} onChange={(e) => setSearch(e.target.value)} /></label>
     {screen === "carrier-webhooks" && <p>{t.webhook}</p>}
     {screen === "carrier-capabilities" && <div className="overflow-x-auto"><table className="w-full text-start"><thead><tr><th>{t.operation}</th><th>{t.status}</th></tr></thead><tbody>{capabilities.map((c) => <tr key={c.operation}><td>{locale === "ar" ? operationNames[c.operation] : c.operation}</td><td>{c.request_documented ? `${t.request} · ${t.unverified}` : t.unsupported}</td></tr>)}</tbody></table></div>}
     {screen === "aramex" && <><p>{t.noCredentials}</p><button className={button} onClick={() => { setEdit(null); setServiceCount(0); }}>{t.new}</button><form key={`${edit?.id || "new"}:${edit?.version || 0}`} onSubmit={save} className="space-y-5 rounded border p-4">

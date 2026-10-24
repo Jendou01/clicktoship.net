@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ShippingScreen } from "@/components/shipping-screen";
-import { api } from "@/lib/api";
-vi.mock("@/lib/api", () => ({ api: vi.fn() }));
+import { api, ApiError } from "@/lib/api";
+vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: vi.fn() }));
 const mocked = vi.mocked(api);
 beforeEach(() => { cleanup(); mocked.mockReset(); });
 describe("shipment workflow safety", () => {
@@ -23,3 +23,19 @@ describe("shipment workflow safety", () => {
   render(<ShippingScreen locale="en" screen="admin-shipping" />); expect(screen.getByRole("button", { name: "Load exceptions" })).toBeDisabled(); expect(mocked).not.toHaveBeenCalled(); expect(screen.getByText(/independent approver/)).toBeInTheDocument();
  });
 });
+
+ it.each(["en", "ar"] as const)("renders localized field errors and focuses the failing step in %s", async (locale) => {
+  mocked.mockImplementation(async (path, method) => {
+   if (method === "POST") throw new ApiError(422, "VALIDATION_FAILED", { "origin.phone": ["Invalid"], "packages.0.weight_grams": ["Invalid"], "items.0.country": ["Invalid"], service_id: ["Invalid"] });
+   return path === "/rates" ? { services: [] } : { shipments: [], page: 1, last_page: 1 };
+  });
+  render(<ShippingScreen locale={locale} screen="shipment-create" />);
+  await screen.findByText(locale === "en" ? "No records." : "لا توجد سجلات.");
+  const next = locale === "en" ? "Next" : "التالي";
+  fireEvent.click(screen.getByRole("button", { name: next })); fireEvent.click(screen.getByRole("button", { name: next }));
+  fireEvent.click(screen.getByRole("button", { name: locale === "en" ? "Save draft" : "حفظ المسودة" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(locale === "en" ? "international phone" : "هاتفًا دوليًا");
+  const phone = screen.getByLabelText(locale === "en" ? "Sender — International phone" : "المرسل — الهاتف الدولي");
+  expect(phone).toHaveAttribute("aria-invalid", "true"); expect(phone).toHaveFocus();
+  expect(screen.getByRole("alert")).toHaveTextContent(locale === "en" ? "Configured service" : "الخدمة المهيأة");
+ });

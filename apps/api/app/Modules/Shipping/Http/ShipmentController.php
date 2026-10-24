@@ -24,6 +24,10 @@ final class ShipmentController
         $d = $r->validate(['page' => 'sometimes|integer|min:1|max:100000', 'state' => 'sometimes|in:draft,ready,queued,sending,accepted,rejected,unknown,cancelled,blocked']);
         $p = DB::table('shipments')->where('merchant_id', $c->id())->when($d['state'] ?? null, fn ($q, $s) => $q->where('state', $s))->orderByDesc('created_at')->orderByDesc('id')->paginate(25, ['id', 'version', 'revision', 'state', 'financial_state', 'document_state', 'created_at'], 'page', $d['page'] ?? 1);
 
+        foreach ($p->items() as $shipment) {
+            $shipment->summary = app(Shipments::class)->summary($c->id(), $shipment);
+        }
+
         return ApiResponse::success(['shipments' => $p->items(), 'page' => $p->currentPage(), 'last_page' => $p->lastPage(), 'submission_enabled' => false, 'reason' => 'CARRIER_EVIDENCE_AND_FINANCIAL_ACTIVATION_REQUIRED']);
     }
 
