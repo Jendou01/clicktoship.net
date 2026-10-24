@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Bulk\Application\Processor;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Operations\Application\PlatformSecurity;
 use App\Modules\Pickups\Application\Pickups;
@@ -88,3 +89,8 @@ Artisan::command('e2e:rebuild', function (): int {
 
     return $this->call('migrate:fresh', ['--force' => true, '--no-interaction' => true]);
 })->purpose('Rebuild only the explicitly disposable browser database');
+
+Artisan::command('bulk:recover', function (): void {
+    $this->info((string) app(Processor::class)->recover());
+})->purpose('Republish durable pending import work without requiring Redis delivery history');
+Schedule::command('bulk:recover')->everyMinute()->withoutOverlapping();

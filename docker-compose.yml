@@ -10,6 +10,7 @@ x-api: &api
   user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
   volumes:
     - ./apps/api:/app
+    - ./infrastructure/docker/bulk.ini:/usr/local/etc/php/conf.d/bulk.ini:ro
   environment:
     APP_ENV: local
     APP_DEBUG: "false"

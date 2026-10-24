@@ -1,3 +1,5 @@
+import { BulkScreen } from "@/components/bulk-screen";
+import { bulkScreens, type BulkView } from "@/lib/bulk";
 import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { ShippingScreen } from "@/components/shipping-screen";
 import { shippingScreens, type ShippingView } from "@/lib/shipping";
@@ -14,10 +16,11 @@ import { IdentityScreen } from "@/components/identity-screen";
 import { screenNames, type Screen } from "@/lib/auth-copy";
 import { isLocale } from "@/lib/i18n";
 
-export function generateStaticParams() { return [...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
+export function generateStaticParams() { return [...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
-  if (!isLocale(locale) || ![...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (!isLocale(locale) || ![...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (bulkScreens.includes(screen as BulkView)) return <BulkScreen key={`${locale}:${screen}`} locale={locale} screen={screen as BulkView} />;
   if (shippingScreens.includes(screen as ShippingView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><ShippingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ShippingView} /></>;
   if (carrierScreens.includes(screen as CarrierView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><CarrierScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CarrierView} /></>;
   if (pricingScreens.includes(screen as PricingView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><PricingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PricingView} /></>;

@@ -71,3 +71,10 @@ Changes to an accepted decision require a rationale, migration/compatibility imp
 ## Phase 7 approved decisions
 
 Single-use quote acceptance binds full revision and canonical pricing inputs; valid at reserve and dispatch, fixed thereafter. Carrier evidence persists before finance. Unknown outcomes retain protected funds without external retries or timeout release. Independent reconciliation appends an effective decision without editing terminal carrier evidence. Typed encrypted revision snapshots avoid duplicate mutable PII tables. Default carrier and document scanner are disabled; synthetic adapters remain autoload-dev and isolated-database guarded. No real charges or deployment.
+
+## Phase 8 implementation decisions
+
+* Canonical import workflow is /api/v1/bulk/imports. The blueprint's proposed one-shot bulk-shipment endpoint is not implemented because Phase 8 creates drafts only and requires private scan/mapping/review/approval stages. No bulk carrier submission alias.
+* Native bounded CSV/ZipArchive/XMLReader parsers use the published runtime's existing extensions; unsupported active/complex workbook content fails explicitly. Original bytes and row payloads are encrypted. Production processing is closed pending real malware scanning/shared storage/retention approval; structural inspection is not antivirus certification.
+* Duplicate matches require explicit keep/skip rather than silent discard. Command replay and permanent per-row draft business keys are separate. Approval acknowledges unpriced drafts and does not accept a price or authorize charges.
+* PostgreSQL work records/cursors are authoritative, with Redis/Horizon notifications, per-row reauthorization, expiring leases and bounded recovery. Cancellation ends at the first committed draft; completed references/history are never deleted as an undo.

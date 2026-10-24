@@ -35,6 +35,24 @@ final class SchemaIntegrity
             $missing[] = 'shipments decisive-observation foreign key';
         }
 
+        if (Schema::hasTable('bulk_batches')) {
+            foreach (['bulk_batches' => ['merchant_id', 'mapping_version', 'origin_token_id'], 'bulk_work' => ['cursor', 'lease_until'], 'bulk_rows' => ['raw_hash'], 'bulk_drafts' => ['shipment_id']] as $table => $columns) {
+                foreach ($columns as $column) {
+                    if (! Schema::hasColumn($table, $column)) {
+                        $missing[] = "$table.$column";
+                    }
+                }
+            }
+            foreach (['bulk_files', 'bulk_rows', 'bulk_mappings', 'bulk_validations', 'bulk_decisions', 'bulk_prices', 'bulk_approvals', 'bulk_drafts', 'bulk_events', 'bulk_commands'] as $table) {
+                $guard = DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=?::regclass AND tgname='bulk_history_immutable' AND tgenabled IN ('O','A')", [$table]);
+                if (! $guard) {
+                    $missing[] = "$table.bulk_history_immutable";
+                }
+            }
+        } elseif (DB::table('migrations')->where('migration', '2026_10_24_130000_create_bulk_imports')->exists()) {
+            $missing[] = 'bulk_batches';
+        }
+
         return $missing;
     }
 }

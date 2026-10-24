@@ -38,8 +38,8 @@ erDiagram
   shipments ||--o| shipment_price_snapshots : charges
   shipments ||--o{ pickup_shipments : linked
   pickups ||--o{ pickup_shipments : includes
-  merchants ||--o{ bulk_imports : uploads
-  bulk_imports ||--o{ bulk_import_rows : processes
+  merchants ||--o{ bulk_batches : uploads
+  bulk_batches ||--o{ bulk_rows : processes
   store_integrations ||--o{ external_orders : imports
   external_orders ||--o{ shipments : fulfills
   merchants ||--o{ store_integrations : authorizes
@@ -74,7 +74,7 @@ A quote may have zero/many shipment snapshots. Snapshot is 0:1 per shipment unti
 | rate_quotes | merchant, service/account, origin/destination, costs/sell/tax/fees minor amounts and currencies, expires_at, rule version; opaque immutable quote result |
 | pricing_rules | merchant nullable for platform default, carrier/service/route/weight bands, effective dates, markup/min margin/tax; explicit precedence and no ambiguous overlap |
 | shipment_price_snapshots, snapshot_lines | shipment UNIQUE; quoted cost, sell subtotal, fee/tax/discount/margin components, currency, rule version, approved_at; immutable; no dynamic joins to changing rules |
-| bulk_imports, bulk_import_rows | merchant/import composite FK; private file, digest, status/counts; row number UNIQUE per import; canonical payload ref, validation errors, execution key, shipment FK, outcome; row idempotency permanent |
+| bulk_batches, bulk_rows | merchant/import composite FK; private file, digest, status/counts; row number UNIQUE per import; canonical payload ref, validation errors, execution key, shipment FK, outcome; row idempotency permanent |
 | wallets | UNIQUE(merchant_id,currency); liability_account_id; cached posted balance optional, version; available excludes active holds |
 | ledger_accounts | currency, class (clearing/liability/revenue/expense/payable/tax/COD); optional merchant; UNIQUE(merchant_id,purpose,currency) for merchant accounts; platform account uniqueness uses NULLS NOT DISTINCT or a separate partial unique index |
 | ledger_transactions | id, merchant context if applicable, operation key UNIQUE, currency, posted_at, source/ref, reversal_of_id; immutable after posting |
@@ -153,3 +153,7 @@ Migration rollback refuses posted financial history and retained financial grant
 ## Phase 7 additive schema
 
 `2026_10_24_110000_create_shipment_management` adds shipments, encrypted immutable shipment_revisions, shipment_validations, Pricing-owned pricing_quote_acceptances, immutable shipment_submissions/events, scoped shipping_request_keys, shipping_outbox/deliveries, shipping_observations, reconciliation requests/approvals, WalletBilling-owned financial_hold_resolutions, private shipment_documents, pickups/pickup_shipments/events/commands. Composite merchant FKs bind quote/revision/hold/wallet/carrier/document relationships. Retained history blocks normal downgrade. Packages/customs items live in typed encrypted immutable revision snapshots; no mutable duplicate PII projection or second ledger.
+
+## Implemented Phase 8 import schema
+
+The logical bulk sketches above are implemented by bulk_batches/files/rows/mappings/work/validations/decisions/prices/approvals/drafts/events/commands. Composite merchant/batch/row/mapping/work keys prevent reparenting and mixed-tenant relationships. Work has one active row per batch, a phase/revision/cursor and a bounded lease. Source/file/mapping/validation/decision/price/approval/reference/event/command histories are immutable. Bulk draft references target existing merchant-owned shipments; no second shipment or financial ledger table is introduced. See [Phase 8 architecture](../architecture/PHASE_8_BULK.md) and database/sql/phase8.sql for complete constraints.
