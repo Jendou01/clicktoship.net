@@ -7,6 +7,8 @@ use App\Modules\Operations\Application\PlatformSecurity;
 use App\Modules\Pickups\Application\Pickups;
 use App\Modules\Shipping\Application\Recovery;
 use App\Modules\Shipping\Jobs\ProcessShipment;
+use App\Modules\Tracking\Application\TrackingHealthMonitor;
+use App\Modules\Tracking\Application\TrackingPollScheduler;
 use App\Modules\WalletBilling\Application\Reconciliation;
 use App\Support\SchemaIntegrity;
 use Illuminate\Foundation\Inspiring;
@@ -94,3 +96,15 @@ Artisan::command('bulk:recover', function (): void {
     $this->info((string) app(Processor::class)->recover());
 })->purpose('Republish durable pending import work without requiring Redis delivery history');
 Schedule::command('bulk:recover')->everyMinute()->withoutOverlapping();
+
+Artisan::command('tracking:recover', function (): void {
+    $this->info((string) app(TrackingPollScheduler::class)->recover());
+})->purpose('Republish durable tracking work, with bounded leases and no shipment creation');
+Schedule::command('tracking:recover')->everyMinute()->withoutOverlapping();
+Artisan::command('tracking:schedule', function (): void {
+    $this->info((string) app(TrackingPollScheduler::class)->schedule());
+})->purpose('Incremental tracking backfill; external polling remains evidence-gated');
+Schedule::command('tracking:schedule')->everyMinute()->withoutOverlapping();
+Artisan::command('tracking:retention-candidates', function (): void {
+    $this->info((string) app(TrackingHealthMonitor::class)->retentionCandidates());
+})->purpose('Count retention review candidates without deleting encrypted history');

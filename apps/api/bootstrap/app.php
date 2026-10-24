@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend([RequestId::class, ClearMerchantContext::class]);
         $middleware->statefulApi();
+        $middleware->validateCsrfTokens(except: ['api/v1/tracking/webhooks/*']);
         $middleware->redirectGuestsTo(fn (Request $request) => null);
         $middleware->alias([
             'identity.active' => ActiveIdentity::class,
@@ -44,6 +45,8 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             $status = $response->getStatusCode();
             [$code, $message] = match ($status) {
+                413 => ['PAYLOAD_TOO_LARGE', 'The request exceeds the permitted size.'],
+                415 => ['UNSUPPORTED_MEDIA_TYPE', 'The content type is unsupported.'],
                 400 => ['BAD_REQUEST', 'The request is invalid.'],
                 401 => ['UNAUTHENTICATED', 'Authentication is required.'],
                 403 => ['FORBIDDEN', 'This action is not permitted.'],

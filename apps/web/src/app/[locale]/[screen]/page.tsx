@@ -1,3 +1,5 @@
+import { TrackingScreen } from "@/components/tracking-screen";
+import { trackingScreens, type TrackingScreen as TrackingView } from "@/lib/tracking";
 import { BulkScreen } from "@/components/bulk-screen";
 import { bulkScreens, type BulkView } from "@/lib/bulk";
 import { WorkspaceNavigation } from "@/components/workspace-navigation";
@@ -16,10 +18,11 @@ import { IdentityScreen } from "@/components/identity-screen";
 import { screenNames, type Screen } from "@/lib/auth-copy";
 import { isLocale } from "@/lib/i18n";
 
-export function generateStaticParams() { return [...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
+export function generateStaticParams() { return [...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
-  if (!isLocale(locale) || ![...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (!isLocale(locale) || ![...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (trackingScreens.includes(screen as TrackingView)) return <TrackingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as TrackingView} />;
   if (bulkScreens.includes(screen as BulkView)) return <BulkScreen key={`${locale}:${screen}`} locale={locale} screen={screen as BulkView} />;
   if (shippingScreens.includes(screen as ShippingView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><ShippingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ShippingView} /></>;
   if (carrierScreens.includes(screen as CarrierView)) return <><WorkspaceNavigation locale={locale} screen={screen} /><CarrierScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CarrierView} /></>;

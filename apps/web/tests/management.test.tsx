@@ -80,3 +80,11 @@ it("keeps the directory navigation hidden until authorized first-page data is lo
   expect(screen.getByRole("navigation", { name: "Page" })).toBeVisible();
   expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 });
+
+it("preserves the existing merchant-read default while tracking grants require explicit selection", async () => {
+  mockApi.mockImplementation(async(path)=>path==="/auth/me"?profile:path==="/auth/mfa"?{enabled:true,fresh:true,platform_permissions:["platform.merchant.view","platform.tracking.view","platform.tracking.review"]}:path==="/merchants/current"?{merchant:{id:"merchant",name:"Test merchant"},permissions:[]}:path.startsWith("/admin/merchants?page")?{merchants:[{id:"merchant",name:"Test merchant",verification_status:"unverified",version:1}],pagination:{pages:1}}:path==="/admin/access-requests"?{grants:[]}:{});
+  render(<ManagementScreen locale="en" screen="admin-access"/>);
+  const select=await screen.findByLabelText("Requested access");expect(select).toHaveValue("platform.merchant.view");
+  fireEvent.change(select,{target:{value:"platform.tracking.review"}});fireEvent.change(screen.getByLabelText("Reason (at least 10 characters)"),{target:{value:"Explicit tracking review grant"}});fireEvent.submit(screen.getByRole("button",{name:"Request merchant access"}).closest("form")!);
+  await waitFor(()=>expect(mockApi).toHaveBeenCalledWith("/admin/access-requests","POST",expect.objectContaining({capabilities:["platform.tracking.view","platform.tracking.review"]})));
+});

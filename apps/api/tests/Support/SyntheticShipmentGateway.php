@@ -19,6 +19,8 @@ final class SyntheticShipmentGateway implements ShipmentGateway
 
     public bool $throw = false;
 
+    public ?string $reference = null;
+
     public function __construct(public string $account)
     {
         $this->guard();
@@ -53,6 +55,6 @@ final class SyntheticShipmentGateway implements ShipmentGateway
             throw new \RuntimeException('Synthetic lost response');
         }
 
-        return new ShipmentOutcome($this->outcome, hash('sha256', 'synthetic:'.$operation->id.':'.$this->outcome), $this->outcome === 'accepted' ? 'SYNTHETIC-'.$operation->id : null);
+        return new ShipmentOutcome($this->outcome, hash('sha256', 'synthetic:'.$operation->id.':'.$this->outcome), $this->outcome === 'accepted' ? ($this->reference ?? 'SYNTHETIC-'.$operation->id) : null);
     }
 }

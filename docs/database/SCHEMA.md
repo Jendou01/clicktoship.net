@@ -157,3 +157,7 @@ Migration rollback refuses posted financial history and retained financial grant
 ## Implemented Phase 8 import schema
 
 The logical bulk sketches above are implemented by bulk_batches/files/rows/mappings/work/validations/decisions/prices/approvals/drafts/events/commands. Composite merchant/batch/row/mapping/work keys prevent reparenting and mixed-tenant relationships. Work has one active row per batch, a phase/revision/cursor and a bounded lease. Source/file/mapping/validation/decision/price/approval/reference/event/command histories are immutable. Bulk draft references target existing merchant-owned shipments; no second shipment or financial ledger table is introduced. See [Phase 8 architecture](../architecture/PHASE_8_BULK.md) and database/sql/phase8.sql for complete constraints.
+
+## Phase 9 tracking
+
+`2026_10_24_150000_create_tracking` adds tracking_bindings, tracking_endpoints, tracking_work, tracking_commands, tracking_event_details, tracking_attempts, tracking_cases, tracking_reviews, tracking_account_health, tracking_preferences, tracking_notifications, tracking_scan_cursors and tracking_receipts. Reuses carrier_webhook_deliveries, carrier_tracking_events and carrier_tracking_projections; no second shipment status or ledger. Composite tenant/account/submission/event FKs, immutable history, guarded projections, unique replay/event/command/notification identities and one active poll per binding enforce isolation. Runtime retained history prevents downgrade.

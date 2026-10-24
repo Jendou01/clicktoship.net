@@ -110,17 +110,16 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Acceptance: 1,000-row mixed/retry workloads, spreadsheet security, tenant/scope/revocation and actual PostgreSQL concurrency fences; all prior regression/build/audit checks. See [Phase 8 report](PHASE_8_REPORT.md) for executed outcomes.
 * No live carrier/financial operations, merge or production deployment. Phase 9 remains separately authorized.
 
-## Phase 9 — Tracking and webhooks
+## Phase 9 — Tracking and webhooks (implemented foundations)
 
-* Scope: Tracking and webhooks.
-* Dependencies: Phase 7; actual webhook contract.
-* Implementation tasks: Verified durable inbox, dedupe/replay, raw status map, event projection, poll reconciliation, notifications.
-* Database changes: events/inbox/delivery/subscription tables.
-* API changes: Tracking timelines + authenticated carrier ingress + subscriptions.
-* Frontend changes: Timeline/exception/replay/admin views.
-* Automated tests: Invalid auth, duplicates, out-of-order, unknown code, reconciliation outage.
-* Acceptance criteria: Append-only history; stale events cannot silently regress projection.
-* Completion report: Planned; webhook specification missing.
+* Verified base: PR #8 merge `3b301898f5fb197488a442814716bd274af695be`.
+* Reuse Phase 6 immutable carrier events/deliveries and the sole projection, bound to decisive Phase 7 submission evidence; imported drafts remain ordinary drafts.
+* Provider-neutral normalization, conservative transition graph, encrypted durable inbox/work, replay/event/command idempotency, bounded retries, quarantine, lease recovery and incremental backfill.
+* Merchant overview/timeline/search/exceptions and recent-MFA, independently granted administrator diagnostics/review in Arabic and English.
+* Disabled notification outbox readiness with explicit consent and event/recipient uniqueness. No sender, real carrier polling, provider webhook activation or financial resolution.
+* New OpenAPI contracts and additive migration/security/concurrency coverage. See [Phase 9 report](PHASE_9_REPORT.md) and [architecture](architecture/PHASE_9_TRACKING.md).
+* Aramex V2 response/event and webhook authenticity/replay/ACK contracts and authorized sandbox access remain missing. Adapter flags cannot bypass Phase 6 evidence gates.
+* No merge, deployment or Phase 10 implementation is authorized.
 
 ## Phase 10 — International shipping
 
@@ -220,8 +219,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 8 bulk-import feature branch and its completion/security report. Production import processing remains blocked pending approved malware scanning, shared storage and retention/operations policy. Existing carrier/financial activation gates remain closed. No automatic merge, deployment or Phase 9 work.
-
-## Post-Phase 7 QA remediation
-
-Focused follow-up on `fix/post-phase-7-qa-ux`: disposable browser schema integrity/rebuild, permission-aware shared workspace navigation, bilingual shipment field errors and persisted locale context, RTL identifiers, mobile team cards, safe availability copy and clearer empty/admin/list states. Execution evidence: [QA report](POST_PHASE_7_QA_REPORT.md). Phase 8 and live carrier/financial activation remain separately gated.
+Review the Phase 9 tracking/webhook feature branch and its completion/security report. All external carrier/financial/notification gates remain closed. No automatic merge, production deployment or Phase 10 work.
