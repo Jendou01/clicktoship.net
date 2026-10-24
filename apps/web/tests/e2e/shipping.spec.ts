@@ -1,0 +1,20 @@
+import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+const fixture = JSON.parse(readFileSync(process.env.E2E_PRICING_FIXTURE_FILE || "/tmp/clicktoship-pricing-e2e.json", "utf8")) as { pricingOwner: { email: string; password: string }; service: string };
+test("real shipment draft, exact quote acceptance and Arabic disabled shipping boundary", async ({ page }) => {
+ await page.goto("/en/login"); await page.getByLabel("Email address", { exact: true }).fill(fixture.pricingOwner.email); await page.getByLabel("Password", { exact: true }).fill(fixture.pricingOwner.password); await page.getByRole("button", { name: "Continue", exact: true }).click(); await expect(page).toHaveURL(/\/en\/organizations$/);
+ await page.goto("/en/onboarding"); await page.getByLabel("Organization name", { exact: true }).fill(`Shipping synthetic ${randomUUID()}`); await page.getByRole("button", { name: "Create organization", exact: true }).click(); await expect(page).toHaveURL(/\/en\/dashboard$/);
+ await page.goto("/en/shipment-create");
+ for (const side of ["Sender", "Recipient"]) {
+  await page.getByLabel(`${side} — Country code`, { exact: true }).fill("SA"); await page.getByLabel(`${side} — City`, { exact: true }).fill(side === "Sender" ? "Synthetic Origin" : "Synthetic Destination"); await page.getByLabel(`${side} — Contact name`, { exact: true }).fill("Synthetic contact"); await page.getByLabel(`${side} — International phone`, { exact: true }).fill("+966501234567"); await page.getByLabel(`${side} — Street address`, { exact: true }).fill("Synthetic test address"); await page.getByLabel(`${side} — Postal code`, { exact: true }).fill("12345");
+ }
+ await page.getByRole("button", { name: "Next", exact: true }).click(); await page.getByLabel("Contents description", { exact: true }).fill("Synthetic goods"); await page.getByLabel("Weight (grams) 1", { exact: true }).fill("1000");
+ for (const label of ["Length (mm) 1", "Width (mm) 1", "Height (mm) 1"]) await page.getByLabel(label, { exact: true }).fill("100");
+ await page.getByRole("button", { name: "Next", exact: true }).click(); await page.getByLabel("Configured service", { exact: true }).selectOption(fixture.service);
+ const saved = page.waitForResponse((r) => r.url().endsWith("/api/v1/shipments") && r.request().method() === "POST"); await page.getByRole("button", { name: "Save draft", exact: true }).click(); const result = await saved; expect(result.status()).toBe(201); const id = (await result.json()).data.shipment.id as string; await expect(page.getByRole("status")).toHaveText("Changes saved");
+ await page.getByRole("button", { name: "Validate draft", exact: true }).click(); await expect(page.getByRole("button", { name: "Calculate and accept quote", exact: true })).toBeEnabled(); await page.getByRole("button", { name: "Calculate and accept quote", exact: true }).click(); await expect(page.getByText(/Accepted price snapshot:.*20.00 SAR/)).toBeVisible(); await expect(page.getByRole("button", { name: "Submit shipment (disabled)" })).toBeDisabled();
+ const denied = await page.request.post(`/api/v1/shipments/${id}/submit`, { data: { version: 2, idempotency_key: randomUUID() }, headers: { Origin: new URL(page.url()).origin, Referer: page.url(), "X-XSRF-TOKEN": decodeURIComponent((await page.context().cookies()).find((c) => c.name === "XSRF-TOKEN")!.value) } }); expect(denied.status()).toBe(503);
+ await page.goto("/ar/shipment-details"); await expect(page.getByRole("main")).toHaveAttribute("dir", "rtl"); const article = page.getByRole("article").filter({ hasText: id }); await article.getByRole("button", { name: "فتح", exact: true }).click(); await expect(page.getByRole("button", { name: "إرسال الشحنة (معطل)" })).toBeDisabled(); await expect(page.getByRole("note")).toContainText("معطلة");
+ await page.getByRole("button", { name: "إلغاء قبل الإرسال", exact: true }).click(); await expect(page.getByText("حالة الشحنة: ملغاة", { exact: true })).toBeVisible();
+});

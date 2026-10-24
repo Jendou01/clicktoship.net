@@ -1,3 +1,5 @@
+import { ShippingScreen } from "@/components/shipping-screen";
+import { shippingScreens, type ShippingView } from "@/lib/shipping";
 import { CarrierScreen } from "@/components/carrier-screen";
 import { carrierScreens, type CarrierScreen as CarrierView } from "@/lib/carriers";
 import { PricingScreen } from "@/components/pricing-screen";
@@ -11,10 +13,11 @@ import { IdentityScreen } from "@/components/identity-screen";
 import { screenNames, type Screen } from "@/lib/auth-copy";
 import { isLocale } from "@/lib/i18n";
 
-export function generateStaticParams() { return [...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens].map((screen) => ({ screen })); }
+export function generateStaticParams() { return [...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
-  if (!isLocale(locale) || ![...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens].includes(screen as Screen)) notFound();
+  if (!isLocale(locale) || ![...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (shippingScreens.includes(screen as ShippingView)) return <ShippingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as ShippingView} />;
   if (carrierScreens.includes(screen as CarrierView)) return <CarrierScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CarrierView} />;
   if (pricingScreens.includes(screen as PricingView)) return <PricingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PricingView} />;
   if (financeScreens.includes(screen as FinanceView)) return <FinanceScreen key={`${locale}:${screen}`} locale={locale} screen={screen as FinanceView} />;

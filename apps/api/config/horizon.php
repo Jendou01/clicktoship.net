@@ -16,7 +16,7 @@ return [
     'defaults' => [
         'supervisor-1' => [
             'connection' => 'redis',
-            'queue' => ['critical', 'default', 'carrier', 'carrier-events'],
+            'queue' => ['critical', 'default', 'carrier', 'carrier-events', 'shipments'],
             'balance' => false,
             'maxProcesses' => 2,
             'maxTime' => 0,

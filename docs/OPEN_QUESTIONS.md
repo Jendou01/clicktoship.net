@@ -42,3 +42,7 @@ Unknown external-outcome resolution remains blocked pending an authoritative evi
 ## Phase 6 capability-specific stops
 
 Independent connector/configuration/request/queue/security work is implemented. External operations still need current V2 response/error/status schemas and scrubbed fixtures, secure authorized sandbox credentials/non-billable test policy, account/route/product/payer/customs/COD terms, rate-limit/reference/idempotency guarantees and the missing webhook authenticity/replay/ack/registration specification. Legacy SOAP/manual credentials and request-only examples are insufficient evidence. Label storage/retention, verified status maps and actual send/finalize/reconciliation remain separately gated. See [evidence matrix](integrations/PHASE_6_EVIDENCE.md); no live success or Phase 7 authorization is implied.
+
+## Phase 7 activation blockers
+
+Verified V2 response/lookup/label/pickup contracts, account/service mapping and route entitlements, authorized sandbox policy, storage/scanning/retention, customs/Incoterms/COD/insurance/DG policy, financial settlement during suspension/freeze, conflicting-evidence resolution standards and qualified accounting/regulatory/runtime-role signoff remain unresolved. Independently testable orchestration proceeds; real carrier/financial/document activation stays disabled.

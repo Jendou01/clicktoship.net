@@ -106,3 +106,7 @@ Phase 5 owns versioned pricing configuration and immutable tenant-scoped quotes.
 ## Implemented Phase 6 carrier foundations
 
 Carriers owns encrypted versioned operator accounts, candidate routes, request-only Aramex adapters, code-owned capability evidence, scoped intent/attempt journals, health and encrypted event retention/queue boundaries. Current V2 response and webhook authenticity contracts are missing, so runtime transport, production and external webhook ingestion remain hard disabled. Legacy SOAP structure tests do not verify JSON integration. No merchant shipment command, wallet write or eligibility activation is introduced. [Carrier architecture and capability-specific stops](PHASE_6_CARRIERS.md).
+
+## Phase 7 shipment orchestration
+
+See [shipment architecture](PHASE_7_SHIPPING.md). Verified carrier observations commit before local financial settlement; accepted/capture-pending cannot be resubmitted. Protected/unknown evidence resolution is additive, independently approved where required, and isolated-test-only. Existing external carrier and real-money gates remain unchanged.
