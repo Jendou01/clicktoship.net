@@ -127,6 +127,7 @@ final class ShipmentSecurityTest extends ShippingTestCase
         $u = $this->user();
         $m = $this->organization($u);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 14 identity before older rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive OAuth cancellation guard before prior rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Commerce before exercising prior rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 12 overview before prior-phase rollback.

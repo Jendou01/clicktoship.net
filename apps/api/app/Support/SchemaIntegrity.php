@@ -128,6 +128,25 @@ final class SchemaIntegrity
                     $missing[] = $table.'.commerce_history';
                 }
             }
+            if (DB::table('migrations')->where('migration', '2026_10_25_140000_extend_commerce_provider_identity')->exists()) {
+                foreach (['commerce_connections' => ['external_platform_id', 'display_domain'], 'commerce_authorizations' => ['provider']] as $table => $columns) {
+                    foreach ($columns as $column) {
+                        if (! Schema::hasColumn($table, $column)) {
+                            $missing[] = $table.'.'.$column.' missing';
+                        }
+                    }
+                }
+                $identity = DB::selectOne("SELECT pg_get_functiondef('commerce_identity_guard()'::regprocedure) AS definition");
+                if (! str_contains($identity->definition, 'external_platform_id')) {
+                    $missing[] = 'Commerce platform identity guard missing';
+                }
+            }
+            if (DB::table('migrations')->where('migration', '2026_10_25_140000_extend_commerce_provider_identity')->exists()) {
+                $constraint = DB::selectOne("SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='commerce_connections'::regclass AND conname='commerce_source_identity' AND contype='u'");
+                if (! $constraint || ! str_contains($constraint->definition, 'provider, external_platform_id, external_store_id')) {
+                    $missing[] = 'commerce_source_identity';
+                }
+            }
             foreach (['commerce_connections' => 'commerce_owner_guard', 'commerce_orders' => 'commerce_order_owner_guard'] as $table => $trigger) {
                 if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass(?) AND tgname=? AND tgenabled IN ('O','A')", ['public.'.$table, $trigger])) {
                     $missing[] = $table.'.'.$trigger;

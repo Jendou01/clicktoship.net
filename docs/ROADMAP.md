@@ -163,15 +163,14 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Phase 14 — Shopyzee integration
 
-* Scope: Shopyzee integration.
-* Dependencies: Shipping stable; official extension docs.
-* Implementation tasks: Dedicated connector/plugin, scoped auth, order shipment and fulfillment sync.
-* Database changes: Reuse connector tables; provider mappings.
-* API changes: Documented provider hooks only.
-* Frontend changes: Install/map/health/retry screens.
-* Automated tests: Connector contract and duplicate/revoked token/retry tests.
-* Acceptance criteria: Verified extension mechanisms and isolated merchant credentials.
-* Completion report: Planned; official API/hook documentation missing.
+* Scope: Safe ClickToShip-side provider foundation; separate connector design pending deployed source/contracts.
+* Dependencies: Existing Commerce/Shipping; accessible official plugin docs and actual Shopyzee version/tenant/order/auth contracts for external enablement.
+* Implementation: Reused provider registry, encrypted source data, permanent instance/store identity, provider-aware bounded sync/refresh/recovery and explicit draft/batch preparation.
+* Database: Additive instance/domain metadata, scoped authorization intents, immutable ownership and unique source tuple. No duplicate engine or ledger.
+* API/UI: Existing Commerce with provider catalog/filter/source attribution, disabled Shopyzee authorize/receiver, bilingual merchant pages and aggregate platform monitoring.
+* Tests: Prior suites plus internal synthetic source isolation, revoked origin, crash/recovery, independent-process concurrency, current merchant UI and fail-closed contracts.
+* External/plugin acceptance: Actual documented plugin/auth/order mechanisms and isolated deployed-version compatibility must be verified separately. No installation, fulfillment write-back, live shipping or money movement.
+* Completion: [Phase 14 report](PHASE_14_REPORT.md). All eight supplied official plugin-guide URLs returned proxy403; real connectivity and standalone plugin implementation remain blocked by missing accessible evidence.
 
 ## Phase 15 — Reporting and analytics
 
@@ -211,4 +210,8 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 13 gated store foundation feature branch and completion report. Resolve official Salla contract/demo/callback/consent/privacy prerequisites before real activation. Existing carrier, financial, notification and customs gates remain closed. No automatic merge, deployment or Phase 14.
+Review the Phase 14 gated Shopyzee foundation and separate connector design. Resolve accessible plugin documentation, actual deployed source/version, tenant/order/authentication contracts and isolated compatibility testing before external activation. Salla, carrier, financial, notification and customs gates remain closed. No automatic merge, deployment or Phase 15.
+
+## Phase 14 implementation status
+
+ClickToShip-side foundation implemented on `feat/phase-14-shopyzee-integration`: provider/platform/store ownership, provider-aware sync and credential fences, unified orders/source filters, existing reviewed draft/batch orchestration, aggregate monitoring and bilingual UI. All eight supplied official Nazmart plugin-guide URLs are proxy-denied. Shopyzee live authorization/sync/webhooks and standalone plugin compatibility remain unverified and disabled. See [report](PHASE_14_REPORT.md), [evidence](integrations/SHOPYZEE_EVIDENCE.md) and [connector proposal](integrations/SHOPYZEE_CONNECTOR_DESIGN.md). Phase 15 has not started.

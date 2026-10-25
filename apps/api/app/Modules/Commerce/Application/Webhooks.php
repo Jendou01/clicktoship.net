@@ -3,7 +3,6 @@
 namespace App\Modules\Commerce\Application;
 
 use App\Modules\Commerce\Domain\IntegrationFailure;
-use App\Modules\Commerce\Domain\StoreProvider;
 use App\Modules\Commerce\Jobs\ProcessStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +12,8 @@ final class Webhooks
 {
     public function receive(Request $r): array
     {
-        $provider = app(StoreProvider::class);
+        $name = $r->route('provider', 'salla');
+        $provider = app(Providers::class)->adapter($name);
         abort_unless($provider->available(), 503);
         abort_if((int) $r->header('Content-Length', 0) > 65536, 413);
         $body = $r->getContent();
@@ -23,9 +23,9 @@ final class Webhooks
             throw new IntegrationFailure('WEBHOOK_AUTHENTICITY_UNVERIFIED');
         }
 
-        return DB::transaction(function () use ($v, $body) {
-            $root = DB::table('commerce_connections')->where('provider', 'salla')->where('external_store_id', $v['store_id'])->first();
-            abort_unless($root, 404);
+        return DB::transaction(function () use ($v, $body, $name) {
+            $root = DB::table('commerce_connections')->where('provider', $name)->where('external_platform_id', $v['platform_id'] ?? ($name === 'salla' ? 'salla' : ''))->where('external_store_id', $v['store_id'])->first();
+            abort_unless($root && app(Providers::class)->matches($root, $v), 404);
             DB::table('merchants')->where('id', $root->merchant_id)->lockForUpdate()->firstOrFail();
             $c = app(Access::class)->connection($root->merchant_id, $root->id);
             $hash = hash('sha256', $v['receipt_id']);

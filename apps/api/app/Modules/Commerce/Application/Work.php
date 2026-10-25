@@ -3,7 +3,6 @@
 namespace App\Modules\Commerce\Application;
 
 use App\Modules\Commerce\Domain\IntegrationFailure;
-use App\Modules\Commerce\Domain\StoreProvider;
 use App\Modules\Commerce\Jobs\ProcessStore;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Pricing\Application\Catalog;
@@ -25,7 +24,7 @@ final class Work
             $conn = app(Access::class)->connection($m, $id);
             app(Access::class)->active($conn);
             if ($kind === 'sync') {
-                abort_unless(app(StoreProvider::class)->available(), 503);
+                abort_unless(app(Providers::class)->adapter($conn->provider)->available(), 503);
             } else {
                 $c->require('orders.read');
                 $c->require('shipments.write');
@@ -91,9 +90,11 @@ final class Work
                 $this->prepare($m, $id, $lease);
             } else {
                 $credential = app(Tokens::class)->credential($run);
-                $page = app(StoreProvider::class)->orders($credential, $run->checkpoint ? Crypt::decryptString($run->checkpoint) : null, $run->cursor ? Crypt::decryptString($run->cursor) : null);
+                $source = DB::table('commerce_connections')->where('merchant_id', $m)->where('id', $run->connection_id)->firstOrFail();
+                abort_unless(app(Providers::class)->adapter($source->provider)->available(), 503);
+                $page = app(Providers::class)->adapter($source->provider)->orders($credential, $run->checkpoint ? Crypt::decryptString($run->checkpoint) : null, $run->cursor ? Crypt::decryptString($run->cursor) : null);
                 $this->locked($m, $id, $lease, function ($w, $c) use ($page) {
-                    if (! is_array($page['orders'] ?? null) || count($page['orders']) > config('commerce.max_page_orders') || ($page['store_id'] ?? null) !== $c->external_store_id || ($page['provenance'] ?? null) !== $c->provenance || ! array_key_exists('next_cursor', $page) || ! array_key_exists('checkpoint', $page) || strlen(json_encode($page)) > config('commerce.max_payload_bytes')) {
+                    if (! is_array($page['orders'] ?? null) || count($page['orders']) > config('commerce.max_page_orders') || ! app(Providers::class)->matches($c, $page) || ($page['provenance'] ?? null) !== $c->provenance || ! array_key_exists('next_cursor', $page) || ! array_key_exists('checkpoint', $page) || strlen(json_encode($page)) > config('commerce.max_payload_bytes')) {
                         throw new IntegrationFailure('API_INVALID_PAYLOAD');
                     }foreach (['next_cursor', 'checkpoint'] as $key) {
                         if ($page[$key] !== null && (! is_string($page[$key]) || strlen($page[$key]) > 2048)) {

@@ -18,9 +18,9 @@ final class Connections
 
     public function list(string $merchant): array
     {
-        $rows = DB::table('commerce_connections as c')->leftJoin('commerce_credentials as t', fn ($j) => $j->on('t.connection_id', '=', 'c.id')->on('t.merchant_id', '=', 'c.merchant_id'))->where('c.merchant_id', $merchant)->orderByDesc('c.created_at')->limit(100)->get(['c.id', 'c.provider', 'c.external_store_id', 'c.state', 'c.provenance', 'c.version', 'c.last_synced_at', 'c.error_code', 'c.created_at', 't.expires_at', 't.version as credential_version']);
+        $rows = DB::table('commerce_connections as c')->leftJoin('commerce_credentials as t', fn ($j) => $j->on('t.connection_id', '=', 'c.id')->on('t.merchant_id', '=', 'c.merchant_id'))->leftJoinSub(DB::table('commerce_orders')->where('merchant_id', $merchant)->selectRaw('connection_id, count(*)::int AS imported_orders, count(*) FILTER (WHERE review_required)::int AS review_orders')->groupBy('connection_id'), 'counts', 'counts.connection_id', '=', 'c.id')->where('c.merchant_id', $merchant)->orderByDesc('c.created_at')->limit(100)->get(['c.id', 'c.provider', 'c.external_store_id', 'c.external_platform_id', 'c.display_domain', 'c.state', 'c.provenance', 'c.version', 'c.last_synced_at', 'c.error_code', 'c.created_at', 't.expires_at', 't.version as credential_version', DB::raw('coalesce(counts.imported_orders,0) AS imported_orders'), DB::raw('coalesce(counts.review_orders,0) AS review_orders')]);
 
-        return ['connections' => $rows, 'capabilities' => $this->capabilities()];
+        return ['connections' => $rows, 'capabilities' => $this->capabilities(), 'providers' => app(Providers::class)->catalog()];
     }
 
     private function redirect(): string
@@ -56,7 +56,7 @@ final class Connections
         abort_unless(app(StoreProvider::class)->available(), 503);
         $intent = app(Access::class)->locked($r, $c, 'integrations.manage', function ($m) use ($r, $d) {
             abort_unless($r->hasSession(), 403);
-            $i = DB::table('commerce_authorizations')->where('state_hash', hash('sha256', $d['state']))->where('merchant_id', $m)->where('actor_id', $r->user()->id)->where('session_id', $r->session()->get('auth_session_id'))->whereNull('used_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->lockForUpdate()->first();
+            $i = DB::table('commerce_authorizations')->where('provider', 'salla')->where('state_hash', hash('sha256', $d['state']))->where('merchant_id', $m)->where('actor_id', $r->user()->id)->where('session_id', $r->session()->get('auth_session_id'))->whereNull('used_at')->whereNull('cancelled_at')->where('expires_at', '>', now())->lockForUpdate()->first();
             abort_unless($i && $i->auth_version === $r->user()->fresh()->auth_version && $i->redirect_uri === $this->redirect(), 403);
             DB::table('commerce_authorizations')->where('id', $i->id)->update(['used_at' => now()]);
 
@@ -104,7 +104,7 @@ final class Connections
 
     public function disable(object $s, ?string $actor = null): void
     {
-        DB::table('commerce_authorizations')->where('merchant_id', $s->merchant_id)->whereNull('cancelled_at')->where('expires_at', '>', now())->update(['cancelled_at' => now()]);
+        DB::table('commerce_authorizations')->where('merchant_id', $s->merchant_id)->where('provider', $s->provider)->whereNull('cancelled_at')->where('expires_at', '>', now())->update(['cancelled_at' => now()]);
         DB::table('commerce_connections')->where('id', $s->id)->update(['state' => 'disconnected', 'generation' => $s->generation + 1, 'version' => $s->version + 1, 'updated_at' => now()]);
         DB::table('commerce_credentials')->where('connection_id', $s->id)->update(['ciphertext' => null, 'version' => DB::raw('version+1'), 'refresh_nonce' => null, 'lease_until' => null]);
         DB::table('commerce_runs')->where('connection_id', $s->id)->whereIn('state', ['queued', 'running', 'waiting', 'limited'])->update(['state' => 'blocked', 'failure_code' => 'DISCONNECTED', 'lease_token' => null, 'lease_until' => null]);

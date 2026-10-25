@@ -12667,11 +12667,10 @@ paths:
     get:
       operationId: getPhase13CommerceProviders
       summary: Commerce Providers
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -12693,7 +12692,7 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/CommerceCapabilities'
-                        maxItems: 1
+                        maxItems: 2
                     required:
                     - providers
                   meta:
@@ -12726,11 +12725,10 @@ paths:
     get:
       operationId: getPhase13CommerceConnectionList
       summary: Commerce ConnectionList
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -12777,14 +12775,13 @@ paths:
     post:
       operationId: postPhase13CommerceBegin
       summary: Commerce Begin
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
-        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
-        success schemas describe internal tested architecture, not verified Salla wire
-        behavior. Never invent a reachable callback URL.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Runtime Salla contract/credentials/application/callback
+        gates are CLOSED; default response503. OAuth mode/endpoints/scopes/signatures are
+        unverified; success schemas describe internal tested architecture, not verified Salla
+        wire behavior. Never invent a reachable callback URL.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -12840,14 +12837,13 @@ paths:
     get:
       operationId: getPhase13CommerceCallback
       summary: Commerce Callback
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
-        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
-        success schemas describe internal tested architecture, not verified Salla wire
-        behavior. Never invent a reachable callback URL.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Runtime Salla contract/credentials/application/callback
+        gates are CLOSED; default response503. OAuth mode/endpoints/scopes/signatures are
+        unverified; success schemas describe internal tested architecture, not verified Salla
+        wire behavior. Never invent a reachable callback URL.
       security:
       - SessionCookie: []
       x-required-permissions:
@@ -12917,11 +12913,10 @@ paths:
     post:
       operationId: postPhase13CommerceDisconnect
       summary: Commerce Disconnect
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -12999,14 +12994,13 @@ paths:
     post:
       operationId: postPhase13CommerceSync
       summary: Commerce Sync
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
-        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
-        success schemas describe internal tested architecture, not verified Salla wire
-        behavior. Never invent a reachable callback URL.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Runtime Salla contract/credentials/application/callback
+        gates are CLOSED; default response503. OAuth mode/endpoints/scopes/signatures are
+        unverified; success schemas describe internal tested architecture, not verified Salla
+        wire behavior. Never invent a reachable callback URL.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -13074,14 +13068,14 @@ paths:
     post:
       operationId: postPhase13CommercePrepare
       summary: Commerce Prepare
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
-        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
-        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
-        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Also requires orders.read
+        and shipments.write. Explicit current snapshot/version and preview hash bind the reviewed
+        inputs. Permanent order link prevents duplicate drafts across retries/actors/crashes.
+        Missing COD/weights/currency/source eligibility fail closed; no implicit FX. Existing
+        linked drafts are retained, never overwritten.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -13180,11 +13174,10 @@ paths:
     get:
       operationId: getPhase13CommerceEvents
       summary: Commerce Events
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -13244,11 +13237,10 @@ paths:
     get:
       operationId: getPhase13CommerceOrders
       summary: Commerce Orders
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -13293,6 +13285,17 @@ paths:
           type: string
           format: date
         description: UTC source creation boundary; to is inclusive.
+      - name: provider
+        in: query
+        schema:
+          type: string
+          enum:
+          - all
+          - salla
+          - shopyzee
+          default: salla
+        description: Legacy default Salla; unified workspace explicitly selects all. Each
+          row retains its persisted source identity.
       responses:
         '200':
           description: Authorized local result; external activation gates remain closed.
@@ -13333,11 +13336,10 @@ paths:
     get:
       operationId: getPhase13CommerceOrder
       summary: Commerce Order
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -13390,14 +13392,14 @@ paths:
     post:
       operationId: postPhase13CommercePreview
       summary: Commerce Preview
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
-        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
-        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
-        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Also requires orders.read
+        and shipments.write. Explicit current snapshot/version and preview hash bind the reviewed
+        inputs. Permanent order link prevents duplicate drafts across retries/actors/crashes.
+        Missing COD/weights/currency/source eligibility fail closed; no implicit FX. Existing
+        linked drafts are retained, never overwritten.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -13457,14 +13459,14 @@ paths:
     post:
       operationId: postPhase13CommerceDraft
       summary: Commerce Draft
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
-        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
-        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
-        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Also requires orders.read
+        and shipments.write. Explicit current snapshot/version and preview hash bind the reviewed
+        inputs. Permanent order link prevents duplicate drafts across retries/actors/crashes.
+        Missing COD/weights/currency/source eligibility fail closed; no implicit FX. Existing
+        linked drafts are retained, never overwritten.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -13549,11 +13551,10 @@ paths:
     get:
       operationId: getPhase13CommerceRuns
       summary: Commerce Runs
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -13612,12 +13613,12 @@ paths:
     get:
       operationId: getPhase13CommerceRun
       summary: Commerce Run
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. integrations.read can view run metadata; orders.read alone may inspect
-        only its own prepare run, not sync/another actor.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. integrations.read
+        can view run metadata; orders.read alone may inspect only its own prepare run, not
+        sync/another actor.
       security:
       - SessionCookie: []
       - BearerAuth: []
@@ -13670,13 +13671,12 @@ paths:
     post:
       operationId: postPhase13CommerceRetry
       summary: Commerce Retry
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Explicit resume requires current position, idempotency and origin authority.
-        A waiting run cannot bypass Retry-After. Bounded500-order automatic segment/1000-order
-        run ceiling.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Explicit resume requires
+        current position, idempotency and origin authority. A waiting run cannot bypass Retry-After.
+        Bounded500-order automatic segment/1000-order run ceiling.
       security:
       - SessionCookie: []
         CsrfToken: []
@@ -13749,17 +13749,16 @@ paths:
     post:
       operationId: postPhase13CommerceWebhook
       summary: Commerce Webhook
-      description: Verified active merchant membership, current session/token ability
-        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
-        identity fields prohibited. Private/no-store. No carrier, ledger or customer
-        notification effects. Source snapshots are local, not a claim of live Salla
-        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
-        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
-        success schemas describe internal tested architecture, not verified Salla wire
-        behavior. Never invent a reachable callback URL. No signature header/event name/body
-        contract is asserted; maximum65536 bytes after the code-owned gate. Unknown
-        authenticated events quarantine metadata; receipts never create drafts. Do not
-        post real customer payloads while disabled.
+      description: Verified active merchant membership, current session/token ability intersection
+        and current credential fences. Derived tenant only; client merchant/actor/origin identity
+        fields prohibited. Private/no-store. No carrier, ledger or customer notification effects.
+        Source snapshots are local, not a claim of live provider status. Runtime Salla contract/credentials/application/callback
+        gates are CLOSED; default response503. OAuth mode/endpoints/scopes/signatures are
+        unverified; success schemas describe internal tested architecture, not verified Salla
+        wire behavior. Never invent a reachable callback URL. No signature header/event name/body
+        contract is asserted; maximum65536 bytes after the code-owned gate. Unknown authenticated
+        events quarantine metadata; receipts never create drafts. Do not post real customer
+        payloads while disabled.
       security: []
       x-required-permissions:
       - verified provider authenticity
@@ -13789,6 +13788,74 @@ paths:
                 - data
                 - meta
                 - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '413':
+          description: Request exceeds the permitted 65536-byte authenticated intake limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/shopyzee/authorize:
+    post:
+      operationId: postPhase14ShopyzeeUnavailable
+      summary: Shopyzee authorization unavailable
+      description: 'Current merchant integrations.manage authority and CSRF required. Always503:
+        actual authorization/installation contract is unverified. No OAuth mode, intent, callback,
+        credential or network call is created.'
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      x-required-permissions:
+      - integrations.manage
+      parameters: []
+      responses:
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/webhooks/shopyzee:
+    post:
+      operationId: postPhase14ShopyzeeWebhookUnavailable
+      summary: Shopyzee receiver unavailable
+      description: Public throttled receiver always503 before parsing while verified authenticity/replay/tenant
+        contracts are absent. No invented signature or accepted event schema. No receipts,
+        drafts or external effects.
+      security: []
+      x-required-permissions:
+      - verified provider authenticity
+      parameters: []
+      responses:
         '400':
           $ref: '#/components/responses/Error400'
         '401':
@@ -13925,6 +13992,66 @@ components:
         external_enabled:
           type: boolean
           const: false
+        providers:
+          type: object
+          properties:
+            salla:
+              type: object
+              properties:
+                verified_authorized_stores:
+                  type: integer
+                  minimum: 0
+                synthetic_stores:
+                  type: integer
+                  minimum: 0
+                disconnected_stores:
+                  type: integer
+                  minimum: 0
+                authorization_failures:
+                  type: integer
+                  minimum: 0
+                sync_failures:
+                  type: integer
+                  minimum: 0
+                draft_failures:
+                  type: integer
+                  minimum: 0
+                orders:
+                  type: integer
+                  minimum: 0
+                review_required:
+                  type: integer
+                  minimum: 0
+              additionalProperties: false
+            shopyzee:
+              type: object
+              properties:
+                verified_authorized_stores:
+                  type: integer
+                  minimum: 0
+                synthetic_stores:
+                  type: integer
+                  minimum: 0
+                disconnected_stores:
+                  type: integer
+                  minimum: 0
+                authorization_failures:
+                  type: integer
+                  minimum: 0
+                sync_failures:
+                  type: integer
+                  minimum: 0
+                draft_failures:
+                  type: integer
+                  minimum: 0
+                orders:
+                  type: integer
+                  minimum: 0
+                review_required:
+                  type: integer
+                  minimum: 0
+              additionalProperties: false
+          additionalProperties: false
       required:
       - verified_authorized_stores
       - synthetic_stores
@@ -13940,7 +14067,10 @@ components:
       type: object
       properties:
         provider:
-          const: salla
+          type: string
+          enum:
+          - salla
+          - shopyzee
         available:
           type: boolean
           const: false
@@ -13955,7 +14085,10 @@ components:
             type: string
           maxItems: 0
         reason:
-          const: SALLA_CONTRACT_UNVERIFIED
+          type: string
+          enum:
+          - SALLA_CONTRACT_UNVERIFIED
+          - SHOPYZEE_CONTRACT_UNVERIFIED
         external_webhooks_enabled:
           type: boolean
           const: false
@@ -13963,6 +14096,12 @@ components:
           type: boolean
           const: false
         payments_enabled:
+          type: boolean
+          const: false
+        authorization_method:
+          type: 'null'
+          description: No verified Shopyzee authorization protocol is selected.
+        fulfillment_writeback_enabled:
           type: boolean
           const: false
       required:
@@ -13982,7 +14121,10 @@ components:
           type: string
           format: uuid
         provider:
-          const: salla
+          type: string
+          enum:
+          - salla
+          - shopyzee
         external_store_id:
           type: string
           maxLength: 128
@@ -13995,8 +14137,7 @@ components:
           enum:
           - verified
           - synthetic
-          description: Synthetic is isolated test evidence and must never be presented
-            as real Salla authorization.
+          description: Synthetic evidence is isolated and is not a real external authorization.
         version:
           type: integer
           minimum: 0
@@ -14020,6 +14161,23 @@ components:
         credential_version:
           type: integer
           minimum: 0
+        external_platform_id:
+          type: string
+          maxLength: 128
+          description: Immutable provider instance identity; legacy Salla internal namespace is
+            salla.
+        display_domain:
+          type:
+          - string
+          - 'null'
+          maxLength: 253
+          description: Presentation only, never ownership or API host authority.
+        imported_orders:
+          type: integer
+          minimum: 0
+        review_orders:
+          type: integer
+          minimum: 0
       required:
       - id
       - provider
@@ -14032,6 +14190,8 @@ components:
       - created_at
       - expires_at
       - credential_version
+      - external_platform_id
+      - display_domain
       additionalProperties: false
     CommerceConnectionList:
       type: object
@@ -14043,6 +14203,11 @@ components:
           maxItems: 100
         capabilities:
           $ref: '#/components/schemas/CommerceCapabilities'
+        providers:
+          type: array
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/CommerceCapabilities'
       required:
       - connections
       - capabilities
@@ -14100,6 +14265,19 @@ components:
           - string
           - 'null'
           format: uuid
+        provider:
+          type: string
+          enum:
+          - salla
+          - shopyzee
+        external_platform_id:
+          type: string
+          maxLength: 128
+          description: Immutable provider instance identity; legacy Salla internal namespace
+            is salla.
+        external_store_id:
+          type: string
+          maxLength: 128
       required:
       - id
       - connection_id
@@ -14114,6 +14292,9 @@ components:
       - currency
       - cod_minor
       - shipment_id
+      - external_platform_id
+      - provider
+      - external_store_id
       additionalProperties: false
     CommerceOrderDirectory:
       type: object
@@ -14129,7 +14310,11 @@ components:
           - 'null'
           format: uuid
         source:
-          const: salla
+          type: string
+          enum:
+          - all
+          - salla
+          - shopyzee
         live_status_verified:
           type: boolean
           const: false
@@ -14175,6 +14360,23 @@ components:
             source_created_at:
               type: string
               description: Persisted timestamp with UTC offset.
+            provider:
+              type: string
+              enum:
+              - salla
+              - shopyzee
+            external_platform_id:
+              type: string
+              maxLength: 128
+              description: Immutable provider instance identity; legacy Salla internal namespace
+                is salla.
+            external_store_id:
+              type: string
+              maxLength: 128
+          required:
+          - provider
+          - external_platform_id
+          - external_store_id
         snapshot:
           type: object
           properties:

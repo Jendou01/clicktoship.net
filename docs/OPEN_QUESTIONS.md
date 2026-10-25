@@ -74,3 +74,13 @@ Verified V2 response/lookup/label/pickup contracts, account/service mapping and 
 * Approve ownership transfer and provider-specific private platform support permissions under independent exact target grants before exposing either capability. Current ownership cannot move, and platform receives counts only.
 * Approve lawful customer-data minimization/retention/redaction/deletion, storage/backups, key rotation and blind-index transition policy before real ingestion. Immutable evidence is retained by default; no arbitrary history erase control or PII export.
 * No actual Salla OAuth/sandbox test, fulfillment write-back, live carrier/financial/COD settlement/notification or production readiness is implied by internal synthetic tests. Existing accounting, carrier, customs and regulatory blockers remain.
+
+## Phase 14 Shopyzee connector prerequisites
+
+1. Accessible official plugin documentation export (all eight supplied links were proxy-denied), exact deployed Nazmart/Shopyzee version, and authorized separate development source/staging environment.
+2. Verified manifest, PluginBase namespace/signatures, lifecycle, API/web route/hook registration, tenant initialization/teardown/settings isolation and encryption.
+3. Actual permanent platform and tenant/store identifiers, custom-domain lifecycle, order/item/customer/address/payment/COD/fulfillment models and statuses. Domain alone never proves authority.
+4. Supported per-tenant installation/consent/authentication, least-privilege permissions, credential provision/rotation/revocation and replay guarantees. No OAuth/global customer-order key is assumed.
+5. Verified bounded initial/incremental ordering/cursor/update/rate-limit contracts, source conflicts and webhook authenticity/replay/ACK/uninstall semantics. Current tests are internal synthetic fixtures only.
+6. Independently approved connector packaging/install/upgrade/uninstall compatibility tests in isolated staging; no live site modification is authorized.
+7. Privacy/retention/key rotation, standing background consent, source-ownership transfer and exact-granted support policies. Future fulfillment writes require a separately approved verified API and carrier-verified tracking/outbox/idempotency/reconciliation design.

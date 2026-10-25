@@ -121,3 +121,11 @@ Use one existing carrier tracking history/projection; Shipping, finance and docu
 * Request replay and permanent order-to-draft business identity are separate. Catalog/merchant locks and Shipping.importDraft commit draft/link/outcome atomically. Bulk API orders reuse orchestration patterns without inventing uploaded files. No quote acceptance, wallet/carrier/COD settlement or external notification.
 * Platform visibility is aggregate only. No provider-specific private platform grant route or standing background synchronization authority is invented. Current originating session/token can expire and block future work.
 * No real-data retention/deletion period is assumed. Retained encrypted history is not automatically deleted; privacy/consent/key rotation/transfer/support policies remain launch gates. No new dependency or Phase 14.
+
+## Phase 14 Shopyzee boundaries
+
+* Separate permanent platform-instance identity from tenant/store identity and from mutable display domains. The unique tuple and ownership trigger survive disconnect; no transfer endpoint exists.
+* Preserve Salla DI/routes and legacy Salla-default orders API. The unified merchant UI explicitly asks for all providers and renders per-row source from the scoped server join.
+* Reuse Commerce sync/refresh/draft/batch/recovery/security engines. A persisted provider selects its adapter; Shopyzee pages and refresh results require exact normalized internal provider/instance/store evidence. Internal DTOs are not verified external mappings.
+* All eight user-supplied official Nazmart plugin documentation pages are blocked by managed proxy403. No source version/order/auth/plugin contract is verified. A separately reviewed connector using actual supported plugin lifecycle/routes/hooks is proposed; no fabricated or live-installed plugin is delivered.
+* Shopyzee authorization method remains null, with no callback invented. Live connect/sync/hooks and fulfillment write-back remain disabled. Existing shipping/financial gates are unchanged. No Phase 15 or deployment.

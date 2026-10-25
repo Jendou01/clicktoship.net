@@ -59,14 +59,22 @@ final class Orders
     public function detail(string $m, string $id): array
     {
         $o = $this->row($m, $id);
+        $source = app(Access::class)->connection($m, $o->connection_id);
+        $o->provider = $source->provider;
+        $o->external_platform_id = $source->external_platform_id;
+        $o->external_store_id = $source->external_store_id;
 
         return ['order' => $o, 'snapshot' => $this->snapshot($o), 'draft_link' => DB::table('commerce_draft_links')->where('merchant_id', $m)->where('order_id', $id)->first(), 'history' => DB::table('commerce_snapshots')->where('merchant_id', $m)->where('order_id', $id)->orderByDesc('created_at')->limit(25)->get(['id', 'source_updated_at', 'created_at']), 'external_status_confirmed_live' => false];
     }
 
     public function directory(Request $r, string $m): array
     {
-        $d = $r->validate(['connection' => 'sometimes|uuid', 'status' => 'sometimes|in:ready,cancelled,fulfilled,unknown', 'reference' => 'sometimes|string|max:100', 'from' => 'sometimes|date_format:Y-m-d', 'to' => 'sometimes|date_format:Y-m-d|after_or_equal:from', 'after' => 'sometimes|uuid']);
-        $q = DB::table('commerce_orders as o')->join('commerce_snapshots as s', fn ($j) => $j->on('s.id', '=', 'o.current_snapshot')->on('s.merchant_id', '=', 'o.merchant_id')->on('s.order_id', '=', 'o.id'))->leftJoin('commerce_draft_links as l', fn ($j) => $j->on('l.order_id', '=', 'o.id')->on('l.merchant_id', '=', 'o.merchant_id'))->where('o.merchant_id', $m);
+        $d = $r->validate(['provider' => 'sometimes|in:all,salla,shopyzee', 'connection' => 'sometimes|uuid', 'status' => 'sometimes|in:ready,cancelled,fulfilled,unknown', 'reference' => 'sometimes|string|max:100', 'from' => 'sometimes|date_format:Y-m-d', 'to' => 'sometimes|date_format:Y-m-d|after_or_equal:from', 'after' => 'sometimes|uuid']);
+        $q = DB::table('commerce_orders as o')->join('commerce_connections as c', fn ($j) => $j->on('c.id', '=', 'o.connection_id')->on('c.merchant_id', '=', 'o.merchant_id'))->join('commerce_snapshots as s', fn ($j) => $j->on('s.id', '=', 'o.current_snapshot')->on('s.merchant_id', '=', 'o.merchant_id')->on('s.order_id', '=', 'o.id'))->leftJoin('commerce_draft_links as l', fn ($j) => $j->on('l.order_id', '=', 'o.id')->on('l.merchant_id', '=', 'o.merchant_id'))->where('o.merchant_id', $m);
+        $provider = $d['provider'] ?? 'salla';
+        if ($provider !== 'all') {
+            $q->where('c.provider', $provider);
+        }
         if (isset($d['connection'])) {
             $this->rowConnection($m, $d['connection']);
             $q->where('o.connection_id', $d['connection']);
@@ -81,7 +89,7 @@ final class Orders
         }if (isset($d['after'])) {
             $q->where('o.id', '>', $d['after']);
         }
-        $rows = $q->orderBy('o.id')->limit(26)->get(['o.id', 'o.connection_id', 'o.state', 'o.version', 'o.current_snapshot', 'o.review_required', 'o.source_created_at', 's.payload', 'l.shipment_id']);
+        $rows = $q->orderBy('o.id')->limit(26)->get(['c.provider', 'c.external_platform_id', 'c.external_store_id', 'o.id', 'o.connection_id', 'o.state', 'o.version', 'o.current_snapshot', 'o.review_required', 'o.source_created_at', 's.payload', 'l.shipment_id']);
         $more = $rows->count() > 25;
         $rows = $rows->take(25)->values();
         foreach ($rows as $o) {
@@ -94,7 +102,7 @@ final class Orders
             unset($o->payload);
         }
 
-        return ['orders' => $rows, 'next_after' => $more ? $rows->last()->id : null, 'source' => 'salla', 'live_status_verified' => false, 'sort' => 'internal_uuid_ascending'];
+        return ['orders' => $rows, 'next_after' => $more ? $rows->last()->id : null, 'source' => $provider, 'live_status_verified' => false, 'sort' => 'internal_uuid_ascending'];
     }
 
     private function rowConnection(string $m, string $id): void
