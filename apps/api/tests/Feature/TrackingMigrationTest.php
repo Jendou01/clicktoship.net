@@ -20,6 +20,7 @@ final class TrackingMigrationTest extends TrackingTestCase
     {
         $f = $this->setupShipment(false);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 15 export ownership first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 14 identity before older rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive OAuth cancellation guard before prior rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Commerce before exercising prior rollback targets.
@@ -71,6 +72,22 @@ final class TrackingMigrationTest extends TrackingTestCase
         $m = $this->organization($this->user());
         $this->expectException(QueryException::class);
         DB::table('tracking_work')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $m, 'binding_id' => $f['binding']->id, 'account_id' => $f['binding']->account_id, 'kind' => 'scheduled', 'business_key' => str_repeat('0', 64), 'digest' => str_repeat('0', 64), 'state' => 'pending']);
+    }
+
+    public function test_merchant_analytics_does_not_expose_another_merchants_tracking_work(): void
+    {
+        $f = $this->trackingFixture();
+        DB::table('tracking_work')->insert(['id' => (string) Str::uuid(), 'merchant_id' => $f['m'], 'binding_id' => $f['binding']->id, 'account_id' => $f['binding']->account_id, 'kind' => 'scheduled', 'business_key' => hash('sha256', 'analytics-isolation'), 'digest' => hash('sha256', 'synthetic-work'), 'state' => 'pending']);
+        $u = $this->user();
+        $m = $this->organization($u);
+        $this->login($u);
+        $this->select($m);
+        $this->browser('GET', '/api/v1/analytics/overview')->assertOk()->assertJsonPath('data.widgets.verified_tracking.work', [])->assertJsonPath('data.widgets.verified_tracking.verified_statuses', []);
+        $this->login($f['u']);
+        $this->select($f['m']);
+        $result = $this->browser('GET', '/api/v1/analytics/overview')->assertOk();
+        $this->assertGreaterThanOrEqual(1, array_sum(array_column($result->json('data.widgets.verified_tracking.work'), 'count')));
+        $result->assertJsonPath('data.widgets.verified_tracking.verified_statuses', []);
     }
 
     public function test_projection_tampering_cannot_replace_evidence_status(): void

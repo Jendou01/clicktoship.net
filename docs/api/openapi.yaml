@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–13
-  version: 0.13.0
+  title: ClickToShip API — Phases 1–15
+  version: 0.15.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:
@@ -13880,6 +13880,1354 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '503':
           $ref: '#/components/responses/Error503'
+  /api/v1/analytics/catalog:
+    get:
+      operationId: merchantAnalyticsCatalog
+      summary: Merchant Catalog
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsCatalog'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/analytics/overview:
+    get:
+      operationId: merchantAnalyticsOverview
+      summary: Merchant Overview
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: grain
+        in: query
+        schema:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsMerchantOverview'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/analytics/reports/{report}:
+    get:
+      operationId: merchantAnalyticsReport
+      summary: Merchant Report
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: report
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - shipment_summary
+          - shipment_history
+          - submission_outcomes
+          - submission_attempts
+          - tracking_exceptions
+          - bulk_summary
+          - wallet_transactions
+          - wallet_reservations
+          - financial_reconciliation
+          - quote_summary
+          - customs_readiness
+          - connected_orders
+          - draft_conversion
+          - connection_states
+          - commerce_activity
+          - merchant_activity
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: grain
+        in: query
+        schema:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: provider
+        in: query
+        schema:
+          type: string
+          enum:
+          - salla
+          - shopyzee
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: currency
+        in: query
+        schema:
+          type: string
+          pattern: ^[A-Z]{3}$
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: status
+        in: query
+        schema:
+          type: string
+          pattern: ^[a-z][a-z0-9_.]*$
+          maxLength: 80
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: service
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsReport'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/analytics/exports:
+    get:
+      operationId: merchantAnalyticsExportHistory
+      summary: Merchant ExportHistory
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportHistory'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: analytics.export
+    post:
+      operationId: merchantAnalyticsRequestExport
+      summary: Merchant RequestExport
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      - name: X-XSRF-TOKEN
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Required for cookie-session mutations; Sanctum double-submit CSRF protection.
+      responses:
+        '202':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportItem'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: analytics.export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsExportRequest'
+  /api/v1/analytics/exports/{id}:
+    get:
+      operationId: merchantAnalyticsExport
+      summary: Merchant Export
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportItem'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: analytics.export
+  /api/v1/analytics/exports/{id}/download:
+    get:
+      operationId: merchantAnalyticsDownload
+      summary: Merchant Download
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      responses:
+        '200':
+          description: Test-only verified private artifact; same owner/scope/merchant and exact originating credentials,
+            current source authority and MFA. Fixed attachment filename; no direct URLs.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+            X-Content-Type-Options:
+              schema:
+                type: string
+                const: nosniff
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '410':
+          description: Expired/unready artifact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-export-permission: analytics.export
+  /api/v1/analytics/exports/{id}/revoke:
+    post:
+      operationId: merchantAnalyticsRevoke
+      summary: Merchant Revoke
+      description: Active verified merchant membership and current analytics.read intersected with current token abilities;
+        report-specific source permission required. Tenant resolved from authenticated context, never query merchant_id.
+        Bounded PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max
+        366 inclusive dates; current stocks/balances are not historical. Read pages are live keyset observations;
+        export bytes use a repeatable-read generation snapshot and are reauthorized before publication/download. Exports
+        require additional export permission; financial exports require originating browser session and recent MFA.
+        Normal downloads remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification
+        side effects.
+      security:
+      - SessionCookie: []
+      - BearerToken: []
+      x-required-permissions:
+      - analytics.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-Merchant-ID
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Must match an authorized current merchant context; not arbitrary tenant selection.
+      - name: X-XSRF-TOKEN
+        in: header
+        required: false
+        schema:
+          type: string
+        description: Required for cookie-session mutations; Sanctum double-submit CSRF protection.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsRevoked'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+  /api/v1/admin/analytics/catalog:
+    get:
+      operationId: platformAnalyticsCatalog
+      summary: Platform Catalog
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters: []
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsCatalog'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/analytics/overview:
+    get:
+      operationId: platformAnalyticsOverview
+      summary: Platform Overview
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: grain
+        in: query
+        schema:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsPlatformOverview'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/analytics/reports/{report}:
+    get:
+      operationId: platformAnalyticsReport
+      summary: Platform Report
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: report
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - merchants
+          - users
+          - shipping
+          - bulk
+          - tracking
+          - carriers
+          - pricing
+          - finance
+          - customs
+          - commerce
+      - name: range
+        in: query
+        schema:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      - name: grain
+        in: query
+        schema:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        description: Only applicable report filters accepted. Dates inclusive UTC; Monday weeks, calendar months.
+          after is an opaque descending UUID keyset.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsPlatformOverview'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/analytics/exports:
+    get:
+      operationId: platformAnalyticsExportHistory
+      summary: Platform ExportHistory
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportHistory'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: platform.analytics.export
+    post:
+      operationId: platformAnalyticsRequestExport
+      summary: Platform RequestExport
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: X-XSRF-TOKEN
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required for cookie-session mutations; Sanctum double-submit CSRF protection.
+      responses:
+        '202':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportItem'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: platform.analytics.export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsExportRequest'
+  /api/v1/admin/analytics/exports/{id}:
+    get:
+      operationId: platformAnalyticsExport
+      summary: Platform Export
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsExportItem'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      x-export-permission: platform.analytics.export
+  /api/v1/admin/analytics/exports/{id}/download:
+    get:
+      operationId: platformAnalyticsDownload
+      summary: Platform Download
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Test-only verified private artifact; same owner/scope/merchant and exact originating credentials,
+            current source authority and MFA. Fixed attachment filename; no direct URLs.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+            X-Content-Type-Options:
+              schema:
+                type: string
+                const: nosniff
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+        '410':
+          description: Expired/unready artifact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-export-permission: platform.analytics.export
+  /api/v1/admin/analytics/exports/{id}/revoke:
+    post:
+      operationId: platformAnalyticsRevoke
+      summary: Platform Revoke
+      description: Platform current browser session, verified active user, recent confirmed MFA, platform.analytics.read,
+        platform.overview and per-source platform.metrics.*; aggregates only, never merchant-private details. Bounded
+        PostgreSQL reads with 5-second statement deadline and no shared result cache. Filters are UTC, max 366 inclusive
+        dates; current stocks/balances are not historical. Read pages are live keyset observations; export bytes use
+        a repeatable-read generation snapshot and are reauthorized before publication/download. Exports require additional
+        export permission; financial exports require originating browser session and recent MFA. Normal downloads
+        remain fail-closed pending approved storage/scanning/retention. No carrier, wallet or notification side effects.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.analytics.read
+      - platform.overview
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-XSRF-TOKEN
+        in: header
+        required: true
+        schema:
+          type: string
+        description: Required for cookie-session mutations; Sanctum double-submit CSRF protection.
+      responses:
+        '200':
+          description: Authorized no-store response. A request made while storage is unapproved is durably failed
+            with EXPORT_STORAGE_NOT_APPROVED; no job/artifact. Replay returns existing identity; conflicting key/digest
+            returns 409.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AnalyticsRevoked'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
 components:
   headers:
     RequestId:
@@ -13955,6 +15303,1739 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    AnalyticsApprovalWorkload:
+      type: object
+      properties:
+        approvals:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+                enum:
+                - access
+                - verification
+                - pricing
+                - carriers
+                - customs
+                - finance
+              count:
+                type: integer
+                minimum: 0
+              route:
+                type:
+                - string
+                - 'null'
+                enum:
+                - admin-access
+                - admin-merchants
+                - admin-pricing
+                - carriers
+                - admin-customs
+                - admin-finance
+                - null
+            required:
+            - kind
+            - count
+            - route
+            additionalProperties: false
+        scope:
+          type: string
+          const: aggregate_metadata_or_current_session_own_requests
+        approval_controls:
+          type: string
+          const: existing_independent_domain_workflows
+        generated_at:
+          type: string
+          format: date-time
+      required:
+      - approvals
+      - scope
+      - approval_controls
+      - generated_at
+      additionalProperties: false
+    AnalyticsMerchantGrowthMetrics:
+      allOf:
+      - $ref: '#/components/schemas/PlatformMerchantsMetrics'
+      - type: object
+        properties:
+          activation_trend:
+            $ref: '#/components/schemas/AnalyticsTrend'
+          status_changes:
+            $ref: '#/components/schemas/AnalyticsDistribution'
+          verification_outcomes:
+            $ref: '#/components/schemas/AnalyticsDistribution'
+    AnalyticsPeriod:
+      type: object
+      properties:
+        range:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        start:
+          type: string
+          format: date-time
+        end_exclusive:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          const: UTC
+      required:
+      - range
+      - from
+      - to
+    AnalyticsFilters:
+      type: object
+      properties:
+        period:
+          $ref: '#/components/schemas/AnalyticsPeriod'
+        grain:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        provider:
+          type: string
+          enum:
+          - salla
+          - shopyzee
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        status:
+          type: string
+          maxLength: 80
+        service:
+          type: string
+          format: uuid
+        after:
+          type: string
+          format: uuid
+      required:
+      - period
+      - grain
+      additionalProperties: false
+    AnalyticsDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        permission:
+          type: string
+        source:
+          type: string
+        date:
+          type: string
+          const: created_at
+        columns:
+          type: array
+          items:
+            type: string
+          maxItems: 12
+        filters:
+          type: array
+          items:
+            type: string
+            enum:
+            - provider
+            - currency
+            - status
+            - service
+        financial:
+          type: boolean
+        export_formats:
+          type: array
+          items:
+            type: string
+            enum:
+            - csv
+            - xlsx
+        page_size:
+          type: integer
+          const: 25
+        max_export_rows:
+          type: integer
+          const: 1000
+        max_export_bytes:
+          type: integer
+          const: 2097152
+      required:
+      - id
+      - permission
+      - source
+      - columns
+      - filters
+      - export_formats
+    AnalyticsCatalog:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsDefinition'
+        permissions:
+          type: array
+          items:
+            type: string
+        artifacts_enabled:
+          type: boolean
+          const: false
+          description: False in every normal runtime. True only in exact isolated test databases with explicit test-only
+            enablement; clean scanner still required.
+        max_days:
+          type: integer
+          const: 366
+        max_rows:
+          type: integer
+          const: 1000
+        max_bytes:
+          type: integer
+          const: 2097152
+        expiry_minutes:
+          type: integer
+          const: 15
+      required:
+      - reports
+      - permissions
+      - artifacts_enabled
+      - max_days
+      - max_rows
+      - max_bytes
+      - expiry_minutes
+    AnalyticsTrend:
+      type: array
+      items:
+        type: object
+        properties:
+          day:
+            type: string
+          count:
+            type: integer
+            minimum: 0
+        required:
+        - day
+        - count
+      maxItems: 366
+    AnalyticsDistribution:
+      type: array
+      items:
+        type: object
+        properties:
+          status:
+            type: string
+          count:
+            type: integer
+            minimum: 0
+        required:
+        - status
+        - count
+    AnalyticsRow_shipment_summary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        financial_state:
+          type: string
+        document_state:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - state
+      - financial_state
+      - document_state
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_shipment_history:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shipment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        kind:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - shipment_id
+      - kind
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_submission_outcomes:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shipment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - shipment_id
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_submission_attempts:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        outcome:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - outcome
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_tracking_exceptions:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - reason
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_bulk_summary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        state:
+          type: string
+        row_count:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - state
+      - row_count
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_wallet_transactions:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sequence:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        kind:
+          type: string
+        delta:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        posted_after:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        reserved_after:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        currency:
+          type: string
+        exponent:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - sequence
+      - kind
+      - delta
+      - posted_after
+      - reserved_after
+      - currency
+      - exponent
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_wallet_reservations:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        amount:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        currency:
+          type: string
+        exponent:
+          type: integer
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - kind
+      - amount
+      - currency
+      - exponent
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_financial_reconciliation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        matches:
+          type: boolean
+        currency:
+          type: string
+        exponent:
+          type: integer
+          minimum: 0
+        cutoff:
+          type: string
+          pattern: ^-?[0-9]+$
+          description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+            explicit.
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - matches
+      - currency
+      - exponent
+      - cutoff
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_quote_summary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        exponent:
+          type: integer
+          minimum: 0
+        total_minor:
+          anyOf:
+          - type: string
+            pattern: ^-?[0-9]+$
+            description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+              explicit.
+          - type: 'null'
+        selling_minor:
+          anyOf:
+          - type: string
+            pattern: ^-?[0-9]+$
+            description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+              explicit.
+          - type: 'null'
+        discount_minor:
+          anyOf:
+          - type: string
+            pattern: ^-?[0-9]+$
+            description: Exact integer minor units (or sequence/cutoff); never a JSON float. Currency and exponent are
+              explicit.
+          - type: 'null'
+        expires_at:
+          type: string
+          format: date-time
+        service_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - currency
+      - exponent
+      - total_minor
+      - selling_minor
+      - discount_minor
+      - expires_at
+      - service_id
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_customs_readiness:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        local_valid:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - local_valid
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_connected_orders:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        provenance:
+          type: string
+        state:
+          type: string
+        review_required:
+          type: boolean
+        shipment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - provider
+      - provenance
+      - state
+      - review_required
+      - shipment_id
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_draft_conversion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        provenance:
+          type: string
+        state:
+          type: string
+        review_required:
+          type: boolean
+        shipment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - provider
+      - provenance
+      - state
+      - review_required
+      - shipment_id
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_connection_states:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        provenance:
+          type: string
+        state:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - provider
+      - provenance
+      - state
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_commerce_activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        kind:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - provider
+      - kind
+      - created_at
+      additionalProperties: false
+    AnalyticsRow_merchant_activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - action
+      - created_at
+      additionalProperties: false
+    AnalyticsReport:
+      type: object
+      properties:
+        report:
+          type: string
+          enum:
+          - shipment_summary
+          - shipment_history
+          - submission_outcomes
+          - submission_attempts
+          - tracking_exceptions
+          - bulk_summary
+          - wallet_transactions
+          - wallet_reservations
+          - financial_reconciliation
+          - quote_summary
+          - customs_readiness
+          - connected_orders
+          - draft_conversion
+          - connection_states
+          - commerce_activity
+          - merchant_activity
+        columns:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/AnalyticsRow_shipment_summary'
+            - $ref: '#/components/schemas/AnalyticsRow_shipment_history'
+            - $ref: '#/components/schemas/AnalyticsRow_submission_outcomes'
+            - $ref: '#/components/schemas/AnalyticsRow_submission_attempts'
+            - $ref: '#/components/schemas/AnalyticsRow_tracking_exceptions'
+            - $ref: '#/components/schemas/AnalyticsRow_bulk_summary'
+            - $ref: '#/components/schemas/AnalyticsRow_wallet_transactions'
+            - $ref: '#/components/schemas/AnalyticsRow_wallet_reservations'
+            - $ref: '#/components/schemas/AnalyticsRow_financial_reconciliation'
+            - $ref: '#/components/schemas/AnalyticsRow_quote_summary'
+            - $ref: '#/components/schemas/AnalyticsRow_customs_readiness'
+            - $ref: '#/components/schemas/AnalyticsRow_connected_orders'
+            - $ref: '#/components/schemas/AnalyticsRow_connection_states'
+            - $ref: '#/components/schemas/AnalyticsRow_commerce_activity'
+            - $ref: '#/components/schemas/AnalyticsRow_merchant_activity'
+          maxItems: 25
+        total:
+          type: integer
+          minimum: 0
+        distribution:
+          $ref: '#/components/schemas/AnalyticsDistribution'
+        trend:
+          $ref: '#/components/schemas/AnalyticsTrend'
+        next_after:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        filters:
+          $ref: '#/components/schemas/AnalyticsFilters'
+        generated_at:
+          type: string
+          format: date-time
+        movements:
+          type: array
+          items:
+            type: object
+            properties:
+              currency:
+                type: string
+              exponent:
+                type: integer
+              kind:
+                type: string
+              amount_minor:
+                type: string
+                pattern: ^-?[0-9]+$
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - currency
+            - exponent
+            - kind
+            - count
+            - amount_minor
+        conversion:
+          type: object
+          properties:
+            linked:
+              type: integer
+            total:
+              type: integer
+            ratio:
+              type:
+              - string
+              - 'null'
+              description: Exact local draft-link fraction, not carrier success.
+          required:
+          - linked
+          - total
+          - ratio
+        expiry:
+          type: object
+          properties:
+            expired:
+              type: integer
+            unexpired:
+              type: integer
+          required:
+          - expired
+          - unexpired
+        source:
+          type: string
+        evidence:
+          type: string
+          const: recorded_local_facts
+        live_execution_enabled:
+          type: boolean
+          const: false
+        provenance:
+          type: array
+          items:
+            type: object
+            properties:
+              provenance:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - provenance
+            - count
+      required:
+      - report
+      - columns
+      - rows
+      - total
+      - next_after
+      - generated_at
+    AnalyticsInsight:
+      type: object
+      properties:
+        source:
+          type: string
+        metric:
+          type: string
+        value:
+          type: integer
+          minimum: 1
+        threshold:
+          type: integer
+          const: 1
+        period_kind:
+          type: string
+          enum:
+          - event_period
+          - current_stock
+          - creation_cohort_current_state
+        comparison:
+          type: string
+          const: not_a_growth_claim
+        action_enabled:
+          type: boolean
+          const: false
+      required:
+      - source
+      - metric
+      - value
+      - threshold
+      - period_kind
+      - comparison
+      - action_enabled
+    AnalyticsMerchantOverview:
+      type: object
+      properties:
+        widgets:
+          type: object
+          properties:
+            shipment_summary:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            tracking_exceptions:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            bulk_summary:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            quote_summary:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            customs_readiness:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            draft_conversion:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            wallet_transactions:
+              type: object
+              description: 'Authorized summary only: total, distribution, trend, optional movements/conversion/expiry;
+                row pages excluded. See corresponding report schema.'
+              properties:
+                report:
+                  type: string
+                  enum:
+                  - shipment_summary
+                  - shipment_history
+                  - submission_outcomes
+                  - submission_attempts
+                  - tracking_exceptions
+                  - bulk_summary
+                  - wallet_transactions
+                  - wallet_reservations
+                  - financial_reconciliation
+                  - quote_summary
+                  - customs_readiness
+                  - connected_orders
+                  - draft_conversion
+                  - connection_states
+                  - commerce_activity
+                  - merchant_activity
+                columns:
+                  type: array
+                  items:
+                    type: string
+                total:
+                  type: integer
+                  minimum: 0
+                distribution:
+                  $ref: '#/components/schemas/AnalyticsDistribution'
+                trend:
+                  $ref: '#/components/schemas/AnalyticsTrend'
+                filters:
+                  $ref: '#/components/schemas/AnalyticsFilters'
+                generated_at:
+                  type: string
+                  format: date-time
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      kind:
+                        type: string
+                      amount_minor:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - kind
+                conversion:
+                  type: object
+                  properties:
+                    linked:
+                      type: integer
+                    total:
+                      type: integer
+                    ratio:
+                      type:
+                      - string
+                      - 'null'
+                      description: Exact local draft-link fraction, not carrier success.
+                  required:
+                  - linked
+                  - total
+                  - ratio
+                expiry:
+                  type: object
+                  properties:
+                    expired:
+                      type: integer
+                    unexpired:
+                      type: integer
+                  required:
+                  - expired
+                  - unexpired
+            shipping_evidence:
+              $ref: '#/components/schemas/PlatformShippingMetrics'
+            verified_tracking:
+              $ref: '#/components/schemas/PlatformTrackingMetrics'
+            current_balances:
+              type: object
+              properties:
+                rows:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                      exponent:
+                        type: integer
+                      posted:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                      reserved:
+                        type: string
+                        pattern: ^[0-9]+$
+                      available:
+                        type: string
+                        pattern: ^-?[0-9]+$
+                    required:
+                    - currency
+                    - exponent
+                    - posted
+                    - reserved
+                    - available
+                  maxItems: 100
+                as_of:
+                  type: string
+                  format: date-time
+                historical_balance:
+                  type: string
+                  const: unavailable
+              required:
+              - rows
+              - as_of
+              - historical_balance
+          required: []
+        filters:
+          $ref: '#/components/schemas/AnalyticsFilters'
+        permissions:
+          type: array
+          items:
+            type: string
+        generated_at:
+          type: string
+          format: date-time
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsInsight'
+        live_execution_enabled:
+          type: boolean
+          const: false
+        unavailable:
+          type: array
+          items:
+            type: string
+      required:
+      - widgets
+      - filters
+      - permissions
+      - generated_at
+      - insights
+      - live_execution_enabled
+      - unavailable
+    AnalyticsPlatformOverview:
+      type: object
+      properties:
+        widgets:
+          type: object
+          properties:
+            merchants:
+              $ref: '#/components/schemas/AnalyticsMerchantGrowthMetrics'
+            users:
+              $ref: '#/components/schemas/PlatformUsersMetrics'
+            shipping:
+              $ref: '#/components/schemas/PlatformShippingMetrics'
+            bulk:
+              $ref: '#/components/schemas/PlatformBulkMetrics'
+            tracking:
+              $ref: '#/components/schemas/PlatformTrackingMetrics'
+            carriers:
+              $ref: '#/components/schemas/PlatformCarriersMetrics'
+            pricing:
+              $ref: '#/components/schemas/PlatformPricingMetrics'
+            finance:
+              $ref: '#/components/schemas/PlatformFinanceMetrics'
+            customs:
+              $ref: '#/components/schemas/PlatformCustomsMetrics'
+            commerce:
+              $ref: '#/components/schemas/PlatformCommerceMetrics'
+          required: []
+        generated_at:
+          type: string
+          format: date-time
+        financial_amounts:
+          type: string
+          const: unavailable_global_disclosure_policy
+        cost_margin_revenue:
+          type: string
+          const: unavailable_verified_accounting_and_cost_evidence
+        definitions:
+          type: string
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsInsight'
+        approval_workload:
+          $ref: '#/components/schemas/AnalyticsApprovalWorkload'
+        period:
+          $ref: '#/components/schemas/AnalyticsPeriod'
+        permissions:
+          type: array
+          items:
+            type: string
+        live_shipping_enabled:
+          type: boolean
+          const: false
+        payments_enabled:
+          type: boolean
+          const: false
+        notifications_enabled:
+          type: boolean
+          const: false
+      required:
+      - widgets
+      - generated_at
+      - financial_amounts
+      - cost_margin_revenue
+      - definitions
+      - insights
+    AnalyticsExport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        report:
+          type: string
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        locale:
+          type: string
+          enum:
+          - en
+          - ar
+        state:
+          type: string
+          enum:
+          - requested
+          - authorized
+          - queued
+          - processing
+          - ready
+          - expired
+          - failed
+          - revoked
+        rows:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        bytes:
+          type: integer
+          minimum: 0
+          maximum: 2097152
+        actor_id:
+          type: string
+          format: uuid
+        filters:
+          $ref: '#/components/schemas/AnalyticsFilters'
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        generated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        error_code:
+          type:
+          - string
+          - 'null'
+          description: Sanitized code; never storage paths, SQL, secrets or customer data.
+      required:
+      - id
+      - report
+      - format
+      - locale
+      - state
+      - rows
+      - bytes
+      - actor_id
+      - filters
+      - from
+      - to
+      - created_at
+      - generated_at
+      - expires_at
+      - error_code
+    AnalyticsExportItem:
+      type: object
+      properties:
+        export:
+          $ref: '#/components/schemas/AnalyticsExport'
+        artifacts_enabled:
+          type: boolean
+        replayed:
+          type: boolean
+      required:
+      - export
+    AnalyticsExportHistory:
+      type: object
+      properties:
+        exports:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsExport'
+          maxItems: 25
+        next_after:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        artifacts_enabled:
+          type: boolean
+      required:
+      - exports
+      - next_after
+      - artifacts_enabled
+    AnalyticsExportRequest:
+      type: object
+      properties:
+        report:
+          type: string
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        locale:
+          type: string
+          enum:
+          - en
+          - ar
+        idempotency_key:
+          type: string
+          minLength: 8
+          maxLength: 128
+        range:
+          type: string
+          enum:
+          - today
+          - yesterday
+          - 7d
+          - 30d
+          - 90d
+          - custom
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        grain:
+          type: string
+          enum:
+          - day
+          - week
+          - month
+        provider:
+          type: string
+          enum:
+          - salla
+          - shopyzee
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        status:
+          type: string
+          pattern: ^[a-z][a-z0-9_.]*$
+          maxLength: 80
+        service:
+          type: string
+          format: uuid
+      required:
+      - report
+      - format
+      - locale
+      - idempotency_key
+      additionalProperties: false
+    AnalyticsRevoked:
+      type: object
+      properties:
+        revoked:
+          type: boolean
+          const: true
+      required:
+      - revoked
     PlatformCommerceMetrics:
       type: object
       properties:

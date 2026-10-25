@@ -4,8 +4,11 @@ use App\Models\User;
 use App\Modules\Commerce\Application\Orders;
 use App\Modules\Commerce\Application\Tokens;
 use App\Modules\Merchants\Application\MerchantService;
+use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Pricing\Domain\Configuration;
+use App\Modules\Shipping\Application\Shipments;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,7 +22,7 @@ if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== '
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'commerceOwner', 'commerceDraftOwner', 'commerceBatchOwner', 'shopyzeeOwner', 'shopyzeeDraftOwner', 'shopyzeeBatchOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
+    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'commerceOwner', 'commerceDraftOwner', 'commerceBatchOwner', 'shopyzeeOwner', 'shopyzeeDraftOwner', 'shopyzeeBatchOwner', 'analyticsOwner', 'analyticsFinanceOwner', 'adminAnalytics', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;
@@ -63,6 +66,28 @@ DB::transaction(function () use (&$accounts) {
     $row('tariff', 'tariff', $selectors + $amounts, 'SAR');
     $row('rule', 'rule', $selectors + array_replace($amounts, ['base_minor' => '2000']) + ['scope' => 'global', 'mode' => 'fixed', 'tier_id' => null, 'discount_minor' => '0', 'discount_bps' => 0, 'min_margin_minor' => '100', 'min_margin_bps' => 100, 'tax_id' => $tax], 'SAR');
     $accounts['service'] = $service;
+    foreach (['analyticsOwner' => 'analytics', 'analyticsFinanceOwner' => 'analyticsFinance'] as $accountKey => $fixtureKey) {
+        $owner = User::findOrFail($accounts[$accountKey]['id']);
+        $merchant = app(MerchantService::class)->create($owner, 'Analytics synthetic browser '.bin2hex(random_bytes(5)));
+        $accounts[$fixtureKey] = ['merchant_id' => $merchant->id, 'merchant_name' => $merchant->name];
+        if ($fixtureKey === 'analytics') {
+            $token = $owner->createToken('Synthetic analytics fixture', ['shipments.write'], now()->addHour());
+            $token->accessToken->forceFill(['merchant_id' => $merchant->id, 'auth_version' => $owner->auth_version])->save();
+            $owner->withAccessToken($token->accessToken);
+            $context = app(MerchantContext::class);
+            try {
+                for ($i = 0; $i < 3; $i++) {
+                    $context->establish($owner, $merchant->id, $token->accessToken);
+                    $request = Request::create('/internal/synthetic-draft', 'POST', ['idempotency_key' => (string) Str::uuid(), 'draft' => ['currency' => 'SAR', 'description' => 'Synthetic analytics draft', 'origin' => ['country' => 'SA', 'city' => 'synthetic origin'], 'destination' => ['country' => 'SA', 'city' => 'synthetic destination'], 'packages' => [['weight_grams' => 1000, 'length_mm' => 100, 'width_mm' => 100, 'height_mm' => 100]], 'declared_value_minor' => '0', 'cod_minor' => '0', 'items' => []]]);
+                    $request->setUserResolver(fn () => $owner);
+                    app(Shipments::class)->write($request, $context);
+                }
+            } finally {
+                $context->clear();
+                $token->accessToken->delete();
+            }
+        }
+    }
     // Opt-in internal normalized fixtures only; NOT Salla responses or real authorization.
     foreach (['commerceOwner' => 'commerce', 'commerceDraftOwner' => 'commerceDraft', 'commerceBatchOwner' => 'commerceBatch', 'shopyzeeOwner' => 'shopyzee', 'shopyzeeDraftOwner' => 'shopyzeeDraft', 'shopyzeeBatchOwner' => 'shopyzeeBatch'] as $accountKey => $fixtureKey) {
         $provider = str_starts_with($fixtureKey, 'shopyzee') ? 'shopyzee' : 'salla';

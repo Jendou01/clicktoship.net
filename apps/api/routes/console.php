@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Analytics\Application\Exports;
 use App\Modules\Bulk\Application\Processor;
 use App\Modules\Commerce\Application\Work;
 use App\Modules\Customs\Application\DocumentWork;
@@ -120,3 +121,8 @@ Artisan::command('commerce:recover', function (): void {
     $this->info((string) app(Work::class)->recover());
 })->purpose('Recover durable authorized commerce work without live carrier or financial operations');
 Schedule::command('commerce:recover')->everyMinute()->withoutOverlapping();
+
+Artisan::command('analytics:recover', function (): void {
+    $this->info((string) app(Exports::class)->recover());
+})->purpose('Recover bounded report exports and remove expired reporting-owned encrypted artifacts');
+Schedule::command('analytics:recover')->everyMinute()->withoutOverlapping();

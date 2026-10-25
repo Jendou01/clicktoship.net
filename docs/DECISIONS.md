@@ -129,3 +129,10 @@ Use one existing carrier tracking history/projection; Shipping, finance and docu
 * Reuse Commerce sync/refresh/draft/batch/recovery/security engines. A persisted provider selects its adapter; Shopyzee pages and refresh results require exact normalized internal provider/instance/store evidence. Internal DTOs are not verified external mappings.
 * All eight user-supplied official Nazmart plugin documentation pages are blocked by managed proxy403. No source version/order/auth/plugin contract is verified. A separately reviewed connector using actual supported plugin lifecycle/routes/hooks is proposed; no fabricated or live-installed plugin is delivered.
 * Shopyzee authorization method remains null, with no callback invented. Live connect/sync/hooks and fulfillment write-back remain disabled. Existing shipping/financial gates are unchanged. No Phase 15 or deployment.
+
+
+## Phase 15 — source-owned analytics, bounded export safety
+
+Analytics reuses existing module facts and Operations read models, with no ledger/order/tracking replicas or speculative materializations. Metric definitions precede implementation; event cohorts and current stocks are distinct. All periods are UTC; money is exact currency/exponent-separated integer text. Missing accounting/evidence projections are unavailable rather than estimated as facts.
+
+Only approved fixed report columns/filters are executable. Merchant source permissions intersect tokens; platform count-only permissions never create private target grants. Export source reads use repeatable-read, with live authority checked again before publication. Durable lease/recovery and append-only origin/audit records prevent request/business duplicates and orphaned unsafe downloads. CSV UTF-8 and minimal inline-string XLSX need no additional application dependency. Normal downloads are closed until storage/scanning/retention are approved; isolated testing is not an activation mechanism. No new notifications, real carrier or financial operations are introduced.

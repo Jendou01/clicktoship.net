@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–12 are merged; Phase 13 store integration foundations are implemented on their review branch with all external Salla gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–14 are merged; Phase 15 analytics is implemented on its review branch with all external and financial activation gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -174,15 +174,14 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Phase 15 — Reporting and analytics
 
-* Scope: Reporting and analytics.
-* Dependencies: Financial/shipping/commerce event models.
-* Implementation tasks: Merchant/platform reports, shipment exceptions, margin vs actual billing, COD settlement and safe exports.
-* Database changes: Reporting projections and indexes.
-* API changes: Scoped reports/export jobs.
-* Frontend changes: Date/currency/merchant filters, transparent financial totals.
-* Automated tests: Tenant/report totals vs ledger, reconciliation and export injection.
-* Acceptance criteria: Reports reconcile without mixing currencies or changing history.
-* Completion report: Planned.
+* Scope: Authoritative merchant and platform analytics, bounded report builder and secure gated exports.
+* Dependencies: Existing WalletBilling, Pricing, Shipping, Bulk, Tracking, Customs, MerchantDashboard, Operations and Commerce sources; no duplicate engines or business projections.
+* Implementation: 16 merchant report definitions, 10 existing platform aggregate sections, UTC periods/day-week-month trends, exact currency-separated financial activity, source evidence and deterministic threshold insights. Unsupported realized revenue/profit/costs/FX/historical balances remain unavailable.
+* Database: Additive export orchestration and immutable event tables; current-origin identity guards and query/recovery indexes. No business data seeding in normal runtime.
+* API/UI: Current source permissions, token intersection, MFA-protected platform aggregates, owner/origin-bound export lifecycle and 11 bilingual responsive routes.
+* Exports: CSV UTF-8 / XLSX generation proven only with isolated synthetic fixtures and explicit scanner. Normal download gate remains closed pending approved private storage/scanning/retention.
+* Acceptance: Existing history preserved; no cross-tenant disclosure, currency mixing, live actions, unsafe exports or fabricated carrier evidence. PostgreSQL/Redis regression, concurrency, migration, browser and visual verification recorded in [Phase 15 report](PHASE_15_REPORT.md).
+* Completion: Implemented on `feat/phase-15-analytics-reporting` for review; not automatically merged or deployed. No Phase 16 work.
 
 ## Phase 16 — Security, performance and QA
 
@@ -210,8 +209,8 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 14 gated Shopyzee foundation and separate connector design. Resolve accessible plugin documentation, actual deployed source/version, tenant/order/authentication contracts and isolated compatibility testing before external activation. Salla, carrier, financial, notification and customs gates remain closed. No automatic merge, deployment or Phase 15.
+Review the Phase 14 gated Shopyzee foundation and separate connector design. Resolve accessible plugin documentation, actual deployed source/version, tenant/order/authentication contracts and isolated compatibility testing before external activation. Salla, carrier, financial, notification and customs gates remain closed. No automatic merge or deployment. Phase 15 analytics preserves these evidence gates.
 
 ## Phase 14 implementation status
 
-ClickToShip-side foundation implemented on `feat/phase-14-shopyzee-integration`: provider/platform/store ownership, provider-aware sync and credential fences, unified orders/source filters, existing reviewed draft/batch orchestration, aggregate monitoring and bilingual UI. All eight supplied official Nazmart plugin-guide URLs are proxy-denied. Shopyzee live authorization/sync/webhooks and standalone plugin compatibility remain unverified and disabled. See [report](PHASE_14_REPORT.md), [evidence](integrations/SHOPYZEE_EVIDENCE.md) and [connector proposal](integrations/SHOPYZEE_CONNECTOR_DESIGN.md). Phase 15 has not started.
+ClickToShip-side foundation implemented on `feat/phase-14-shopyzee-integration`: provider/platform/store ownership, provider-aware sync and credential fences, unified orders/source filters, existing reviewed draft/batch orchestration, aggregate monitoring and bilingual UI. All eight supplied official Nazmart plugin-guide URLs are proxy-denied. Shopyzee live authorization/sync/webhooks and standalone plugin compatibility remain unverified and disabled. See [report](PHASE_14_REPORT.md), [evidence](integrations/SHOPYZEE_EVIDENCE.md) and [connector proposal](integrations/SHOPYZEE_CONNECTOR_DESIGN.md). Phase 15 analytics uses these persisted sources while preserving all external evidence gates.

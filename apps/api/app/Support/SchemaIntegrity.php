@@ -162,6 +162,26 @@ final class SchemaIntegrity
             }
         }
 
+        if (DB::table('migrations')->where('migration', '2026_10_25_150000_create_analytics_exports')->exists()) {
+            foreach (['report_exports' => ['scope', 'merchant_id', 'actor_id', 'filters', 'lease', 'artifact', 'last_cleanup_at'], 'report_export_events' => ['export_id', 'kind', 'artifact']] as $table => $columns) {
+                foreach ($columns as $column) {
+                    if (! Schema::hasColumn($table, $column)) {
+                        $missing[] = $table.'.'.$column;
+                    }
+                }
+            }
+            foreach (['report_exports' => 'report_export_identity_guard', 'report_export_events' => 'report_export_history'] as $table => $trigger) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass(?) AND tgname=? AND tgenabled IN ('O','A')", ['public.'.$table, $trigger])) {
+                    $missing[] = $table.'.'.$trigger;
+                }
+            }
+            foreach (['report_export_history', 'report_export_active_digest', 'report_export_event_history', 'report_export_recovery', 'report_export_expiry', 'analytics_hold_events', 'analytics_wallet_movements', 'analytics_commerce_orders'] as $index) {
+                if (! DB::selectOne('SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid WHERE c.relname=? AND i.indisvalid AND i.indisready', [$index])) {
+                    $missing[] = 'index.'.$index;
+                }
+            }
+        }
+
         return $missing;
     }
 }
