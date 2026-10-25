@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–11 are merged; Phase 12 platform administration is implemented on its review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–12 are merged; Phase 13 store integration foundations are implemented on their review branch with all external Salla gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -151,17 +151,15 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Real PostgreSQL/Redis security races,2,000-merchant measurement, full Phase 0–11 regressions and responsive EN/AR browser evidence. See [Phase 12 report](PHASE_12_REPORT.md) and [architecture](architecture/PHASE_12_PLATFORM.md).
 * No automatic merge, deployment, live activation or Phase 13. Accounting/global monetary disclosure and external carrier/customs/production gates remain open decisions.
 
-## Phase 13 — Salla integration
+## Phase 13 — Salla integration (implemented gated foundation)
 
-* Scope: Salla integration.
-* Dependencies: Shipping stable; official app access.
-* Implementation tasks: Official authorization/token rotation/order import/fulfillment/tracking/health/retry.
-* Database changes: store integrations/orders/sync jobs.
-* API changes: Salla install/callback/sync hooks per official contract.
-* Frontend changes: Install/map/health/revoke screens.
-* Automated tests: Provider contract, revocation, duplicate import and update-loop protection.
-* Acceptance criteria: Official authorized integration; no invented API calls.
-* Completion report: Planned; partner documentation/access missing.
+* Verified base: Phase 12 PR #12 merge `35400617214e3da08d6bfef29434cc30832c13db`; preserved all prior code/commits on feat/phase-13-salla-integration.
+* Commerce owns permanent tenant/store identity, encrypted credentials/normalized immutable snapshots, hashed session-bound one-use/cancellable authorization intents, durable synchronization/checkpoints/leases, authenticated signal receipts and permanent links to existing shipment drafts. No second ledger/pricing/tracking/shipping engine.
+* Source minimization, current session/token/member rechecks, scope/identity/refresh and disconnect races, cross-tenant composite FKs, bounded retries/recovery/idempotency and stale-response fences. Late OAuth or refresh cannot resurrect disconnected credentials.
+* Four bilingual merchant screens plus count-only platform-commerce and merchant dashboard integration. Explicit single/bounded-batch review creates local drafts only, preserves existing drafts and reports partial failures. Missing/ambiguous source data, unsupported COD/currency and unverified fulfillment fail closed.
+* Two additive migrations, 12 module tables and 6 granular permissions; schema/drift/down/up and all Phase 0–12 regressions. [Report](PHASE_13_REPORT.md), [architecture](architecture/PHASE_13_COMMERCE.md), [official evidence gates](integrations/SALLA_EVIDENCE.md).
+* Official documentation is network-blocked; no real Salla contract, OAuth flow, endpoint, signature, event, scope or sandbox test is verified. Runtime provider/live webhook and Connect/Sync controls remain unavailable, with no fake connected state. Use internal synthetic tests only until authorized evidence/demo setup is available.
+* No merge, deployment, DNS/tunnel, live carrier/payment/customer notification or Phase 14. Ownership transfer, standing sync consent/authority and real-data retention require approval.
 
 ## Phase 14 — Shopyzee integration
 
@@ -213,4 +211,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 12 platform dashboard feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 13 work.
+Review the Phase 13 gated store foundation feature branch and completion report. Resolve official Salla contract/demo/callback/consent/privacy prerequisites before real activation. Existing carrier, financial, notification and customs gates remain closed. No automatic merge, deployment or Phase 14.

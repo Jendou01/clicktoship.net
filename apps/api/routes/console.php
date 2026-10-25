@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Modules\Bulk\Application\Processor;
+use App\Modules\Commerce\Application\Work;
 use App\Modules\Customs\Application\DocumentWork;
 use App\Modules\Identity\Application\Audit;
 use App\Modules\Operations\Application\PlatformSecurity;
@@ -114,3 +115,8 @@ Artisan::command('customs:recover', function (): void {
     $this->info((string) app(DocumentWork::class)->recover());
 })->purpose('Recover durable draft document work without external filings or charges');
 Schedule::command('customs:recover')->everyMinute()->withoutOverlapping();
+
+Artisan::command('commerce:recover', function (): void {
+    $this->info((string) app(Work::class)->recover());
+})->purpose('Recover durable authorized commerce work without live carrier or financial operations');
+Schedule::command('commerce:recover')->everyMinute()->withoutOverlapping();

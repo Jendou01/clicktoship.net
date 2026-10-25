@@ -109,3 +109,15 @@ Use one existing carrier tracking history/projection; Shipping, finance and docu
 * Alerts derive from current facts with opaque HMAC identities; append-only actor/session read receipts neither resolve source issues nor send notifications. Current country drafts, carrier draft events and unrevoked current customs documents avoid stale-workload claims.
 * Explicit UTC periods; stocks/current queues remain independent of the period. Synthetic carrier/tracking observations never count as verified activity. No pending-account status is invented.
 * Health is redacted local observation, scheduler is independently unobservable, settings are a typed read-only catalogue. No unrestricted config/replay/activation control or production readiness claim.
+
+
+## Phase 13 store integration decisions
+
+* Official Salla sources returned proxy 403; do not substitute invented URLs, OAuth scopes/modes, API fields/statuses or webhook headers/events. A disabled runtime adapter and explicit internal DTO/test-only synthetic protocol isolate all unverified contracts.
+* Permanently bind each provider/store identity to one merchant, including after disconnect. No self-service or administrator reassignment is authorized in Phase 13. Verified server-returned identity is mandatory; no browser store-ID claim.
+* Use existing merchant/user/current-origin locks and role/token intersections, plus connection generations, rotating-refresh nonce/version and durable page leases. No SQL transaction holds network I/O. Unknown refresh outcome requires reauthorization; no blind refresh replay.
+* Cancel pending/in-flight authorization intents on merchant disconnect. Two migrations preserve already-installed development history instead of editing migration rows or resetting normal data.
+* Orders are minimized/encrypted immutable normalized snapshots; reference search is blind-indexed. Unknown/older/equal conflicting changes do not silently replace current data. New drafts remain blocked until authoritative source conflict is resolved; browser acknowledgement is insufficient. Existing drafts remain unchanged.
+* Request replay and permanent order-to-draft business identity are separate. Catalog/merchant locks and Shipping.importDraft commit draft/link/outcome atomically. Bulk API orders reuse orchestration patterns without inventing uploaded files. No quote acceptance, wallet/carrier/COD settlement or external notification.
+* Platform visibility is aggregate only. No provider-specific private platform grant route or standing background synchronization authority is invented. Current originating session/token can expire and block future work.
+* No real-data retention/deletion period is assumed. Retained encrypted history is not automatically deleted; privacy/consent/key rotation/transfer/support policies remain launch gates. No new dependency or Phase 14.

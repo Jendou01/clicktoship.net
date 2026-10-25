@@ -43,7 +43,7 @@ final class Health
         } catch (Throwable) {
         }
 
-        return ['checks' => $checks, 'queues' => $queues, 'failed_jobs' => $failed, 'scheduler' => 'not_independently_observable', 'recovery_modules' => ['shipping', 'bulk', 'tracking', 'customs'], 'capabilities' => app(CarrierCapabilityRegistry::class)->all(), 'production_readiness' => 'not_certified', 'generated_at' => now()->toIso8601String()];
+        return ['checks' => $checks, 'queues' => $queues, 'failed_jobs' => $failed, 'scheduler' => 'not_independently_observable', 'recovery_modules' => ['shipping', 'bulk', 'tracking', 'customs', 'commerce'], 'capabilities' => app(CarrierCapabilityRegistry::class)->all(), 'production_readiness' => 'not_certified', 'generated_at' => now()->toIso8601String()];
     }
 
     public function settings(): array

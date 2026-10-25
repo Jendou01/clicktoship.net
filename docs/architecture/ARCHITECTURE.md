@@ -133,3 +133,8 @@ MerchantDashboard composes existing Shipping, Tracking, Bulk, WalletBilling, Pri
 ## Phase 12 platform operations
 
 Operations composes existing module-owned counts, bounded trends, approval workload, redacted audit and current-fact alerts under separate aggregate source permissions. Current browser session/role/MFA checks execute under PostgreSQL security locks; private merchant data still uses the existing exact approved session-bound grant services. Only append-only actor alert-read receipts are new; no duplicated business state or financial engine. Safe health and code-owned settings are read-only. Global finance shows per-currency counts, not amounts/revenue. Existing admin workflows share a responsive bilingual shell. [Source dictionary, authority, bounds and limitations](PHASE_12_PLATFORM.md).
+
+
+## Phase 13 Commerce foundations
+
+Commerce reuses current tenant authority and Shipping.importDraft, with encrypted normalized order snapshots, permanent provider/store ownership, session-bound/cancellable authorization intents, serialized token refresh, durable page/preparation runs and immutable receipts/links/results/audit. HTTP is outside merchant transactions; lease/generation/current credential checks fence commits. Old/unknown conflicting source data never silently overwrites reviewed drafts or becomes authorized by a browser acknowledgement. Four bilingual merchant screens and bounded merchant/platform read composition add no ledger/carrier/tracking engine. The default Salla adapter is code-disabled because official contracts/demo/callback prerequisites are unverified. [Detailed architecture](PHASE_13_COMMERCE.md).
