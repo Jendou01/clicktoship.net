@@ -20,7 +20,7 @@ final class OverviewController
     public function show(Request $r, ReadAuthority $gate, Metrics $metrics): mixed
     {
         $p = Period::read($r);
-        $d = $r->validate(['section' => 'sometimes|in:merchants,users,shipping,bulk,tracking,carriers,pricing,finance,customs']);
+        $d = $r->validate(['section' => 'sometimes|in:merchants,users,shipping,bulk,tracking,carriers,pricing,finance,customs,commerce']);
 
         return $gate->respond($r, 'platform.overview', fn ($permissions) => $metrics->overview($permissions, $p, $d['section'] ?? null));
     }

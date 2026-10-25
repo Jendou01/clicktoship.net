@@ -63,3 +63,14 @@ Verified V2 response/lookup/label/pickup contracts, account/service mapping and 
 * APP_KEY rotation changes derived opaque alert identities/read-state fingerprints; agree on retention/rotation transition before production. Source cases remain authoritative and immutable receipts are retained.
 * 2,000 synthetic merchants and local plans are not representative production load/soak evidence. Production requires separate runtime DB role provisioning, disaster recovery, retention, observability and security review.
 * Existing carrier response/auth/webhook evidence, accountant/regulatory review, document scanning/storage/retention and external notification consent/transport gates remain unresolved and cannot be enabled in dashboard settings.
+
+
+## Phase 13 Salla prerequisites and deliberately stopped capabilities
+
+* Obtain accessible current official Partners/API/OAuth/event documentation and dated contract evidence. All requested docs URLs were denied by the managed proxy. No official API endpoint, wire field/status, OAuth mode/scope, signature/event/retry/replay/ACK contract is verified.
+* Register/approve a legitimately controlled demo Partners app; agree least privilege/installation mode and exact reachable HTTPS callback/redirects. No production keys, tunnels, DNS or deployment were requested/created. Runtime Salla/client/webhook capability remains closed.
+* Verify order payment/fulfillment/cancellation, COD, currency precision, item weight/address semantics, pagination/checkpoints and rate limits before mapping real data. Existing Shipping allows SAR and zero COD only; missing/ambiguous fields cannot be fabricated. International UI supplementation still uses existing Shipping/Customs workflows; complete typed API review cannot bypass those rules.
+* Approve standing automated sync consent/authority and uninstall/revocation policy. Current durable work rechecks its originating browser session/token; expiry can block unattended processing. No permanent credential/membership bypass.
+* Approve ownership transfer and provider-specific private platform support permissions under independent exact target grants before exposing either capability. Current ownership cannot move, and platform receives counts only.
+* Approve lawful customer-data minimization/retention/redaction/deletion, storage/backups, key rotation and blind-index transition policy before real ingestion. Immutable evidence is retained by default; no arbitrary history erase control or PII export.
+* No actual Salla OAuth/sandbox test, fulfillment write-back, live carrier/financial/COD settlement/notification or production readiness is implied by internal synthetic tests. Existing accounting, carrier, customs and regulatory blockers remain.

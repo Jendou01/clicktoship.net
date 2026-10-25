@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Commerce\Application\Orders;
+use App\Modules\Commerce\Application\Tokens;
+use App\Modules\Merchants\Application\MerchantService;
 use App\Modules\Pricing\Domain\Configuration;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Crypt;
@@ -16,7 +19,7 @@ if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== '
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
+    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'commerceOwner', 'commerceDraftOwner', 'commerceBatchOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;
@@ -60,5 +63,28 @@ DB::transaction(function () use (&$accounts) {
     $row('tariff', 'tariff', $selectors + $amounts, 'SAR');
     $row('rule', 'rule', $selectors + array_replace($amounts, ['base_minor' => '2000']) + ['scope' => 'global', 'mode' => 'fixed', 'tier_id' => null, 'discount_minor' => '0', 'discount_bps' => 0, 'min_margin_minor' => '100', 'min_margin_bps' => 100, 'tax_id' => $tax], 'SAR');
     $accounts['service'] = $service;
+    // Opt-in internal normalized fixtures only; NOT Salla responses or real authorization.
+    foreach (['commerceOwner' => 'commerce', 'commerceDraftOwner' => 'commerceDraft', 'commerceBatchOwner' => 'commerceBatch'] as $accountKey => $fixtureKey) {
+        $owner = User::findOrFail($accounts[$accountKey]['id']);
+        $nonce = bin2hex(random_bytes(5));
+        $merchant = app(MerchantService::class)->create($owner, 'Commerce synthetic browser '.$nonce);
+        $connection = (string) Str::uuid();
+        $token = $owner->createToken('Synthetic commerce fixture', ['integrations.sync'], now()->addDay());
+        $token->accessToken->forceFill(['merchant_id' => $merchant->id, 'auth_version' => $owner->auth_version])->save();
+        DB::table('commerce_connections')->insert(['id' => $connection, 'merchant_id' => $merchant->id, 'provider' => 'salla', 'external_store_id' => 'SYNTHETIC-STORE-'.$nonce, 'state' => 'authorized', 'provenance' => 'synthetic', 'actor_id' => $owner->id, 'auth_version' => $owner->auth_version, 'origin_token_id' => $token->accessToken->id]);
+        app(Tokens::class)->store($merchant->id, $connection, ['access_token' => 'synthetic-test-only', 'refresh_token' => 'synthetic-test-only', 'expires_at' => now()->addHour(), 'scopes' => ['synthetic.orders.read']]);
+        $conn = DB::table('commerce_connections')->where('id', $connection)->first();
+        $orderRefs = [];
+        foreach (['single', 'batch-good', 'batch-incomplete'] as $kind) {
+            $external = $kind.'-'.$nonce;
+            $orderRefs[$kind] = 'SYN-'.$external;
+            $data = ['id' => $external, 'reference' => $orderRefs[$kind], 'created_at' => now()->subHour()->toIso8601String(), 'updated_at' => now()->toIso8601String(), 'status' => 'ready', 'payment' => 'paid', 'fulfillment' => 'unfulfilled', 'currency' => 'SAR', 'amount_minor' => '2500', 'cod_minor' => '0', 'recipient' => ['name' => 'Synthetic Recipient', 'phone' => '+966501234567', 'country' => 'SA', 'city' => 'synthetic destination', 'line1' => 'Synthetic street', 'postal' => '12345'], 'items' => []];
+            if ($kind === 'batch-incomplete') {
+                $data['recipient'] = ['country' => 'SA'];
+            }app(Orders::class)->ingest($conn, $data);
+        }
+        $accounts[$fixtureKey] = ['merchant_id' => $merchant->id, 'merchant_name' => $merchant->name, 'connection_id' => $connection, 'store' => 'SYNTHETIC-STORE-'.$nonce, 'references' => $orderRefs, 'orders' => DB::table('commerce_orders')->where('connection_id', $connection)->get(['id', 'external_order_id'])->all()];
+
+    }
 });
 echo json_encode($accounts, JSON_THROW_ON_ERROR);

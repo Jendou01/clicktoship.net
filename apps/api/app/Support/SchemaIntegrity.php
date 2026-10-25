@@ -117,6 +117,32 @@ final class SchemaIntegrity
             }
         }
 
+        if (DB::table('migrations')->where('migration', '2026_10_25_120000_create_commerce')->exists()) {
+            foreach (['connections', 'credentials', 'authorizations', 'orders', 'snapshots', 'runs', 'pages', 'draft_links', 'results', 'commands', 'events', 'receipts'] as $table) {
+                if (! Schema::hasTable('commerce_'.$table)) {
+                    $missing[] = 'commerce_'.$table;
+                }
+            }
+            foreach (['commerce_snapshots', 'commerce_pages', 'commerce_draft_links', 'commerce_results', 'commerce_commands', 'commerce_events', 'commerce_receipts'] as $table) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass(?) AND tgname='commerce_history' AND tgenabled IN ('O','A')", ['public.'.$table])) {
+                    $missing[] = $table.'.commerce_history';
+                }
+            }
+            foreach (['commerce_connections' => 'commerce_owner_guard', 'commerce_orders' => 'commerce_order_owner_guard'] as $table => $trigger) {
+                if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass(?) AND tgname=? AND tgenabled IN ('O','A')", ['public.'.$table, $trigger])) {
+                    $missing[] = $table.'.'.$trigger;
+                }
+            }
+            if (! Schema::hasColumn('commerce_authorizations', 'cancelled_at')) {
+                $missing[] = 'commerce_authorizations.cancelled_at';
+            }
+            foreach (['commerce_authorization_pending', 'commerce_one_active_run', 'commerce_order_directory', 'commerce_order_reference'] as $index) {
+                if (! DB::selectOne('SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid WHERE c.relname=? AND i.indisvalid AND i.indisready', [$index])) {
+                    $missing[] = 'index.'.$index;
+                }
+            }
+        }
+
         return $missing;
     }
 }

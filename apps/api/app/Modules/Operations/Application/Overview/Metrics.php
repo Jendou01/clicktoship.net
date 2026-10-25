@@ -33,7 +33,7 @@ final class Metrics
     public function overview(array $permissions, array $p, ?string $section = null): array
     {
         $widgets = [];
-        foreach (['merchants', 'users', 'shipping', 'bulk', 'tracking', 'carriers', 'pricing', 'finance', 'customs'] as $kind) {
+        foreach (['merchants', 'users', 'shipping', 'bulk', 'tracking', 'carriers', 'pricing', 'finance', 'customs', 'commerce'] as $kind) {
             if ((! $section || $kind === $section) && in_array('platform.metrics.'.$kind, $permissions, true)) {
                 $widgets[$kind] = $this->$kind($p);
             }
@@ -100,5 +100,10 @@ final class Metrics
     public function customs(array $p): array
     {
         return ['rules' => DB::table('customs_country_rules')->count(), 'pending_reviews' => app(Approvals::class)->countryPending()->count(), 'document_work' => $this->groups(DB::table('customs_document_work'), 'state'), 'quarantined_documents' => app(Facts::class)->currentCustomsQuarantine()->count(), 'local_incomplete' => DB::query()->fromSub(DB::table('customs_readiness')->selectRaw('DISTINCT ON(merchant_id,shipment_id,revision) merchant_id,shipment_id,revision,report')->orderBy('merchant_id')->orderBy('shipment_id')->orderBy('revision')->orderByDesc('created_at')->orderByDesc('id'), 'r')->join('shipments as s', fn ($j) => $j->on('s.merchant_id', '=', 'r.merchant_id')->on('s.id', '=', 'r.shipment_id')->on('s.revision', '=', 'r.revision'))->whereRaw("(r.report->>'local_valid')::boolean=false")->count(), 'clearance_enabled' => false];
+    }
+
+    public function commerce(array $p): array
+    {
+        return ['verified_authorized_stores' => DB::table('commerce_connections')->where('state', 'authorized')->where('provenance', 'verified')->count(), 'synthetic_stores' => DB::table('commerce_connections')->where('provenance', 'synthetic')->count(), 'reauthorization_required' => DB::table('commerce_connections')->where('state', 'reauthorization_required')->count(), 'work' => $this->groups(DB::table('commerce_runs'), 'state'), 'orders' => DB::table('commerce_orders')->count(), 'review_required' => DB::table('commerce_orders')->where('review_required', true)->count(), 'prepared_drafts' => DB::table('commerce_draft_links')->count(), 'quarantined_receipts' => DB::table('commerce_receipts')->where('kind', 'quarantined')->count(), 'external_enabled' => false];
     }
 }

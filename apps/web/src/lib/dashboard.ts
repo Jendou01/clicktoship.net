@@ -5,6 +5,7 @@ export type DashboardData = {
  merchant: {id:string;name:string}; permissions:string[]; period:Period; generated_at:string;
  activity:Activity[]; next_cursor:string|null; live_shipping_enabled:false; payments_enabled:false;
  widgets:{
+ commerce?:{orders:number;review_required:number;prepared_drafts:number;external_enabled:false};
  shipping?:{total:number;drafts:number;submitted:number;carrier_accepted:number;exceptions:number;states:{state:string;count:number}[];daily:{day:string;count:number}[]};
  tracking?:{verified_statuses:{status:string;count:number}[];external_enabled:false};
  wallet?:{balances:{currency:string;exponent:number;posted:string;reserved:string;available:string;frozen:boolean}[];as_of:string;funding_enabled:false};

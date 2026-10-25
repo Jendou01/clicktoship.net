@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–12
-  version: 0.12.0
+  title: ClickToShip API — Phases 1–13
+  version: 0.13.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:
@@ -12027,6 +12027,7 @@ paths:
           - pricing
           - finance
           - customs
+          - commerce
         description: Optional single source; never grants that source permission.
       responses:
         '200':
@@ -12662,6 +12663,1156 @@ paths:
           $ref: '#/components/responses/Error429'
         '503':
           $ref: '#/components/responses/Error503'
+  /api/v1/commerce/providers:
+    get:
+      operationId: getPhase13CommerceProviders
+      summary: Commerce Providers
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.read
+      parameters: []
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      providers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CommerceCapabilities'
+                        maxItems: 1
+                    required:
+                    - providers
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/connections:
+    get:
+      operationId: getPhase13CommerceConnectionList
+      summary: Commerce ConnectionList
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.read
+      parameters: []
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceConnectionList'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/salla/authorize:
+    post:
+      operationId: postPhase13CommerceBegin
+      summary: Commerce Begin
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
+        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
+        success schemas describe internal tested architecture, not verified Salla wire
+        behavior. Never invent a reachable callback URL.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      x-required-permissions:
+      - integrations.manage
+      parameters: []
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      authorization_url:
+                        type: string
+                        format: uri
+                      expires_in:
+                        const: 600
+                    required:
+                    - authorization_url
+                    - expires_in
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/salla/callback:
+    get:
+      operationId: getPhase13CommerceCallback
+      summary: Commerce Callback
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
+        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
+        success schemas describe internal tested architecture, not verified Salla wire
+        behavior. Never invent a reachable callback URL.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - integrations.manage
+      parameters:
+      - name: state
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 64
+          maxLength: 64
+      - name: code
+        in: query
+        required: true
+        schema:
+          type: string
+          maxLength: 2048
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      connection_id:
+                        type: string
+                        format: uuid
+                      provenance:
+                        enum:
+                        - verified
+                        - synthetic
+                      external_execution_enabled:
+                        type: boolean
+                        const: false
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/connections/{id}/disconnect:
+    post:
+      operationId: postPhase13CommerceDisconnect
+      summary: Commerce Disconnect
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.manage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      disconnected:
+                        const: true
+                      external_revocation_verified:
+                        type: boolean
+                        const: false
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - version
+              - idempotency_key
+              additionalProperties: false
+  /api/v1/commerce/connections/{id}/sync:
+    post:
+      operationId: postPhase13CommerceSync
+      summary: Commerce Sync
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
+        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
+        success schemas describe internal tested architecture, not verified Salla wire
+        behavior. Never invent a reachable callback URL.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.sync
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceQueuedRun'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - idempotency_key
+              additionalProperties: false
+  /api/v1/commerce/connections/{id}/prepare:
+    post:
+      operationId: postPhase13CommercePrepare
+      summary: Commerce Prepare
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
+        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
+        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
+        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - orders.prepare
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '202':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceQueuedRun'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selections:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      order_id:
+                        type: string
+                        format: uuid
+                      snapshot_id:
+                        type: string
+                        format: uuid
+                      version:
+                        type: integer
+                        minimum: 1
+                      review:
+                        $ref: '#/components/schemas/CommerceReview'
+                      acknowledge_changes:
+                        type: boolean
+                      preview_hash:
+                        type: string
+                        pattern: ^[a-f0-9]{64}$
+                    required:
+                    - order_id
+                    - snapshot_id
+                    - version
+                    - review
+                    - preview_hash
+                    additionalProperties: false
+                  minItems: 1
+                  maxItems: 25
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - selections
+              - idempotency_key
+              additionalProperties: false
+  /api/v1/commerce/connections/{id}/events:
+    get:
+      operationId: getPhase13CommerceEvents
+      summary: Commerce Events
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Opaque UUID keyset; ascending internal UUID order, never an authority
+          selector.
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceEvents'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/orders:
+    get:
+      operationId: getPhase13CommerceOrders
+      summary: Commerce Orders
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - orders.read
+      parameters:
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Opaque UUID keyset; ascending internal UUID order, never an authority
+          selector.
+      - name: connection
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          enum:
+          - ready
+          - cancelled
+          - fulfilled
+          - unknown
+      - name: reference
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Exact external order reference, blind-indexed at rest.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: UTC source creation boundary; to is inclusive.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: UTC source creation boundary; to is inclusive.
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceOrderDirectory'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/orders/{id}:
+    get:
+      operationId: getPhase13CommerceOrder
+      summary: Commerce Order
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - orders.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceOrderDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/orders/{id}/preview:
+    post:
+      operationId: postPhase13CommercePreview
+      summary: Commerce Preview
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
+        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
+        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
+        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - orders.prepare
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceDraftPreview'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommerceDraftInput'
+  /api/v1/commerce/orders/{id}/draft:
+    post:
+      operationId: postPhase13CommerceDraft
+      summary: Commerce Draft
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Also requires orders.read and shipments.write. Explicit current snapshot/version
+        and preview hash bind the reviewed inputs. Permanent order link prevents duplicate
+        drafts across retries/actors/crashes. Missing COD/weights/currency/source eligibility
+        fail closed; no implicit FX. Existing linked drafts are retained, never overwritten.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - orders.prepare
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceDraftResult'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                snapshot_id:
+                  type: string
+                  format: uuid
+                version:
+                  type: integer
+                  minimum: 1
+                review:
+                  $ref: '#/components/schemas/CommerceReview'
+                acknowledge_changes:
+                  type: boolean
+                preview_hash:
+                  type: string
+                  pattern: ^[a-f0-9]{64}$
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - snapshot_id
+              - version
+              - review
+              - preview_hash
+              - idempotency_key
+              additionalProperties: false
+  /api/v1/commerce/runs:
+    get:
+      operationId: getPhase13CommerceRuns
+      summary: Commerce Runs
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.read
+      parameters:
+      - name: after
+        in: query
+        schema:
+          type: string
+          format: uuid
+        description: Opaque UUID keyset; ascending internal UUID order, never an authority
+          selector.
+      - name: connection
+        in: query
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceRunDirectory'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/runs/{id}:
+    get:
+      operationId: getPhase13CommerceRun
+      summary: Commerce Run
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. integrations.read can view run metadata; orders.read alone may inspect
+        only its own prepare run, not sync/another actor.
+      security:
+      - SessionCookie: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.read OR own prepare + orders.read
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceRunDetail'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/commerce/runs/{id}/retry:
+    post:
+      operationId: postPhase13CommerceRetry
+      summary: Commerce Retry
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Explicit resume requires current position, idempotency and origin authority.
+        A waiting run cannot bypass Retry-After. Bounded500-order automatic segment/1000-order
+        run ceiling.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      - BearerAuth: []
+      x-required-permissions:
+      - integrations.sync
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CommerceQueuedRun'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expected_position:
+                  type: integer
+                  minimum: 0
+                  maximum: 1000
+                idempotency_key:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+              required:
+              - expected_position
+              - idempotency_key
+              additionalProperties: false
+  /api/v1/commerce/webhooks/salla:
+    post:
+      operationId: postPhase13CommerceWebhook
+      summary: Commerce Webhook
+      description: Verified active merchant membership, current session/token ability
+        intersection and current credential fences. Derived tenant only; client merchant/actor/origin
+        identity fields prohibited. Private/no-store. No carrier, ledger or customer
+        notification effects. Source snapshots are local, not a claim of live Salla
+        status. Runtime Salla contract/credentials/application/callback gates are CLOSED;
+        default response503. OAuth mode/endpoints/scopes/signatures are unverified;
+        success schemas describe internal tested architecture, not verified Salla wire
+        behavior. Never invent a reachable callback URL. No signature header/event name/body
+        contract is asserted; maximum65536 bytes after the code-owned gate. Unknown
+        authenticated events quarantine metadata; receipts never create drafts. Do not
+        post real customer payloads while disabled.
+      security: []
+      x-required-permissions:
+      - verified provider authenticity
+      parameters: []
+      responses:
+        '200':
+          description: Authorized local result; external activation gates remain closed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accepted:
+                        const: true
+                      duplicate:
+                        type: boolean
+                      quarantined:
+                        type: boolean
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '413':
+          description: Request exceeds the permitted 65536-byte authenticated intake limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          $ref: '#/components/responses/Error503'
 components:
   headers:
     RequestId:
@@ -12737,6 +13888,730 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    PlatformCommerceMetrics:
+      type: object
+      properties:
+        verified_authorized_stores:
+          type: integer
+          minimum: 0
+        synthetic_stores:
+          type: integer
+          minimum: 0
+        reauthorization_required:
+          type: integer
+          minimum: 0
+        work:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+        orders:
+          type: integer
+          minimum: 0
+        review_required:
+          type: integer
+          minimum: 0
+        prepared_drafts:
+          type: integer
+          minimum: 0
+        quarantined_receipts:
+          type: integer
+          minimum: 0
+        external_enabled:
+          type: boolean
+          const: false
+      required:
+      - verified_authorized_stores
+      - synthetic_stores
+      - reauthorization_required
+      - work
+      - orders
+      - review_required
+      - prepared_drafts
+      - quarantined_receipts
+      - external_enabled
+      additionalProperties: false
+    CommerceCapabilities:
+      type: object
+      properties:
+        provider:
+          const: salla
+        available:
+          type: boolean
+          const: false
+        official_contract_verified:
+          type: boolean
+          const: false
+        oauth_mode:
+          type: 'null'
+        required_scopes:
+          type: array
+          items:
+            type: string
+          maxItems: 0
+        reason:
+          const: SALLA_CONTRACT_UNVERIFIED
+        external_webhooks_enabled:
+          type: boolean
+          const: false
+        carrier_execution_enabled:
+          type: boolean
+          const: false
+        payments_enabled:
+          type: boolean
+          const: false
+      required:
+      - provider
+      - available
+      - official_contract_verified
+      - oauth_mode
+      - required_scopes
+      - reason
+      - external_webhooks_enabled
+      - carrier_execution_enabled
+      - payments_enabled
+    CommerceConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          const: salla
+        external_store_id:
+          type: string
+          maxLength: 128
+        state:
+          enum:
+          - authorized
+          - reauthorization_required
+          - disconnected
+        provenance:
+          enum:
+          - verified
+          - synthetic
+          description: Synthetic is isolated test evidence and must never be presented
+            as real Salla authorization.
+        version:
+          type: integer
+          minimum: 0
+        last_synced_at:
+          type:
+          - string
+          - 'null'
+          description: Persisted timestamp with UTC offset or null.
+        error_code:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          description: Persisted timestamp with UTC offset.
+        expires_at:
+          type:
+          - string
+          - 'null'
+          description: Persisted timestamp with UTC offset or null.
+        credential_version:
+          type: integer
+          minimum: 0
+      required:
+      - id
+      - provider
+      - external_store_id
+      - state
+      - provenance
+      - version
+      - last_synced_at
+      - error_code
+      - created_at
+      - expires_at
+      - credential_version
+      additionalProperties: false
+    CommerceConnectionList:
+      type: object
+      properties:
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommerceConnection'
+          maxItems: 100
+        capabilities:
+          $ref: '#/components/schemas/CommerceCapabilities'
+      required:
+      - connections
+      - capabilities
+    CommerceOrderRow:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        connection_id:
+          type: string
+          format: uuid
+        state:
+          enum:
+          - ready
+          - cancelled
+          - fulfilled
+          - unknown
+        version:
+          type: integer
+          minimum: 0
+        current_snapshot:
+          type: string
+          format: uuid
+        review_required:
+          type: boolean
+        source_created_at:
+          type: string
+          description: Persisted timestamp with UTC offset.
+        reference:
+          type: string
+          maxLength: 100
+        payment:
+          enum:
+          - paid
+          - unpaid
+          - refunded
+          - unknown
+        fulfillment:
+          enum:
+          - unfulfilled
+          - fulfilled
+          - partial
+          - unknown
+        currency:
+          type:
+          - string
+          - 'null'
+        cod_minor:
+          type:
+          - string
+          - 'null'
+        shipment_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - id
+      - connection_id
+      - state
+      - version
+      - current_snapshot
+      - review_required
+      - source_created_at
+      - reference
+      - payment
+      - fulfillment
+      - currency
+      - cod_minor
+      - shipment_id
+      additionalProperties: false
+    CommerceOrderDirectory:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommerceOrderRow'
+          maxItems: 25
+        next_after:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        source:
+          const: salla
+        live_status_verified:
+          type: boolean
+          const: false
+        sort:
+          const: internal_uuid_ascending
+      required:
+      - orders
+      - next_after
+      - source
+      - live_status_verified
+      - sort
+    CommerceOrderDetail:
+      type: object
+      properties:
+        order:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            merchant_id:
+              type: string
+              format: uuid
+            connection_id:
+              type: string
+              format: uuid
+            external_order_id:
+              type: string
+            current_snapshot:
+              type: string
+              format: uuid
+            version:
+              type: integer
+              minimum: 0
+            state:
+              enum:
+              - ready
+              - cancelled
+              - fulfilled
+              - unknown
+            review_required:
+              type: boolean
+            source_created_at:
+              type: string
+              description: Persisted timestamp with UTC offset.
+        snapshot:
+          type: object
+          properties:
+            id:
+              type: string
+            reference:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type:
+              - string
+              - 'null'
+              format: date-time
+            status:
+              enum:
+              - ready
+              - cancelled
+              - fulfilled
+              - unknown
+            payment:
+              enum:
+              - paid
+              - unpaid
+              - refunded
+              - unknown
+            fulfillment:
+              enum:
+              - unfulfilled
+              - fulfilled
+              - partial
+              - unknown
+            currency:
+              type:
+              - string
+              - 'null'
+            amount_minor:
+              type:
+              - string
+              - 'null'
+            cod_minor:
+              type:
+              - string
+              - 'null'
+            recipient:
+              type: object
+              properties:
+                name:
+                  type:
+                  - string
+                  - 'null'
+                phone:
+                  type:
+                  - string
+                  - 'null'
+                country:
+                  type:
+                  - string
+                  - 'null'
+                city:
+                  type:
+                  - string
+                  - 'null'
+                line1:
+                  type:
+                  - string
+                  - 'null'
+                postal:
+                  type:
+                  - string
+                  - 'null'
+                state:
+                  type:
+                  - string
+                  - 'null'
+                email:
+                  type:
+                  - string
+                  - 'null'
+              additionalProperties: false
+            items:
+              type: array
+              items:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  sku:
+                    type:
+                    - string
+                    - 'null'
+                  quantity:
+                    type: integer
+                    minimum: 0
+                  value_minor:
+                    type:
+                    - string
+                    - 'null'
+                  weight_grams:
+                    type:
+                    - integer
+                    - 'null'
+                  country:
+                    type:
+                    - string
+                    - 'null'
+                  hs_code:
+                    type:
+                    - string
+                    - 'null'
+              maxItems: 100
+        draft_link:
+          type:
+          - object
+          - 'null'
+          properties:
+            shipment_id:
+              type: string
+              format: uuid
+            snapshot_id:
+              type: string
+              format: uuid
+        history:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              source_updated_at:
+                type:
+                - string
+                - 'null'
+                description: Persisted timestamp with UTC offset or null.
+              created_at:
+                type: string
+                description: Persisted timestamp with UTC offset.
+          maxItems: 25
+        external_status_confirmed_live:
+          type: boolean
+          const: false
+      required:
+      - order
+      - snapshot
+      - draft_link
+      - history
+      - external_status_confirmed_live
+    CommerceReview:
+      type: object
+      properties:
+        customs:
+          $ref: '#/components/schemas/CustomsDeclaration'
+        service_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        description:
+          type: string
+          maxLength: 500
+        origin:
+          $ref: '#/components/schemas/ShipmentParty'
+        destination:
+          $ref: '#/components/schemas/ShipmentParty'
+        packages:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/ShipmentPackage'
+        goods_origin_country:
+          type:
+          - string
+          - 'null'
+          pattern: ^[A-Z]{2}$
+        items:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+                maximum: 100000
+              value_minor:
+                type: string
+                pattern: ^(0|[1-9][0-9]{0,11})$
+              country:
+                type: string
+                pattern: ^[A-Z]{2}$
+              hs_code:
+                type:
+                - string
+                - 'null'
+                pattern: ^[0-9]{6,12}$
+            required:
+            - description
+            - quantity
+            - value_minor
+            - country
+            additionalProperties: false
+      additionalProperties: false
+      description: Explicit merchant-supplied corrections/origin/parcels. Source money/currency/COD
+        are immutable here. Missing data is never guessed. International complete typed
+        data may be submitted through the API; the initial UI requires existing customs
+        workflows for missing declarations.
+    CommerceDraftInput:
+      type: object
+      properties:
+        snapshot_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+        review:
+          $ref: '#/components/schemas/CommerceReview'
+        acknowledge_changes:
+          type: boolean
+        preview_hash:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+      required:
+      - snapshot_id
+      - version
+      - review
+      additionalProperties: false
+    CommerceDraftPreview:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        fields:
+          type: array
+          items:
+            type: string
+        blocks:
+          type: array
+          items:
+            enum:
+            - STORE_NOT_AUTHORIZED
+            - SOURCE_NOT_ELIGIBLE
+            - SOURCE_REVIEW_REQUIRED
+            - CURRENCY_NOT_SUPPORTED
+            - AMOUNT_UNKNOWN
+            - COD_UNKNOWN
+            - COD_NOT_SUPPORTED
+        preview_hash:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+        snapshot_id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 0
+        shipment_draft:
+          type: object
+          properties: {}
+        source_provenance:
+          enum:
+          - verified
+          - synthetic
+        submission_enabled:
+          type: boolean
+          const: false
+      required:
+      - valid
+      - fields
+      - blocks
+      - preview_hash
+      - snapshot_id
+      - version
+      - shipment_draft
+      - source_provenance
+      - submission_enabled
+    CommerceDraftResult:
+      type: object
+      properties:
+        shipment_id:
+          type: string
+          format: uuid
+        state:
+          enum:
+          - created
+          - existing
+        source_changed:
+          type: boolean
+      required:
+      - shipment_id
+      - state
+      - source_changed
+    CommerceRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        connection_id:
+          type: string
+          format: uuid
+        kind:
+          enum:
+          - sync
+          - prepare
+        state:
+          enum:
+          - queued
+          - running
+          - waiting
+          - limited
+          - succeeded
+          - failed
+          - blocked
+        position:
+          type: integer
+          minimum: 0
+        pages:
+          type: integer
+          minimum: 0
+        attempt:
+          type: integer
+          minimum: 0
+        failure_code:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          description: Persisted timestamp with UTC offset.
+        updated_at:
+          type: string
+          description: Persisted timestamp with UTC offset.
+      required:
+      - id
+      - connection_id
+      - kind
+      - state
+      - position
+      - pages
+      - attempt
+      - failure_code
+      - created_at
+      - updated_at
+      additionalProperties: false
+    CommerceRunDirectory:
+      type: object
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommerceRun'
+          maxItems: 25
+        next_after:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - runs
+      - next_after
+    CommerceRunDetail:
+      type: object
+      properties:
+        run:
+          $ref: '#/components/schemas/CommerceRun'
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              order_id:
+                type: string
+                format: uuid
+              state:
+                enum:
+                - created
+                - existing
+                - failed
+              shipment_id:
+                type:
+                - string
+                - 'null'
+                format: uuid
+              error_code:
+                type:
+                - string
+                - 'null'
+          maxItems: 25
+      required:
+      - run
+      - results
+    CommerceQueuedRun:
+      type: object
+      properties:
+        run_id:
+          type: string
+          format: uuid
+        state:
+          const: queued
+      required:
+      - run_id
+      - state
+    CommerceEvents:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              kind:
+                type: string
+              metadata:
+                type: string
+                description: Persisted JSON metadata, identifiers/counts only; no raw
+                  payload or PII.
+              created_at:
+                type: string
+                description: Persisted timestamp with UTC offset.
+          maxItems: 25
+        next_after:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - events
+      - next_after
     PlatformMerchantsMetrics:
       type: object
       properties:
@@ -13271,6 +15146,8 @@ components:
         widgets:
           type: object
           properties:
+            commerce:
+              $ref: '#/components/schemas/PlatformCommerceMetrics'
             merchants:
               $ref: '#/components/schemas/PlatformMerchantsMetrics'
             users:
@@ -14077,6 +15954,16 @@ components:
         merchant:
           type: object
           properties:
+            commerce:
+              type: object
+              description: Current merchant counts only when orders.read is authorized; no live Salla claim.
+              properties:
+                orders: {type: integer, minimum: 0}
+                review_required: {type: integer, minimum: 0}
+                prepared_drafts: {type: integer, minimum: 0}
+                external_enabled: {type: boolean, const: false}
+              required: [orders, review_required, prepared_drafts, external_enabled]
+              additionalProperties: false
             id:
               type: string
               format: uuid

@@ -11,6 +11,8 @@ export { localeHref } from "@/lib/navigation-context";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
+  ["store-integrations", "integrations.read", "Store integrations", "تكامل المتاجر"],
+  ["store-orders", "orders.read", "Connected-store orders", "طلبات المتاجر المرتبطة"],
   ["international", "customs.read", "International customs", "الجمارك الدولية"],
   ["tracking", "tracking.read", "Shipment tracking", "تتبع الشحنات"],
   ["bulk", "bulk.read", "Bulk shipping", "الشحن الجماعي"],

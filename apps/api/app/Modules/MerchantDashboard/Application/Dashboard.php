@@ -82,6 +82,10 @@ final class Dashboard
                 $widgets['customs'] = (array) $summary + ['clearance_enabled' => false];
             }
 
+            if (in_array('orders.read', $permissions, true)) {
+                $widgets['commerce'] = ['orders' => DB::table('commerce_orders')->where('merchant_id', $merchant)->count(), 'review_required' => DB::table('commerce_orders')->where('merchant_id', $merchant)->where('review_required', true)->count(), 'prepared_drafts' => DB::table('commerce_draft_links')->where('merchant_id', $merchant)->count(), 'external_enabled' => false];
+            }
+
             return ['merchant' => DB::table('merchants')->where('id', $merchant)->first(['id', 'name']), 'permissions' => $permissions, 'period' => $p, 'widgets' => (object) $widgets, 'generated_at' => now()->toIso8601String(), 'live_shipping_enabled' => false, 'payments_enabled' => false] + $activity;
         });
 

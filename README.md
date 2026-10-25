@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–12 development foundations**, including authentication/tenancy, merchant administration, a financial ledger, static pricing, evidence-gated carrier adapters, shipment/bulk drafts, tracking foundations, customs preparation and bilingual merchant and platform operational dashboards. Live carrier operations, wallet funding, payments and customs clearance remain disabled. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–13 development foundations**, including authentication/tenancy, merchant administration, a financial ledger, static pricing, evidence-gated carrier adapters, shipment/bulk drafts, tracking foundations, customs preparation bilingual merchant/platform dashboards and an evidence-gated store integration foundation. Live carrier operations, wallet funding, payments and customs clearance remain disabled. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -63,7 +63,7 @@ BUILDX_CONFIG=/tmp/clicktoship-buildx docker build \
   --secret id=cloud_ca,src=/usr/local/share/ca-certificates/environment-proxy-ca.crt \
   -f infrastructure/docker/browser.Dockerfile -t clicktoship-browser:dev .
 docker run --rm --init --ipc=host --network clicktoship_default \
-  -e NO_PROXY=nginx,web,mailpit,localhost,127.0.0.1 -e no_proxy=nginx,web,mailpit,localhost,127.0.0.1 \
+  -e NO_PROXY=nginx,web,mailpit,localhost, 127.0.0.1 -e no_proxy=nginx,web,mailpit,localhost, 127.0.0.1 \
   -e E2E_BASE_URL=http://nginx -e MAILPIT_URL=http://mailpit:8025 \
   -v /tmp/clicktoship-e2e-credentials.json:/tmp/clicktoship-e2e-credentials.json:ro \
   -v "$PWD:/workspace" clicktoship-browser:dev
@@ -81,7 +81,7 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Review the Phase 12 platform administration feature branch and [completion report](docs/PHASE_12_REPORT.md). Existing carrier, financial, document/scanning and regulatory gates remain closed. Do not merge, deploy or start Phase 13 automatically.
+Review the Phase 13 store integration feature branch and [completion report](docs/PHASE_13_REPORT.md). Salla OAuth/API/webhook contracts, demo credentials and an approved callback remain unavailable; the runtime adapter is disabled. Existing carrier, financial, privacy and regulatory gates remain closed. Do not merge, deploy or start Phase 14 automatically.
 
 ## Phase 2 workflows
 
@@ -166,4 +166,13 @@ PDF generation uses locked TCPDF 6.11.4 for native Unicode/Arabic layout, not an
 
 `/en/platform-overview` and `/ar/platform-overview` compose authorized merchant/user/shipping/bulk/tracking/carrier/pricing/finance/customs counts, UTC trends, redacted audit, current approval workload, derived alerts, safe health and a read-only settings catalogue. All new APIs require current browser sessions, role rechecks and recent MFA. Private merchant details and financial amounts still require independently approved expiring exact session-bound grants; aggregate visibility never grants private access. Finance totals are count-only; no global monetary disclosure policy is assumed.
 
-The shared responsive platform navigation also wraps existing admin workflows. Only an immutable actor-specific alert-read receipt table and bounded aggregate permissions are added; no second ledger, carrier gateway or business system. [Architecture/source dictionary](docs/architecture/PHASE_12_PLATFORM.md), [scope/RBAC](docs/architecture/PHASE_12_SCOPE.md), [report](docs/PHASE_12_REPORT.md), [API](docs/api/openapi.yaml). Normal startup seeds no accounts or activity. Refresh disposable E2E fixtures before each full browser cycle; private credentials remain 0600 under /tmp. No live activation, deployment or Phase 13.
+The shared responsive platform navigation also wraps existing admin workflows. Only an immutable actor-specific alert-read receipt table and bounded aggregate permissions are added; no second ledger, carrier gateway or business system. [Architecture/source dictionary](docs/architecture/PHASE_12_PLATFORM.md), [scope/RBAC](docs/architecture/PHASE_12_SCOPE.md), [report](docs/PHASE_12_REPORT.md), [API](docs/api/openapi.yaml). Normal startup seeds no accounts or activity. Refresh disposable E2E fixtures before each full browser cycle; private credentials remain 0600 under /tmp. Historical Phase 12 delivery boundary; Phase 13 was subsequently authorized. No live activation or deployment.
+
+
+### Phase 13 store integration foundation
+
+`/en/store-integrations`, `/store-orders`, `/store-order?order=UUID` and `/store-syncs` (and Arabic equivalents) provide truthful connection state, scoped imported order inspection, explicit source/shipping review, single/bounded-batch draft preparation and durable progress. Merchant/dashboard and count-only platform-commerce monitoring reuse existing authorization/UI/module boundaries. Two additive migrations install12 integration tables, 6 permissions and an OAuth cancellation fence; normal startup seeds no store, account, order or financial activity.
+
+**Live Salla remains unavailable.** All three requested official documentation URLs returned managed proxy 403. No Salla endpoint, OAuth mode/scope, wire field/status, signature/event or sandbox result is claimed verified. Default provider blocks all external calls. Internal normalized/synthetic tests prove architecture, not Salla compatibility. [Evidence/activation checklist](docs/integrations/SALLA_EVIDENCE.md), [architecture and ownership](docs/architecture/PHASE_13_COMMERCE.md), [report](docs/PHASE_13_REPORT.md), [OpenAPI](docs/api/openapi.yaml).
+
+Store identities cannot move between merchants. Current sessions/token abilities/roles and connection generations fence every step; credentials/source snapshots/cursors/batch inputs encrypt at rest. Disconnect cancels pending/in-flight authorization intents and invalidates late refresh/sync work. Ambiguous rotating refresh requires reauthorization. Unresolved source conflicts cannot be overridden by a browser acknowledgement. Commerce invokes Shipping.importDraft only: no carrier submission, paid waybill, wallet charge, COD settlement, fulfillment write-back or notification. `commerce:recover` republishes durable work on the existing encrypted bulk queue. No deployment, tunnel, automatic merge or Phase 14.

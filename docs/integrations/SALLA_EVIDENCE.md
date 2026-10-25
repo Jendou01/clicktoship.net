@@ -1,0 +1,9 @@
+# Salla evidence and activation gates — 2026-10-25
+
+Requested official sources: https://docs.salla.dev/, https://docs.salla.dev/doc-421118 and https://docs.salla.dev/doc-421119. All three HTTPS retrievals in this environment failed at the managed network proxy: `Tunnel connection failed: 403 Forbidden`. No TLS validation was disabled or alternate tunnel introduced.
+
+**No Salla endpoint, payload, OAuth mode/scope, signature header, event name, retry promise or status/fulfillment mapping has been verified by this delivery.** No registered Partners application, authorized demo credentials or reachable approved HTTPS callback is available. Examples remembered from third-party articles are not evidence.
+
+The production Salla adapter therefore refuses all external operations. OAuth and webhook routes fail closed; no fake redirect/callback URL or connected identity is shown. Normalized DTOs and the synthetic provider under Tests are ClickToShip internal contracts, explicitly NOT Salla response fixtures. Tests prove architecture/security behavior, not real Salla compatibility or OAuth success.
+
+Before enabling any external capability, independently verify and retain dated official evidence for Partners eligibility/app mode/installation approvals; exact authorization/token/revoke/store/order endpoints and HTTPS hosts; redirect/state requirements; least-privilege scope names; token lifetime/rotation/ambiguous refresh handling; verified store identity/ownership; order statuses/payment/fulfillment/address/item/money/weight semantics; pagination/checkpoints/rate limits; webhook signature/raw-byte canonicalization/headers/key lifecycle/events/delivery IDs/timestamps/retry/ACK semantics; uninstall/revocation and consent/retention policy. Implement the verified adapter mappings and official-contract fixtures only then, followed by authorized demo sandbox tests. Environment variables cannot bypass the code-owned evidence gate.
