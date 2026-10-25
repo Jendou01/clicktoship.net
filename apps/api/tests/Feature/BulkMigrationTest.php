@@ -22,6 +22,7 @@ final class BulkMigrationTest extends BulkTestCase
         $s = $this->bearer($f['token'], 'POST', '/api/v1/shipments', ['draft' => $draft, 'idempotency_key' => 'prior-shipment'])->assertCreated()->json('data.shipment.id');
         $wallet = app(Ledger::class)->provision($f['m']);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 15 export ownership first.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 14 identity before older rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive OAuth cancellation guard before prior rollback targets.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Commerce before exercising prior rollback targets.

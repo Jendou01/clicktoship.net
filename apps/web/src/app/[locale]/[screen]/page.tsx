@@ -1,3 +1,5 @@
+import {AnalyticsScreen} from "@/components/analytics-screen";
+import {analyticsScreens,type AnalyticsView} from "@/lib/analytics";
 import {CommerceScreen} from "@/components/commerce-screen";
 import {commerceScreens,type CommerceScreen as CommerceView} from "@/lib/commerce";
 import { PlatformScreen } from "@/components/platform-screen";
@@ -25,10 +27,11 @@ import { IdentityScreen } from "@/components/identity-screen";
 import { screenNames, type Screen } from "@/lib/auth-copy";
 import { isLocale } from "@/lib/i18n";
 
-export function generateStaticParams() { return [...commerceScreens,...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
+export function generateStaticParams() { return [...analyticsScreens,...commerceScreens,...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
-  if (!isLocale(locale) || ![...commerceScreens,...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (!isLocale(locale) || ![...analyticsScreens,...commerceScreens,...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if(analyticsScreens.includes(screen as AnalyticsView))return <AnalyticsScreen key={`${locale}:${screen}`} locale={locale} screen={screen as AnalyticsView}/>;
   if(commerceScreens.includes(screen as CommerceView))return <CommerceScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CommerceView}/>;
   if (platformScreens.includes(screen as PlatformView)) return <PlatformScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PlatformView}/>;
   if (screen === "dashboard") return <MerchantDashboard key={locale} locale={locale} />;

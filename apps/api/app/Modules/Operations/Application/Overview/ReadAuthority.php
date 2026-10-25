@@ -10,6 +10,7 @@ use App\Support\ApiResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 final class ReadAuthority
 {
@@ -33,6 +34,10 @@ final class ReadAuthority
 
         } catch (QueryException) {
             abort(503);
+        }
+
+        if ($data instanceof Response) {
+            return $data;
         }
 
         return ApiResponse::success($data)->header('Cache-Control', 'private, no-store')->header('Vary', 'Cookie, Authorization');

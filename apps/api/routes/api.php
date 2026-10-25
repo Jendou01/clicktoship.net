@@ -78,3 +78,5 @@ require __DIR__.'/dashboard.php';
 require __DIR__.'/overview.php';
 
 require __DIR__.'/commerce.php';
+
+require __DIR__.'/analytics.php';

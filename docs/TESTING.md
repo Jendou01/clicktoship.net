@@ -86,3 +86,17 @@ CommerceTest, CommerceReliabilityTest and CommerceRaceTest use real guarded Post
 New component cases cover unavailable/empty/permission/RTL/locale/error/merchant-response fences and no fabricated package data. Browser fixtures use three dedicated commerce actors/merchants so independent journeys do not share a throttle bucket or mutable source order. They validate real local API/Horizon draft preparation, partial results and truthful unavailable Salla status. Explicit accessible select labels avoid option-text label ambiguity; operational result states use the shared badge. No timeouts/rate limits/security checks are weakened or tests skipped.
 
 Run all README checks, prepare only the documented disposable E2E stack, and restore scripts/start.sh afterwards. Two additive migrations are included in prior rollback target setup; previous preservation assertions remain intact. Report official-contract/demo checks as blocked, never as mock-verified Salla integration. Full executed evidence is in PHASE_13_REPORT.md.
+
+
+## Phase 15 analytics
+
+Run the complete backend suite against real PostgreSQL/Redis, not SQLite. `php artisan test --filter=Analytics` includes source permissions, date boundaries, exact money/currencies, fail-closed storage, spreadsheet escaping, immutable export audit, source consistency, current-origin/MFA changes, statement deadlines, bounded query count and independent-process export races. The additional TrackingMigrationTest proves that reusing the existing platform tracking reader with a merchant scope cannot expose another merchant's work. Test database names/environment are checked before synthetic storage/scanner or migration-reset helpers run.
+
+After the full suite, verify `schema:verify` and migrations. Normal rollback refuses retained export history; disposable migration round-trip tests preserve existing users and recreate only the test schema. The new partial dedupe index is itself checked by a negative drift regression. Never reset the normal development database.
+
+Run complete frontend tests, ESLint, TypeScript, production build, strict Composer validation and both full/runtime dependency audits. Prepare the existing disposable browser database before the full Playwright suite. Analytics adds dedicated merchant/finance/admin accounts, whose random temporary credentials stay outside Git. Browser journeys verify nonempty persisted draft counts, source catalogue, English/Arabic filters, currency filtering, disabled CSV/XLSX, private history, recent admin MFA and mobile/tablet layout. Use separate synthetic principals for long visual audits to respect existing rate budgets; do not raise throttles or add sleeps.
+
+OpenAPI must pass 3.1 validation, unique operation IDs/local reference resolution and duplicate-key checks. Synthetic benchmarks measure query counts and bounded bytes, not a production SLA. No tests call real carriers/payment/providers, enable wallet funding or emit customer notifications. Screenshot artifacts must contain only isolated synthetic data and remain outside application source.
+
+
+For repeated complete verification, use the documented `./scripts/prepare-browser-tests.sh --rebuild` when the disposable database has accumulated many earlier synthetic merchants. Directory traversal tests should not inherit unbounded history across previous runs. This command is explicitly guarded to the disposable E2E database; never reset normal development/production data or increase test timeouts to hide fixture growth.

@@ -84,3 +84,11 @@ Verified V2 response/lookup/label/pickup contracts, account/service mapping and 
 5. Verified bounded initial/incremental ordering/cursor/update/rate-limit contracts, source conflicts and webhook authenticity/replay/ACK/uninstall semantics. Current tests are internal synthetic fixtures only.
 6. Independently approved connector packaging/install/upgrade/uninstall compatibility tests in isolated staging; no live site modification is authorized.
 7. Privacy/retention/key rotation, standing background consent, source-ownership transfer and exact-granted support policies. Future fulfillment writes require a separately approved verified API and carrier-verified tracking/outbox/idempotency/reconciliation design.
+
+
+## Phase 15 remaining approval/evidence requirements
+
+* Approve private export storage, encryption key management/rotation, malware/content scanning, residency, retention/deletion and operator access before any normal artifact enablement. Current implementation intentionally has no normal-runtime enable switch.
+* Qualified accountant/regulatory review of realized revenue, carrier invoice costs, margin/profit, settlement and tax recognition remains required. No wallet funding-as-revenue, P&L, implicit FX or global private monetary disclosure is authorized.
+* Historical balance replay/as-of semantics, authoritative shipment country/service projection, complete duplicate-suppression counters and comparison-based growth alerts require separately approved source contracts. Current insights are threshold observations, not increase/decrease claims.
+* Carrier/provider evidence gates remain unchanged; synthetic data cannot establish verified delivery or real integration compatibility. Any future normal exports require a reviewed implementation change and independent security/operations validation.

@@ -11,6 +11,7 @@ export { localeHref } from "@/lib/navigation-context";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
+  ["analytics", "analytics.read", "Analytics & reports", "التحليلات والتقارير"],
   ["store-integrations", "integrations.read", "Store integrations", "تكامل المتاجر"],
   ["store-orders", "orders.read", "Connected-store orders", "طلبات المتاجر المرتبطة"],
   ["international", "customs.read", "International customs", "الجمارك الدولية"],
@@ -32,6 +33,7 @@ export const merchantLinks = [
   ["business-profile", "profile.view", "Organization", "المنشأة"],
 ] as const;
 const platformLinks = [
+  ["platform-analytics", "platform.analytics.read", "Platform analytics", "تحليلات المنصة"],
   ["platform-overview", "platform.overview", "Platform overview", "نظرة عامة على المنصة"],
   ["admin-customs", "platform.customs.view", "Customs administration", "إدارة الجمارك"],
   ["admin-tracking", "platform.tracking.health", "Tracking administration", "إدارة التتبع"],
