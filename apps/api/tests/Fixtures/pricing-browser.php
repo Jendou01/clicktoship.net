@@ -16,7 +16,7 @@ if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== '
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'adminE', 'adminF'] as $key) {
+    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'adminE', 'adminF'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;

@@ -72,3 +72,5 @@ require __DIR__.'/bulk.php';
 require __DIR__.'/tracking.php';
 
 require __DIR__.'/customs.php';
+
+require __DIR__.'/dashboard.php';

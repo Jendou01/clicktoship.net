@@ -91,3 +91,11 @@ Use one existing carrier tracking history/projection; Shipping, finance and docu
 * Existing label documents are constrained synthetic label records with incompatible provenance. Customs keeps a dedicated immutable document reference/work/result history, reusing private storage and Shipping DocumentScanner. TCPDF is the sole new dependency, necessary for native Unicode/Arabic PDF/font support; no remote resource/HTML/signature execution.
 * Draft numbers are merchant/type counters with immutable per-version/language identities, not approved fiscal/legal invoice numbers. All pages say DRAFT / NOT CUSTOMS CLEARANCE. Default scanner quarantines; production generation/download await explicit storage, scanning, privacy and retention approval.
 * Admin review annotates immutable declarations under recent MFA plus an independently approved session-bound target grant. It never clears a shipment or grants financial/carrier execution. No Phase 11 work is authorized.
+
+## Phase 11 reporting and merchant experience
+
+* Compose read-only existing module data, preserving authority and ownership. Reuse merchant.view plus per-source read permissions rather than introduce redundant role grants. Platform assignment is not merchant membership.
+* Use explicit UTC inclusive calendar date ranges (maximum 366 days), event-specific source timestamps and separate current wallet balances. Never imply local customs readiness is clearance or an unexpired estimate is current route eligibility.
+* Exclude synthetic/unverified acceptance and tracking from verified KPIs; label current recorded shipment distributions separately. No revenue, combined-currency money or invented projections.
+* Serialize current authority with existing merchant/user lock order; no shared dashboard cache. Private/no-store responses and request generation fences prevent stale role/context reuse. Scale/lock tuning needs measured production evidence.
+* Add only six read indexes and reusable bilingual UI primitives/navigation; no additional UI/chart dependency, ledger or tracking state machine. No Phase 12 or external preview/deployment scope.

@@ -1,4 +1,5 @@
 "use client";
+import { PageHeader } from "@/components/ui/workspace";
 
 import { useEffect, useState, type FormEvent } from "react";
 import { requestKey } from "@/lib/request-key";
@@ -65,7 +66,7 @@ export function PricingScreen({ locale, screen }: { locale: Locale; screen: Pric
   const kinds = merchantView ? ["rule", "assignment"] : Object.keys(pricingFields).filter((k) => k !== "assignment");
   return <main dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-6 p-6 text-slate-900">
 
-    <h1 className="text-3xl font-bold">{title}</h1><p className="rounded border border-amber-400 bg-amber-50 p-4">{t.estimate}</p>{admin && <p>{t.privacy} {t.noDefaults}</p>}
+    <PageHeader title={title}/><p className="rounded border border-amber-400 bg-amber-50 p-4">{t.estimate}</p>{admin && <p>{t.privacy} {t.noDefaults}</p>}
     {!loaded && <p>{t.loading}</p>}{message && <p role="status">{message}</p>}
     {screen === "available-rates" && <section className="grid gap-4 md:grid-cols-2">{services.map((s) => <article key={s.id} className="rounded border p-4"><h2 className="text-xl font-bold">{locale === "ar" ? s.name_ar : s.name_en}</h2><p>{t.estimate}</p><a href={`/${locale}/rates`}>{t.calculate}</a></article>)}{loaded && !services.length && <p>{t.empty}</p>}</section>}
     {screen === "rates" && <form onSubmit={calculate} onChange={() => setKey(requestKey())} className="space-y-4">
