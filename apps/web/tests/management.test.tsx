@@ -88,3 +88,21 @@ it("preserves the existing merchant-read default while tracking grants require e
   fireEvent.change(select,{target:{value:"platform.tracking.review"}});fireEvent.change(screen.getByLabelText("Reason (at least 10 characters)"),{target:{value:"Explicit tracking review grant"}});fireEvent.submit(screen.getByRole("button",{name:"Request merchant access"}).closest("form")!);
   await waitFor(()=>expect(mockApi).toHaveBeenCalledWith("/admin/access-requests","POST",expect.objectContaining({capabilities:["platform.tracking.view","platform.tracking.review"]})));
 });
+
+it("filters the access-grant merchant directory without changing grant authority", async () => {
+  mockApi.mockImplementation(async path => {
+    if (path === "/auth/me") return { ...profile, active_merchant_id: null };
+    if (path === "/auth/mfa") return { enabled: true, fresh: true, platform_permissions: ["platform.directory", "platform.access.request", "platform.merchant.view"] };
+    if (path.startsWith("/admin/merchants?")) return { merchants: [{ id: "target", name: "Isolated grant target", verification_status: "pending", version: 1 }], pagination: { pages: 1 } };
+    if (path === "/admin/access-requests") return { grants: [] };
+    throw new ApiError(403, "FORBIDDEN");
+  });
+  render(<ManagementScreen locale="en" screen="admin-access" />);
+  const search = await screen.findByLabelText("Search merchant directory");
+  fireEvent.change(search, { target: { value: "Isolated grant target" } });
+  fireEvent.change(screen.getByLabelText("Account status filter"), { target: { value: "active" } });
+  fireEvent.submit(screen.getByRole("button", { name: "Apply filters" }).closest("form")!);
+  await waitFor(() => expect(mockApi).toHaveBeenCalledWith("/admin/merchants?page=1&search=Isolated+grant+target&status=active"));
+  expect(mockApi.mock.calls.some(([, method]) => method === "POST")).toBe(false);
+  expect(screen.getByLabelText("Requested access")).toHaveValue("platform.merchant.view");
+});

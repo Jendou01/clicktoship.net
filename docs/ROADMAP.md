@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–4 are merged; Phase 5 static pricing is merged through PR #4; Phase 6 connector foundations are on their review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–11 are merged; Phase 12 platform administration is implemented on its review branch. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -141,17 +141,15 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * See [Phase 11 architecture](architecture/PHASE_11_DASHBOARD.md) and [completion report](PHASE_11_REPORT.md) for verification and external limits.
 * No merge, deployment, live operations, customer notifications or Phase 12 work.
 
-## Phase 12 — Super admin dashboard
+## Phase 12 — Super admin dashboard (implemented)
 
-* Scope: Super admin dashboard.
-* Dependencies: Phases 3–10.
-* Implementation tasks: Merchant/carrier/pricing/ledger/COD/reconciliation/roles/audit/queues/notifications operations.
-* Database changes: Audited settings/approval/report models.
-* API changes: Separately authorized /admin resources.
-* Frontend changes: Platform overview and all scoped operational screens.
-* Automated tests: Permission/MFA matrix, dual approval, masked PII, safe replay.
-* Acceptance criteria: Operators resolve cases with auditable least privilege; no arbitrary ledger edits.
-* Completion report: Planned.
+* Verified base: Phase 11 PR #11 merge `18ae1e3ded0ba17166aa3f3ff92c8a9fe7943872`.
+* Operations composes permission-separated source-backed counts/trends, safe health/settings, approval workload, redacted audit and current-fact internal alerts over existing module-owned records.
+* Distinct bilingual responsive platform sidebar/shell,16 platform screens, filtered merchant directory and existing controlled domain workflows; private summaries retain independently approved exact session-bound grants and current authority/MFA fences.
+* Finance is currency-separated count-only globally, exact-granted balances privately; no arbitrary edits, new ledger, funding, carrier calls or notifications.
+* One append-only alert receipt table,14 bounded permissions, schema-integrity/down/up checks; no speculative read indexes or new business records.
+* Real PostgreSQL/Redis security races,2,000-merchant measurement, full Phase 0–11 regressions and responsive EN/AR browser evidence. See [Phase 12 report](PHASE_12_REPORT.md) and [architecture](architecture/PHASE_12_PLATFORM.md).
+* No automatic merge, deployment, live activation or Phase 13. Accounting/global monetary disclosure and external carrier/customs/production gates remain open decisions.
 
 ## Phase 13 — Salla integration
 
@@ -215,4 +213,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 11 merchant dashboard feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 12 work.
+Review the Phase 12 platform dashboard feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 13 work.

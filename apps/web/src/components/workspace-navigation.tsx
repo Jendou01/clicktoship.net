@@ -4,7 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { carrierCopy, carrierScreens } from "@/lib/carriers";
 import { pricingCopy, pricingScreens } from "@/lib/pricing";
 import { api } from "@/lib/api";
-import { dashboardQuery, dashboardCopy } from "@/lib/dashboard";
+import { dashboardCopy } from "@/lib/dashboard";
+import { PlatformNavigation } from "@/components/platform-navigation";
+import { localeHref } from "@/lib/navigation-context";
+export { localeHref } from "@/lib/navigation-context";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
@@ -27,6 +30,7 @@ export const merchantLinks = [
   ["business-profile", "profile.view", "Organization", "المنشأة"],
 ] as const;
 const platformLinks = [
+  ["platform-overview", "platform.overview", "Platform overview", "نظرة عامة على المنصة"],
   ["admin-customs", "platform.customs.view", "Customs administration", "إدارة الجمارك"],
   ["admin-tracking", "platform.tracking.health", "Tracking administration", "إدارة التتبع"],
   ["admin-merchants", "platform.directory", "Merchant administration", "إدارة التجار"],
@@ -37,17 +41,12 @@ const platformLinks = [
   ["admin-shipping", "platform.shipments.view", "Shipping administration", "إدارة الشحن"],
 ] as const;
 
-/** Only a public shipment identifier is carried across locales; never tokens, grants or PII. */
-export function localeHref(locale: Locale, screen: string, search = "") {
-  if (screen === "dashboard") { const query = dashboardQuery(search).toString(); return `/${locale}/dashboard${query ? `?${query}` : ""}`; }
-  const batch = new URLSearchParams(search).get("batch");
-  if (batch && /^[0-9a-f-]{36}$/i.test(batch) && ["bulk", "bulk-import", "bulk-results", "bulk-history"].includes(screen)) return `/${locale}/${screen}?batch=${encodeURIComponent(batch)}`;
-  const id = new URLSearchParams(search).get("shipment");
-  return `/${locale}/${screen}${id && /^[0-9a-f-]{36}$/i.test(id) && ["shipment-details", "shipment-create", "shipment-documents", "tracking", "tracking-details", "tracking-exceptions", "international", "customs-declaration", "customs-products", "commercial-invoice", "packing-list", "customs-readiness", "customs-documents", "international-history"].includes(screen) ? `?shipment=${encodeURIComponent(id)}` : ""}`;
-}
-
 type Context = { merchant: string; permissions: string[]; platform?: string[] };
-export function WorkspaceNavigation({ locale, screen, context }: { locale: Locale; screen: string; context?: Context }) {
+export function WorkspaceNavigation(props: {locale: Locale; screen: string; context?: Context}) {
+ const platform=props.screen.startsWith("admin-")||props.screen.startsWith("platform-")||carrierScreens.includes(props.screen as typeof carrierScreens[number])||(pricingScreens.includes(props.screen as typeof pricingScreens[number])&&!["rates","available-rates","quote-history"].includes(props.screen));
+ return platform ? <PlatformNavigation locale={props.locale} screen={props.screen} permissions={props.context?.platform}/> : <MerchantNavigation {...props}/>;
+}
+function MerchantNavigation({ locale, screen, context }: { locale: Locale; screen: string; context?: Context }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [platform, setPlatform] = useState<string[]>([]);
   const [merchant, setMerchant] = useState("");

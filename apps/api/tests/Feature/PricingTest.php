@@ -188,6 +188,7 @@ final class PricingTest extends PricingTestCase
     {
         $u = $this->user();
         $m = $this->organization($u);
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 12 overview before prior-phase rollback.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 11 indexes before prior-phase rollback.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 10 before the original rollback target.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 9 before the existing preservation assertions.

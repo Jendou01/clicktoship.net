@@ -1,6 +1,6 @@
 # ClickToShip
 
-Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–11 development foundations**, including authentication/tenancy, merchant administration, a financial ledger, static pricing, evidence-gated carrier adapters, shipment/bulk drafts, tracking foundations, customs preparation and a bilingual operational merchant dashboard. Live carrier operations, wallet funding, payments and customs clearance remain disabled. No production deployment has occurred.
+Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–12 development foundations**, including authentication/tenancy, merchant administration, a financial ledger, static pricing, evidence-gated carrier adapters, shipment/bulk drafts, tracking foundations, customs preparation and bilingual merchant and platform operational dashboards. Live carrier operations, wallet funding, payments and customs clearance remain disabled. No production deployment has occurred.
 
 ## Requirements
 Docker Engine + Compose v2, Node.js 24/npm, Python 3 and ripgrep. PHP runs inside Docker: PHP 8.3, Laravel 12, Sanctum, Horizon and Predis. Next.js 16 uses TypeScript, Tailwind and bilingual routes. PostgreSQL 17 and Redis 7 have persistent local volumes; Nginx and the development-only Mailpit inbox expose loopback ports. This Compose setup is development-only.
@@ -81,7 +81,7 @@ docker run --rm --init --ipc=host --network clicktoship_default \
 Read [AGENTS.md](AGENTS.md) before changes. Raw uploaded source documents are intentionally outside Git because examples contain credential/PII fields; only provenance and field/type inventories are retained. Source dates/claims do not establish current service availability. Aramex resale authorization, route/account permissions, current API responses/webhook specification, financial policies and PSP/store documentation remain external prerequisites for later phases.
 
 ## Next increment
-Review the Phase 11 merchant dashboard feature branch and [completion report](docs/PHASE_11_REPORT.md). Existing carrier, financial, document/scanning and regulatory gates remain closed. Do not merge, deploy or start Phase 12 automatically.
+Review the Phase 12 platform administration feature branch and [completion report](docs/PHASE_12_REPORT.md). Existing carrier, financial, document/scanning and regulatory gates remain closed. Do not merge, deploy or start Phase 13 automatically.
 
 ## Phase 2 workflows
 
@@ -159,4 +159,11 @@ PDF generation uses locked TCPDF 6.11.4 for native Unicode/Arabic layout, not an
 
 ### Phase 11 merchant dashboard
 
-`/en/dashboard` and `/ar/dashboard` compose real authorized operational counts, UTC date filters, current currency-specific wallet balances, bulk progress, customs readiness and recent activity. No data is seeded by normal startup and no real carrier/payment capability is enabled. `GET /api/v1/dashboard` and `/dashboard/activity` require current merchant authority and filter each source by existing permission/token scopes. Responses are private/no-store, with no shared cache. Six additive read indexes are installed through the normal migration process. Shared page headers/navigation and responsive bilingual components reuse existing module workflows. [Architecture and exact KPI semantics](docs/architecture/PHASE_11_DASHBOARD.md), [completion report](docs/PHASE_11_REPORT.md). No Phase 12 or external deployment/preview work.
+`/en/dashboard` and `/ar/dashboard` compose real authorized operational counts, UTC date filters, current currency-specific wallet balances, bulk progress, customs readiness and recent activity. No data is seeded by normal startup and no real carrier/payment capability is enabled. `GET /api/v1/dashboard` and `/dashboard/activity` require current merchant authority and filter each source by existing permission/token scopes. Responses are private/no-store, with no shared cache. Six additive read indexes are installed through the normal migration process. Shared page headers/navigation and responsive bilingual components reuse existing module workflows. [Architecture and exact KPI semantics](docs/architecture/PHASE_11_DASHBOARD.md), [completion report](docs/PHASE_11_REPORT.md). Historical Phase 11 boundary; Phase 12 was separately authorized. No external deployment/preview work.
+
+
+### Phase 12 platform administration
+
+`/en/platform-overview` and `/ar/platform-overview` compose authorized merchant/user/shipping/bulk/tracking/carrier/pricing/finance/customs counts, UTC trends, redacted audit, current approval workload, derived alerts, safe health and a read-only settings catalogue. All new APIs require current browser sessions, role rechecks and recent MFA. Private merchant details and financial amounts still require independently approved expiring exact session-bound grants; aggregate visibility never grants private access. Finance totals are count-only; no global monetary disclosure policy is assumed.
+
+The shared responsive platform navigation also wraps existing admin workflows. Only an immutable actor-specific alert-read receipt table and bounded aggregate permissions are added; no second ledger, carrier gateway or business system. [Architecture/source dictionary](docs/architecture/PHASE_12_PLATFORM.md), [scope/RBAC](docs/architecture/PHASE_12_SCOPE.md), [report](docs/PHASE_12_REPORT.md), [API](docs/api/openapi.yaml). Normal startup seeds no accounts or activity. Refresh disposable E2E fixtures before each full browser cycle; private credentials remain 0600 under /tmp. No live activation, deployment or Phase 13.

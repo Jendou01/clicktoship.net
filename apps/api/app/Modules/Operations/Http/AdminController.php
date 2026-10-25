@@ -29,8 +29,13 @@ final class AdminController
     public function directory(Request $r): mixed
     {
         PlatformSecurity::require($r, 'platform.directory');
-        $r->validate(['page' => 'sometimes|integer|min:1']);
-        $p = DB::table('merchants')->orderBy('id')->paginate(25, ['id', 'name', 'status', 'verification_status', 'version']);
+        $d = $r->validate(['page' => 'sometimes|integer|min:1|max:100000', 'search' => 'sometimes|nullable|string|max:100', 'status' => 'sometimes|in:active,suspended,closed', 'verification' => 'sometimes|in:unverified,pending,verified,rejected']);
+        $q = DB::table('merchants')->when($d['status'] ?? null, fn ($q, $v) => $q->where('status', $v))->when($d['verification'] ?? null, fn ($q, $v) => $q->where('verification_status', $v));
+        if (! empty($d['search'])) {
+            $needle = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $d['search']);
+            $q->whereRaw("name ILIKE ? ESCAPE '!'", ['%'.$needle.'%']);
+        }
+        $p = $q->orderBy('id')->paginate(25, ['id', 'name', 'status', 'verification_status', 'version']);
 
         return ApiResponse::success(['merchants' => $p->items(), 'pagination' => ['page' => $p->currentPage(), 'pages' => $p->lastPage()]]);
     }

@@ -10,6 +10,19 @@ async function nextDirectoryPage(page: Page) {
 /** Follow the actual paginated directory; fixtures are retained across test runs. */
 export async function selectMerchantOption(page: Page, name: string) {
   const select = page.getByLabel("Organization", { exact: true }); await expect(select).toBeVisible();
+  // Retained fixture directories grow between runs; use the real bounded search
+  // before traversing results, rather than making test cost depend on every prior tenant.
+  const search = page.getByLabel("Search merchant directory", { exact: true });
+  if (await search.count()) {
+    await search.fill(name);
+    const response = page.waitForResponse(r => {
+      const url = new URL(r.url());
+      return url.pathname === "/api/v1/admin/merchants" && url.searchParams.get("search") === name;
+    });
+    await page.getByRole("button", { name: "Apply filters", exact: true }).click();
+    expect((await response).status()).toBe(200);
+    await expect(select.getByRole("option", { name, exact: true })).toHaveCount(1);
+  }
   while (!(await select.getByRole("option", { name, exact: true }).count())) await nextDirectoryPage(page);
   await select.selectOption({ label: name });
 }

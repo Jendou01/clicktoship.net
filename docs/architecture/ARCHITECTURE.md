@@ -128,3 +128,8 @@ Customs owns immutable tenant-bound declaration/profile/country-rule/readiness/r
 ## Phase 11 merchant operational read composition
 
 MerchantDashboard composes existing Shipping, Tracking, Bulk, WalletBilling, Pricing and Customs data under current merchant/token/session authority. It owns no business state or tables. Only six read indexes are added; UTC period semantics, no-store responses, per-source permission omission, verified-only tracking/acceptance and independently labeled current balances avoid stale permissions or misleading combined KPIs. Existing mutation/financial/carrier boundaries are unchanged. [Detailed source definitions, concurrency and UI design](PHASE_11_DASHBOARD.md).
+
+
+## Phase 12 platform operations
+
+Operations composes existing module-owned counts, bounded trends, approval workload, redacted audit and current-fact alerts under separate aggregate source permissions. Current browser session/role/MFA checks execute under PostgreSQL security locks; private merchant data still uses the existing exact approved session-bound grant services. Only append-only actor alert-read receipts are new; no duplicated business state or financial engine. Safe health and code-owned settings are read-only. Global finance shows per-currency counts, not amounts/revenue. Existing admin workflows share a responsive bilingual shell. [Source dictionary, authority, bounds and limitations](PHASE_12_PLATFORM.md).

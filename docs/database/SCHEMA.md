@@ -173,3 +173,8 @@ Rollback refuses retained customs history or active Phase 10 grant references. D
 ## Phase 11 dashboard read indexes
 
 `2026_10_25_080000_add_dashboard_read_indexes` adds `dashboard_submissions`, `dashboard_quotes`, `dashboard_customs_latest`, `dashboard_customs_directory`, `dashboard_customs_activity`, `dashboard_shipping_activity`. These are non-unique merchant/date or merchant/shipment/revision/latest-readiness indexes on existing module tables. No table, permission, financial posting or tracking state change. Down removes only indexes; schema verification detects missing/invalid indexes independently of applied history. Prior-phase rollback tests remove this additive migration before their original targets.
+
+
+## Phase 12 platform alert read history
+
+Migration `2026_10_25_100000_create_platform_overview` adds platform_alert_receipts only: actor UUID,64-hex opaque alert fingerprint, acknowledging session UUID and timestamptz. PK(actor_id,alert_key), actor FK and composite actor/session FK protect receipt ownership. PostgreSQL rejects updates/deletes/truncation; existing immutable audit records acknowledgements. No alert source or business event duplication.14 additive bounded permissions are assigned to existing built-in platform roles, never target capabilities. SchemaIntegrity checks actual table/trigger independent of migration history. Downgrade refuses retained non-test receipts; clicktoship_test verifies rollback/reapply without changing previous schemas. No new read indexes beyond its PK: measured existing plans were adequate. See [architecture](../architecture/PHASE_12_PLATFORM.md).
