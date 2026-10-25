@@ -108,6 +108,15 @@ final class SchemaIntegrity
             }
         }
 
+        if (DB::table('migrations')->where('migration', '2026_10_25_100000_create_platform_overview')->exists()) {
+            if (! Schema::hasTable('platform_alert_receipts')) {
+                $missing[] = 'platform_alert_receipts';
+            }
+            if (! DB::selectOne("SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass('public.platform_alert_receipts') AND tgname='platform_receipt_history' AND tgenabled IN ('O','A')")) {
+                $missing[] = 'platform_alert_receipts.platform_receipt_history';
+            }
+        }
+
         return $missing;
     }
 }

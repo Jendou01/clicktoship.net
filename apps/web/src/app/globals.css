@@ -88,3 +88,28 @@ main table { text-align: start; }main th { font-weight: 600; }main td { overflow
 }
 
 .distribution-list meter { flex: 1; max-width: 55%; min-width: 2rem; height: 1rem; accent-color: #008577; }
+
+/* Phase 12 administration stays visually distinct from the merchant workspace. */
+.platform-page { min-height: 100vh; background: #f4f7fb; color: #172d44; }
+.platform-navigation aside { position: fixed; inset-block: 0; inset-inline-start: 0; width: 16rem; padding: 1.25rem; background: #102b3d; color: #e8f2f7; overflow-y: auto; z-index: 20; }
+.platform-brand { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.4rem; text-decoration: none; }
+.platform-brand span { font-size: .75rem; color: #a8c7d4; letter-spacing: .04em; }
+.platform-navigation summary { cursor: pointer; padding-block: .6rem; font-size: .85rem; }
+.platform-nav-search { display: grid; gap: .45rem; font-size: .75rem; color: #c6dbe3; margin-block: .75rem; }
+.platform-nav-search input { min-width: 0; width: 100%; border: 1px solid #62818f; border-radius: .5rem; padding: .6rem; color: white; background: #19394a; }
+.platform-navigation aside nav { display: grid; gap: .25rem; }
+.platform-navigation aside nav a { display: flex; align-items: center; min-height: 42px; padding: .55rem .75rem; border-radius: .6rem; font-size: .85rem; text-decoration: none; }
+.platform-navigation aside nav a:hover { background: #234959; }.platform-navigation aside nav a[aria-current="page"] { background: #13695f; color: white; font-weight: 700; }
+.platform-workflow-menu { margin-top: 1rem; border-top: 1px solid #385565; padding-top: .5rem; }
+.platform-topbar { margin-inline-start: 16rem; padding: 1rem 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; background: white; border-bottom: 1px solid #dbe5ec; font-size: .8rem; }
+.platform-topbar>div { display: flex; flex-wrap: wrap; gap: 1rem; }.platform-topbar a { min-height: 36px; display: inline-flex; align-items: center; color: #075f57; }
+.platform-navigation ~ main { margin-inline-start: 16rem; max-width: calc(100% - 16rem); }
+.platform-main { display: grid; gap: 1.4rem; padding: 1.5rem 2rem 3rem; }
+.platform-page .page-heading h1 { color: #173952; }.platform-page .kpi-card { border-top-color: #206886; }
+.platform-module-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 1rem; }.platform-module-grid h2 { margin: 0; }.platform-module-grid a { text-decoration: none; }.platform-module-grid a:hover { border-color: #379081; }
+.platform-values { display: grid; gap: 1rem; min-width: 0; }.platform-values>div { display: grid; gap: .4rem; min-width: 0; border-bottom: 1px solid #ecf0f4; padding-bottom: .8rem; }.platform-values dt { font-size: .85rem; color: #506476; font-weight: 600; }.platform-values dd { min-width: 0; font-size: .9rem; }.platform-values>div:has(>.platform-values) { margin-inline-start: .5rem; }
+.platform-record-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,250px),1fr)); gap: 1rem; }.platform-record { border: 1px solid #dbe5ec; background: #f8fafc; padding: 1rem; border-radius: .75rem; min-width: 0; }
+.platform-alert-list,.approval-list { display: grid; gap: .75rem; margin-top: 1rem; }.platform-alert-list>li,.approval-list>li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem; border: 1px solid #dbe5ec; border-inline-start: 4px solid #a56b10; border-radius: .75rem; }.platform-alert-list h3,.approval-list h3 { font-weight: 600; }.platform-alert-list>li>div:first-child { flex: 1 1 18rem; }
+.platform-trend { min-width: 0; }.platform-trend details { font-size: .8rem; color: #506476; }
+@media (min-width:901px) { .platform-navigation aside>details>summary { display: none; } }
+@media (max-width:900px) { .platform-navigation aside { position: static; width: 100%; max-height: none; padding: 1rem; }.platform-brand { font-size: 1.1rem; margin-bottom: .5rem; }.platform-topbar { margin-inline-start: 0; padding: .75rem 1rem; }.platform-navigation ~ main { margin-inline-start: 0; max-width: 100%; }.platform-main { padding: 1.25rem .9rem 3rem; }.platform-record-list { grid-template-columns: minmax(0,1fr); } }

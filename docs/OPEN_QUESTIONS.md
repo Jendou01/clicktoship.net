@@ -54,3 +54,12 @@ Verified V2 response/lookup/label/pickup contracts, account/service mapping and 
 * Approved fee/tax/duty/insurance sources and accounting/regulatory policies before prices or collection. No implicit FX or new wallet ledger.
 * Approved commercial invoice/packing-list legal wording, draft-to-official workflow, numbering, signatures/certificates and authority filing mechanism. Current PDFs are preparation drafts only.
 * Production private/shared encrypted storage, malware scanning, backup/access/retention/deletion/privacy controls. Default quarantine and hard production generation/download gates cannot be overridden by merchant/admin review.
+
+
+## Phase 12 operational policy boundaries
+
+* Approve a precise cross-merchant monetary disclosure policy (roles, purpose, currency scope, audit, retention and confidentiality) before any global posted/reserved/available amounts. Current overview provides counts only; exact-granted financial views remain available.
+* Scheduler monitoring needs an approved persisted heartbeat and its operational ownership before independently claiming health. Current UI explicitly reports no independent observation.
+* APP_KEY rotation changes derived opaque alert identities/read-state fingerprints; agree on retention/rotation transition before production. Source cases remain authoritative and immutable receipts are retained.
+* 2,000 synthetic merchants and local plans are not representative production load/soak evidence. Production requires separate runtime DB role provisioning, disaster recovery, retention, observability and security review.
+* Existing carrier response/auth/webhook evidence, accountant/regulatory review, document scanning/storage/retention and external notification consent/transport gates remain unresolved and cannot be enabled in dashboard settings.

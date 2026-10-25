@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–11
-  version: 0.11.0
+  title: ClickToShip API — Phases 1–12
+  version: 0.12.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:
@@ -2380,6 +2380,23 @@ paths:
         schema:
           type: integer
           minimum: 1
+          maximum: 100000
+      - in: query
+        name: search
+        description: Literal case-insensitive organization name search; SQL wildcard characters are escaped.
+        schema:
+          type: string
+          maxLength: 100
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum: [active, suspended, closed]
+      - in: query
+        name: verification
+        schema:
+          type: string
+          enum: [unverified, pending, verified, rejected]
   /api/v1/admin/merchants/{merchant}:
     get:
       summary: Get admin merchants merchant
@@ -11959,6 +11976,692 @@ paths:
           $ref: '#/components/responses/Error422'
         '429':
           $ref: '#/components/responses/Error429'
+  /api/v1/admin/dashboard:
+    get:
+      operationId: getPhase12PlatformOverview
+      summary: Platform Overview
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.overview
+      parameters:
+      - name: range
+        in: query
+        schema:
+          enum:
+          - today
+          - 7d
+          - 30d
+          - 90d
+          - custom
+          default: 30d
+        description: UTC calendar dates; custom inclusive range at most 366 days, no
+          future end.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: section
+        in: query
+        schema:
+          enum:
+          - merchants
+          - users
+          - shipping
+          - bulk
+          - tracking
+          - carriers
+          - pricing
+          - finance
+          - customs
+        description: Optional single source; never grants that source permission.
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformOverview'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/activity:
+    get:
+      operationId: getPhase12PlatformActivityPage
+      summary: Platform ActivityPage
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.audit.view
+      parameters:
+      - name: range
+        in: query
+        schema:
+          enum:
+          - today
+          - 7d
+          - 30d
+          - 90d
+          - custom
+          default: 30d
+        description: UTC calendar dates; custom inclusive range at most 366 days, no
+          future end.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: cursor
+        in: query
+        schema:
+          type: string
+          maxLength: 300
+      - name: action
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+          pattern: ^[a-z][a-z0-9_.]+$
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformActivityPage'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/approvals:
+    get:
+      operationId: getPhase12PlatformApprovalWorkload
+      summary: Platform ApprovalWorkload
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.overview
+      parameters: []
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformApprovalWorkload'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/alerts:
+    get:
+      operationId: getPhase12PlatformAlertList
+      summary: Platform AlertList
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.alerts.read
+      parameters: []
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformAlertList'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/alerts/{alert}/read:
+    post:
+      operationId: postPhase12PlatformReadReceipt
+      summary: Platform ReadReceipt
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+        CsrfToken: []
+      x-required-permissions:
+      - platform.alerts.acknowledge
+      - platform.alerts.read
+      parameters:
+      - name: alert
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformReadReceipt'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/grants:
+    get:
+      operationId: getPhase12PlatformOwnGrants
+      summary: Platform OwnGrants
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.access.request
+      parameters: []
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformOwnGrants'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/health:
+    get:
+      operationId: getPhase12PlatformSafeHealth
+      summary: Platform SafeHealth
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.health.view
+      parameters: []
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformSafeHealth'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/settings:
+    get:
+      operationId: getPhase12PlatformSafeSettings
+      summary: Platform SafeSettings
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.settings.view
+      parameters: []
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformSafeSettings'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/admin/dashboard/merchants/{merchant}:
+    get:
+      operationId: getPhase12PlatformTargetSummary
+      summary: Platform TargetSummary
+      description: Current verified browser session, active user, current platform role
+        and recent MFA required. All API tokens are rejected (400 without browser session,
+        403 when token attaches to stateful request). Shared security-key/current-user/session
+        fences apply; no shared cache or automatic tenant bypass. Global financial amounts
+        are not authorized by aggregate metrics.
+      security:
+      - SessionCookie: []
+      x-required-permissions:
+      - platform.overview
+      parameters:
+      - name: range
+        in: query
+        schema:
+          enum:
+          - today
+          - 7d
+          - 30d
+          - 90d
+          - custom
+          default: 30d
+        description: UTC calendar dates; custom inclusive range at most 366 days, no
+          future end.
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Required only for custom.
+      - name: merchant
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: section
+        in: query
+        required: true
+        schema:
+          enum:
+          - merchant
+          - shipping
+          - finance
+          - pricing
+      - name: access_grant
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Exact target, actor/session/capability, independent approver and
+          expiry are revalidated. Never propagated in UI locale links.
+      responses:
+        '200':
+          description: Authorized, bounded and redacted current data. No-store; unchanged
+            external and financial activation gates.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PlatformTargetSummary'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        format: uuid
+                    required:
+                    - request_id
+                  error:
+                    type: 'null'
+                required:
+                - data
+                - meta
+                - error
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '419':
+          $ref: '#/components/responses/Error419'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '503':
+          $ref: '#/components/responses/Error503'
 components:
   headers:
     RequestId:
@@ -12034,6 +12737,1045 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    PlatformMerchantsMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        verification:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        registrations:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        verification_decisions:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        pending_accounts_supported:
+          const: false
+          type: boolean
+      required:
+      - total
+      - accounts
+      - verification
+      - registrations
+      - verification_decisions
+      - pending_accounts_supported
+      additionalProperties: false
+    PlatformUsersMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        suspended:
+          type: integer
+          minimum: 0
+        platform_assignments:
+          type: integer
+          minimum: 0
+      required:
+      - total
+      - suspended
+      - platform_assignments
+      additionalProperties: false
+    PlatformShippingMetrics:
+      type: object
+      properties:
+        created_in_period:
+          type: integer
+          minimum: 0
+        submitted_in_period:
+          type: integer
+          minimum: 0
+        verified_accepted_in_period:
+          type: integer
+          minimum: 0
+        open_exceptions:
+          type: integer
+          minimum: 0
+        unknown_outcomes:
+          type: integer
+          minimum: 0
+        pending_settlement:
+          type: integer
+          minimum: 0
+        quarantined_documents:
+          type: integer
+          minimum: 0
+        missing_documents:
+          type: integer
+          minimum: 0
+        pickup_exceptions:
+          type: integer
+          minimum: 0
+        states:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        creation_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        submission_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        external_enabled:
+          const: false
+          type: boolean
+      required:
+      - created_in_period
+      - submitted_in_period
+      - verified_accepted_in_period
+      - open_exceptions
+      - unknown_outcomes
+      - pending_settlement
+      - quarantined_documents
+      - missing_documents
+      - pickup_exceptions
+      - states
+      - creation_trend
+      - submission_trend
+      - external_enabled
+      additionalProperties: false
+    PlatformBulkMetrics:
+      type: object
+      properties:
+        batches:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        trend:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        failed:
+          type: integer
+          minimum: 0
+        active_work:
+          type: integer
+          minimum: 0
+        recovery_candidates:
+          type: integer
+          minimum: 0
+        external_enabled:
+          const: false
+          type: boolean
+      required:
+      - batches
+      - trend
+      - failed
+      - active_work
+      - recovery_candidates
+      - external_enabled
+      additionalProperties: false
+    PlatformTrackingMetrics:
+      type: object
+      properties:
+        work:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        webhook_work:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        verified_statuses:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        stale_verified:
+          type: integer
+          minimum: 0
+        unknown_codes:
+          type: integer
+          minimum: 0
+        cases:
+          type: integer
+          minimum: 0
+        failed_work:
+          type: integer
+          minimum: 0
+        exception_trend:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - day
+            - count
+          maxItems: 366
+        external_enabled:
+          const: false
+          type: boolean
+      required:
+      - work
+      - webhook_work
+      - verified_statuses
+      - stale_verified
+      - unknown_codes
+      - cases
+      - failed_work
+      - exception_trend
+      - external_enabled
+      additionalProperties: false
+    PlatformCarriersMetrics:
+      type: object
+      properties:
+        accounts:
+          type: integer
+          minimum: 0
+        disabled_accounts:
+          type: integer
+          minimum: 0
+        configured_accounts:
+          type: integer
+          minimum: 0
+        environments:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        operations:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarrierCapability'
+          maxItems: 16
+        sandbox_verified:
+          const: false
+          type: boolean
+        external_enabled:
+          const: false
+          type: boolean
+      required:
+      - accounts
+      - disabled_accounts
+      - configured_accounts
+      - environments
+      - operations
+      - capabilities
+      - sandbox_verified
+      - external_enabled
+      additionalProperties: false
+    PlatformPricingMetrics:
+      type: object
+      properties:
+        global_definitions:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        enabled_global:
+          type: integer
+          minimum: 0
+        pending_global:
+          type: integer
+          minimum: 0
+        external_rates_enabled:
+          const: false
+          type: boolean
+        cost_payloads_included:
+          const: false
+          type: boolean
+      required:
+      - global_definitions
+      - enabled_global
+      - pending_global
+      - external_rates_enabled
+      - cost_payloads_included
+      additionalProperties: false
+    PlatformFinanceMetrics:
+      type: object
+      properties:
+        currencies:
+          type: array
+          items:
+            type: object
+            properties:
+              currency:
+                type: string
+                pattern: ^[A-Z]{3}$
+              exponent:
+                type: integer
+                minimum: 0
+                maximum: 3
+              wallets:
+                type: integer
+                minimum: 0
+              wallets_with_reservations:
+                type: integer
+                minimum: 0
+              frozen_wallets:
+                type: integer
+                minimum: 0
+            required:
+            - currency
+            - exponent
+            - wallets
+            - wallets_with_reservations
+            - frozen_wallets
+            additionalProperties: false
+          maxItems: 200
+        reconciliation_cases:
+          type: integer
+          minimum: 0
+        pending_approvals:
+          type: integer
+          minimum: 0
+        pending_settlement:
+          type: integer
+          minimum: 0
+        amounts_visibility:
+          const: exact_target_grant_required
+        funding_enabled:
+          const: false
+          type: boolean
+        execution_enabled:
+          const: false
+          type: boolean
+      required:
+      - currencies
+      - reconciliation_cases
+      - pending_approvals
+      - pending_settlement
+      - amounts_visibility
+      - funding_enabled
+      - execution_enabled
+      additionalProperties: false
+    PlatformCustomsMetrics:
+      type: object
+      properties:
+        rules:
+          type: integer
+          minimum: 0
+        pending_reviews:
+          type: integer
+          minimum: 0
+        document_work:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        quarantined_documents:
+          type: integer
+          minimum: 0
+        local_incomplete:
+          type: integer
+          minimum: 0
+        clearance_enabled:
+          const: false
+          type: boolean
+      required:
+      - rules
+      - pending_reviews
+      - document_work
+      - quarantined_documents
+      - local_incomplete
+      - clearance_enabled
+      additionalProperties: false
+    PlatformOverview:
+      type: object
+      properties:
+        widgets:
+          type: object
+          properties:
+            merchants:
+              $ref: '#/components/schemas/PlatformMerchantsMetrics'
+            users:
+              $ref: '#/components/schemas/PlatformUsersMetrics'
+            shipping:
+              $ref: '#/components/schemas/PlatformShippingMetrics'
+            bulk:
+              $ref: '#/components/schemas/PlatformBulkMetrics'
+            tracking:
+              $ref: '#/components/schemas/PlatformTrackingMetrics'
+            carriers:
+              $ref: '#/components/schemas/PlatformCarriersMetrics'
+            pricing:
+              $ref: '#/components/schemas/PlatformPricingMetrics'
+            finance:
+              $ref: '#/components/schemas/PlatformFinanceMetrics'
+            customs:
+              $ref: '#/components/schemas/PlatformCustomsMetrics'
+          additionalProperties: false
+          description: Only current per-source platform.metrics.* permissions are included
+            and queried. Aggregate access does not authorize private target reads.
+        permissions:
+          type: array
+          items:
+            type: string
+        period:
+          $ref: '#/components/schemas/DashboardPeriod'
+        generated_at:
+          type: string
+          format: date-time
+        live_shipping_enabled:
+          const: false
+          type: boolean
+        payments_enabled:
+          const: false
+          type: boolean
+        notifications_enabled:
+          const: false
+          type: boolean
+      required:
+      - widgets
+      - permissions
+      - period
+      - generated_at
+      - live_shipping_enabled
+      - payments_enabled
+      - notifications_enabled
+    PlatformActivityPage:
+      type: object
+      properties:
+        period:
+          $ref: '#/components/schemas/DashboardPeriod'
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              action:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+            required:
+            - id
+            - action
+            - created_at
+            additionalProperties: false
+          maxItems: 25
+        next_cursor:
+          type:
+          - string
+          - 'null'
+          maxLength: 300
+      required:
+      - period
+      - events
+      - next_cursor
+    PlatformApprovalWorkload:
+      type: object
+      properties:
+        approvals:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                enum:
+                - access
+                - verification
+                - pricing
+                - carriers
+                - customs
+                - finance
+              count:
+                type: integer
+                minimum: 0
+              route:
+                type:
+                - string
+                - 'null'
+            required:
+            - kind
+            - count
+            - route
+            additionalProperties: false
+          maxItems: 6
+        scope:
+          const: aggregate_metadata_or_current_session_own_requests
+        approval_controls:
+          const: existing_independent_domain_workflows
+        generated_at:
+          type: string
+          format: date-time
+      required:
+      - approvals
+      - scope
+      - approval_controls
+      - generated_at
+    PlatformAlertList:
+      type: object
+      properties:
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                pattern: ^[a-f0-9]{64}$
+              kind:
+                enum:
+                - verification
+                - pricing
+                - carrier_disabled
+                - unknown_shipment
+                - tracking_failure
+                - bulk_recovery
+                - customs_quarantine
+                - finance_reconciliation
+                - customs_rule
+              occurred_at:
+                type: string
+                format: date-time
+              route:
+                type:
+                - string
+                - 'null'
+              private_details_require_grant:
+                type: boolean
+              read:
+                type: boolean
+            required:
+            - id
+            - kind
+            - occurred_at
+            - route
+            - private_details_require_grant
+            - read
+            additionalProperties: false
+          maxItems: 25
+        sample_limited:
+          type: boolean
+        sample_limit:
+          const: 25
+        generated_at:
+          type: string
+          format: date-time
+        notifications_enabled:
+          const: false
+          type: boolean
+      required:
+      - alerts
+      - sample_limited
+      - sample_limit
+      - generated_at
+      - notifications_enabled
+      description: Bounded recent current facts. HMAC identities reveal no raw tenant/document/shipment
+        IDs. Read state is per actor and never resolves cases.
+    PlatformOwnGrants:
+      type: object
+      properties:
+        grants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              merchant_id:
+                type: string
+                format: uuid
+              expires_at:
+                type: string
+                format: date-time
+              capabilities:
+                type: array
+                items:
+                  type: string
+                maxItems: 3
+            required:
+            - id
+            - merchant_id
+            - expires_at
+            - capabilities
+            additionalProperties: false
+          maxItems: 100
+        sample_limited:
+          type: boolean
+      required:
+      - grants
+      - sample_limited
+      description: Only approved, unexpired, unrevoked current actor/session grant records
+        intersected with current capabilities; approver and target authority are revalidated
+        on use. No reasons or other sessions.
+    PlatformSafeHealth:
+      type: object
+      properties:
+        checks:
+          type: object
+          properties:
+            api:
+              type: string
+            dependencies:
+              type: string
+            schema:
+              type: string
+            horizon:
+              type: string
+          required:
+          - api
+          - dependencies
+          - schema
+          - horizon
+          additionalProperties: false
+        queues:
+          type: array
+          items:
+            type: object
+            properties:
+              queue:
+                enum:
+                - critical
+                - default
+                - carrier
+                - carrier-events
+                - shipments
+                - bulk
+                - tracking
+                - customs
+              pending:
+                type:
+                - integer
+                - 'null'
+                minimum: 0
+            required:
+            - queue
+            - pending
+          maxItems: 8
+        failed_jobs:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+        scheduler:
+          const: not_independently_observable
+        recovery_modules:
+          type: array
+          items:
+            enum:
+            - shipping
+            - bulk
+            - tracking
+            - customs
+          maxItems: 4
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CarrierCapability'
+          maxItems: 16
+        production_readiness:
+          const: not_certified
+        generated_at:
+          type: string
+          format: date-time
+      required:
+      - checks
+      - queues
+      - failed_jobs
+      - scheduler
+      - recovery_modules
+      - capabilities
+      - production_readiness
+      - generated_at
+      description: Supported current-runtime Horizon heartbeat repository, readiness/schema
+        and fixed queue-size observations. No exceptions, process names, hosts, payloads,
+        credentials or production certification.
+    PlatformSafeSettings:
+      type: object
+      properties:
+        reporting_timezone:
+          const: UTC
+        mfa_window_minutes:
+          const: 15
+        access_grant_max_minutes:
+          const: 15
+        currencies:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                pattern: ^[A-Z]{3}$
+              exponent:
+                type: integer
+                minimum: 0
+                maximum: 3
+              enabled:
+                type: boolean
+            required:
+            - code
+            - exponent
+            - enabled
+          maxItems: 200
+        bulk_limits:
+          type: object
+          properties:
+            max_bytes:
+              type: integer
+              minimum: 0
+            max_rows:
+              type: integer
+              minimum: 0
+            max_cell_bytes:
+              type: integer
+              minimum: 0
+          required:
+          - max_bytes
+          - max_rows
+          - max_cell_bytes
+        gates:
+          type: object
+          properties:
+            carrier_requests:
+              const: false
+              type: boolean
+            wallet_funding:
+              const: false
+              type: boolean
+            financial_corrections:
+              const: false
+              type: boolean
+            customer_notifications:
+              const: false
+              type: boolean
+            customs_clearance:
+              const: false
+              type: boolean
+          required:
+          - carrier_requests
+          - wallet_funding
+          - financial_corrections
+          - customer_notifications
+          - customs_clearance
+          additionalProperties: false
+        editable:
+          const: false
+          type: boolean
+        policy:
+          const: existing_versioned_domain_workflows_only
+      required:
+      - reporting_timezone
+      - mfa_window_minutes
+      - access_grant_max_minutes
+      - currencies
+      - bulk_limits
+      - gates
+      - editable
+      - policy
+      description: Fixed allowlisted read-only policy catalogue. No arbitrary setting
+        writes or evidence/control overrides.
+    PlatformTargetSummary:
+      type: object
+      properties:
+        section:
+          enum:
+          - merchant
+          - shipping
+          - finance
+          - pricing
+        merchant:
+          type: object
+          description: Existing Administration.merchant metadata; no contacts or registration/tax
+            identifiers.
+        profile:
+          type:
+          - object
+          - 'null'
+          description: 'Existing granted redacted profile: id/version/legal_name/country
+            only.'
+        settings:
+          type:
+          - object
+          - 'null'
+          properties:
+            locale:
+              enum:
+              - en
+              - ar
+            timezone:
+              type: string
+            version:
+              type: integer
+              minimum: 0
+          additionalProperties: false
+        memberships:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - role
+            - status
+            - count
+          maxItems: 24
+        shipping_eligibility:
+          type: object
+        shipping:
+          $ref: '#/components/schemas/PlatformShippingMetrics'
+        period:
+          $ref: '#/components/schemas/DashboardPeriod'
+        wallets:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancialWallet'
+          maxItems: 200
+        funding_enabled:
+          const: false
+          type: boolean
+        shipping_charges_enabled:
+          const: false
+          type: boolean
+        kinds:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+            required:
+            - status
+            - count
+            additionalProperties: false
+          maxItems: 32
+        assignments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              active_version:
+                type: integer
+                minimum: 0
+              tier_id:
+                type: string
+                format: uuid
+            required:
+            - id
+            - active_version
+            - tier_id
+          maxItems: 20
+      required:
+      - section
+      description: Exact independently approved current-session target capability required
+        per section. Existing merchant, pricing and financial authority/services apply,
+        including exclusion of own-membership financial administration. No costs/margins/PII
+        dump.
+    PlatformReadReceipt:
+      type: object
+      properties:
+        read:
+          const: true
+        resolved:
+          const: false
+          type: boolean
+      required:
+      - read
+      - resolved
+      additionalProperties: false
     DashboardPeriod:
       type: object
       properties:

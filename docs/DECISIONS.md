@@ -99,3 +99,13 @@ Use one existing carrier tracking history/projection; Shipping, finance and docu
 * Exclude synthetic/unverified acceptance and tracking from verified KPIs; label current recorded shipment distributions separately. No revenue, combined-currency money or invented projections.
 * Serialize current authority with existing merchant/user lock order; no shared dashboard cache. Private/no-store responses and request generation fences prevent stale role/context reuse. Scale/lock tuning needs measured production evidence.
 * Add only six read indexes and reusable bilingual UI primitives/navigation; no additional UI/chart dependency, ledger or tracking state machine. No Phase 12 or external preview/deployment scope.
+
+
+## Phase 12 platform reporting decisions
+
+* Aggregate source permissions are separate from target merchant capabilities; unauthorized source queries are omitted. Sessions/recent MFA remain mandatory; personal tokens do not become platform credentials.
+* Reuse module state, approvals, exact grants and financial reads. Shared platform security locks plus current user/session locks serialize authorization with revocation. Private reads acquire exclusive security authority before reusing target services.
+* No approved global amount disclosure policy: finance overview counts wallets/reservations/frozen/reconciliation separately by currency, and exact-granted views retain existing integer-string balances. Stop the global monetary capability pending policy; do not fabricate revenue or profit.
+* Alerts derive from current facts with opaque HMAC identities; append-only actor/session read receipts neither resolve source issues nor send notifications. Current country drafts, carrier draft events and unrevoked current customs documents avoid stale-workload claims.
+* Explicit UTC periods; stocks/current queues remain independent of the period. Synthetic carrier/tracking observations never count as verified activity. No pending-account status is invented.
+* Health is redacted local observation, scheduler is independently unobservable, settings are a typed read-only catalogue. No unrestricted config/replay/activation control or production readiness claim.

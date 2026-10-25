@@ -16,7 +16,7 @@ if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== '
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'adminE', 'adminF'] as $key) {
+    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;
@@ -24,7 +24,7 @@ DB::transaction(function () use (&$accounts) {
         DB::table('auth_sessions')->where('user_id', $u->id)->update(['revoked_at' => now()]);
         $u->tokens()->delete();
         $accounts[$key] = ['id' => $u->id, 'email' => $email, 'password' => $password];
-        if (str_starts_with($key, 'admin')) {
+        if (str_starts_with($key, 'admin') || $key === 'platformFinance') {
             DB::table('user_mfa_credentials')->updateOrInsert(['user_id' => $u->id], ['secret' => Crypt::encryptString(TOTP::generate()->getSecret()), 'confirmed_at' => now(), 'last_step' => -1, 'version' => 1]);
             DB::table('mfa_recovery_codes')->where('user_id', $u->id)->delete();
             $codes = [];
@@ -34,7 +34,7 @@ DB::transaction(function () use (&$accounts) {
                 DB::table('mfa_recovery_codes')->insert(['id' => (string) Str::uuid(), 'user_id' => $u->id, 'code_hash' => hash('sha256', $code)]);
             }
             $accounts[$key]['recovery_codes'] = $codes;
-            DB::table('platform_role_assignments')->insertOrIgnore(['id' => (string) Str::uuid(), 'user_id' => $u->id, 'role_id' => DB::table('roles')->where('code', 'platform.super_admin')->value('id'), 'role_scope' => 'platform', 'created_at' => now()]);
+            DB::table('platform_role_assignments')->insertOrIgnore(['id' => (string) Str::uuid(), 'user_id' => $u->id, 'role_id' => DB::table('roles')->where('code', $key === 'platformFinance' ? 'platform.finance' : 'platform.super_admin')->value('id'), 'role_scope' => 'platform', 'created_at' => now()]);
         }
     }
     $row = function (string $kind, string $code, array $c, ?string $currency = null) use (&$accounts) {

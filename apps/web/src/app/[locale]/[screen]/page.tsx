@@ -1,3 +1,5 @@
+import { PlatformScreen } from "@/components/platform-screen";
+import { platformScreens,type PlatformScreen as PlatformView } from "@/lib/platform";
 import { MerchantDashboard } from "@/components/merchant-dashboard";
 import { CustomsScreen } from "@/components/customs-screen";
 import { customsScreens,type CustomsView } from "@/lib/customs";
@@ -21,10 +23,11 @@ import { IdentityScreen } from "@/components/identity-screen";
 import { screenNames, type Screen } from "@/lib/auth-copy";
 import { isLocale } from "@/lib/i18n";
 
-export function generateStaticParams() { return [...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
+export function generateStaticParams() { return [...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].map((screen) => ({ screen })); }
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
-  if (!isLocale(locale) || ![...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (!isLocale(locale) || ![...platformScreens, ...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (platformScreens.includes(screen as PlatformView)) return <PlatformScreen key={`${locale}:${screen}`} locale={locale} screen={screen as PlatformView}/>;
   if (screen === "dashboard") return <MerchantDashboard key={locale} locale={locale} />;
   if (customsScreens.includes(screen as CustomsView)) return <CustomsScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CustomsView}/>;
   if (trackingScreens.includes(screen as TrackingView)) return <TrackingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as TrackingView} />;

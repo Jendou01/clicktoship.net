@@ -22,6 +22,7 @@ final class BulkMigrationTest extends BulkTestCase
         $s = $this->bearer($f['token'], 'POST', '/api/v1/shipments', ['draft' => $draft, 'idempotency_key' => 'prior-shipment'])->assertCreated()->json('data.shipment.id');
         $wallet = app(Ledger::class)->provision($f['m']);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 12 overview before prior-phase rollback.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 11 indexes before prior-phase rollback.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 10 before the original rollback target.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 9 before the existing preservation assertions.
