@@ -7,8 +7,10 @@ use App\Modules\Carriers\Domain\CarrierTransport;
 use App\Modules\Carriers\Domain\ShipmentGateway;
 use App\Modules\Carriers\Infrastructure\DisabledAramexTransport;
 use App\Modules\Carriers\Infrastructure\EvidenceGatedShipmentGateway;
+use App\Modules\Commerce\Domain\ShopyzeeProvider;
 use App\Modules\Commerce\Domain\StoreProvider;
 use App\Modules\Commerce\Infrastructure\DisabledSallaProvider;
+use App\Modules\Commerce\Infrastructure\DisabledShopyzeeProvider;
 use App\Modules\Merchants\Domain\MembershipPolicy;
 use App\Modules\Merchants\Domain\MerchantContext;
 use App\Modules\Merchants\Infrastructure\Membership;
@@ -36,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(StoreProvider::class, DisabledSallaProvider::class);
+        $this->app->bind(ShopyzeeProvider::class, DisabledShopyzeeProvider::class);
         $this->app->bind(TrackingProviderAdapter::class, DisabledTrackingAdapter::class);
         $this->app->bind(DocumentScanner::class, DisabledDocumentScanner::class);
         $this->app->bind(ShipmentGateway::class, EvidenceGatedShipmentGateway::class);

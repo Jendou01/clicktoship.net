@@ -2,7 +2,7 @@
 
 namespace App\Modules\Commerce\Domain;
 
-/** ClickToShip normalized boundary. Not an assertion of any Salla wire contract. */
+/** ClickToShip normalized boundary. Not an assertion of any provider wire contract. Optional authorization methods do not assert OAuth support. */
 interface StoreProvider
 {
     public function available(): bool;

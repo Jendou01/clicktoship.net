@@ -3,12 +3,14 @@
 use App\Modules\Commerce\Application\Drafts;
 use App\Modules\Commerce\Application\Tokens;
 use App\Modules\Commerce\Domain\IntegrationFailure;
+use App\Modules\Commerce\Domain\ShopyzeeProvider;
 use App\Modules\Commerce\Domain\StoreProvider;
 use App\Modules\Pricing\Application\Catalog;
 use App\Modules\Shipping\Application\ShippingAccess;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Support\SyntheticShopyzeeProvider;
 use Tests\Support\SyntheticStoreProvider;
 
 foreach (['APP_ENV' => 'testing', 'DB_DATABASE' => 'clicktoship_test', 'DB_URL' => '', 'SESSION_DRIVER' => 'redis', 'SESSION_SECURE_COOKIE' => 'false'] as $key => $value) {
@@ -30,6 +32,14 @@ $origin = DB::table('commerce_runs')->where('id', $input['run'])->where('merchan
 if (! $origin) {
     echo json_encode(['guard' => 'origin_missing']);
     exit(9);
+}
+$connection = DB::table('commerce_connections')->where('id', $origin->connection_id)->firstOrFail();
+if ($connection->provider === 'shopyzee') {
+    $adapter = new SyntheticShopyzeeProvider;
+    $adapter->platform = $connection->external_platform_id;
+    $adapter->store = $connection->external_store_id;
+    app()->instance(ShopyzeeProvider::class, $adapter);
+    $provider = $adapter->fixture;
 }
 try {
     if ($input['action'] === 'refresh') {

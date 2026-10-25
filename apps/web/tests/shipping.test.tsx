@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ShippingScreen } from "@/components/shipping-screen";
 import { api, ApiError } from "@/lib/api";
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: vi.fn() }));
@@ -36,6 +36,6 @@ describe("shipment workflow safety", () => {
   fireEvent.click(screen.getByRole("button", { name: locale === "en" ? "Save draft" : "حفظ المسودة" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(locale === "en" ? "international phone" : "هاتفًا دوليًا");
   const phone = screen.getByLabelText(locale === "en" ? "Sender — International phone" : "المرسل — الهاتف الدولي");
-  expect(phone).toHaveAttribute("aria-invalid", "true"); expect(phone).toHaveFocus();
+  expect(phone).toHaveAttribute("aria-invalid", "true"); await waitFor(() => expect(phone).toHaveFocus());
   expect(screen.getByRole("alert")).toHaveTextContent(locale === "en" ? "Configured service" : "الخدمة المهيأة");
  });

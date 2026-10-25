@@ -104,6 +104,25 @@ final class Metrics
 
     public function commerce(array $p): array
     {
-        return ['verified_authorized_stores' => DB::table('commerce_connections')->where('state', 'authorized')->where('provenance', 'verified')->count(), 'synthetic_stores' => DB::table('commerce_connections')->where('provenance', 'synthetic')->count(), 'reauthorization_required' => DB::table('commerce_connections')->where('state', 'reauthorization_required')->count(), 'work' => $this->groups(DB::table('commerce_runs'), 'state'), 'orders' => DB::table('commerce_orders')->count(), 'review_required' => DB::table('commerce_orders')->where('review_required', true)->count(), 'prepared_drafts' => DB::table('commerce_draft_links')->count(), 'quarantined_receipts' => DB::table('commerce_receipts')->where('kind', 'quarantined')->count(), 'external_enabled' => false];
+        // Grouped COUNTs only: query count is independent of merchants and providers.
+        $stores = DB::table('commerce_connections')->selectRaw("provider, count(*) FILTER (WHERE state='authorized' AND provenance='verified')::int AS verified_authorized_stores, count(*) FILTER (WHERE provenance='synthetic')::int AS synthetic_stores, count(*) FILTER (WHERE state='disconnected')::int AS disconnected_stores, count(*) FILTER (WHERE state='reauthorization_required')::int AS authorization_failures")->groupBy('provider')->get()->keyBy('provider');
+        $orders = DB::table('commerce_orders as o')->join('commerce_connections as c', fn ($j) => $j->on('c.id', '=', 'o.connection_id')->on('c.merchant_id', '=', 'o.merchant_id'))->selectRaw('c.provider, count(*)::int AS orders, count(*) FILTER (WHERE o.review_required)::int AS review_required')->groupBy('c.provider')->get()->keyBy('provider');
+        $runs = DB::table('commerce_runs as r')->join('commerce_connections as c', fn ($j) => $j->on('c.id', '=', 'r.connection_id')->on('c.merchant_id', '=', 'r.merchant_id'))->selectRaw('c.provider, r.kind, r.state, count(*)::int AS count')->groupBy('c.provider', 'r.kind', 'r.state')->get();
+        $failures = DB::table('commerce_results as x')->join('commerce_runs as r', fn ($j) => $j->on('r.id', '=', 'x.run_id')->on('r.merchant_id', '=', 'x.merchant_id'))->join('commerce_connections as c', fn ($j) => $j->on('c.id', '=', 'r.connection_id')->on('c.merchant_id', '=', 'r.merchant_id'))->where('x.state', 'failed')->selectRaw('c.provider,count(*)::int AS count')->groupBy('c.provider')->get()->keyBy('provider');
+        $providers = [];
+        foreach (['salla', 'shopyzee'] as $provider) {
+            $providers[$provider] = ['verified_authorized_stores' => (int) ($stores[$provider]->verified_authorized_stores ?? 0), 'synthetic_stores' => (int) ($stores[$provider]->synthetic_stores ?? 0), 'disconnected_stores' => (int) ($stores[$provider]->disconnected_stores ?? 0), 'authorization_failures' => (int) ($stores[$provider]->authorization_failures ?? 0), 'sync_failures' => 0, 'draft_failures' => (int) ($failures[$provider]->count ?? 0), 'orders' => (int) ($orders[$provider]->orders ?? 0), 'review_required' => (int) ($orders[$provider]->review_required ?? 0)];
+        }
+        $work = [];
+        foreach ($runs as $run) {
+            $work[$run->state] = ($work[$run->state] ?? 0) + $run->count;
+            if ($run->kind === 'sync' && in_array($run->state, ['failed', 'blocked'], true)) {
+                $providers[$run->provider]['sync_failures'] += $run->count;
+            }
+        }
+        ksort($work);
+        $sum = fn ($key) => array_sum(array_column($providers, $key));
+
+        return ['providers' => $providers, 'verified_authorized_stores' => $sum('verified_authorized_stores'), 'synthetic_stores' => $sum('synthetic_stores'), 'reauthorization_required' => $sum('authorization_failures'), 'work' => array_map(fn ($state, $count) => ['status' => $state, 'count' => $count], array_keys($work), array_values($work)), 'orders' => $sum('orders'), 'review_required' => $sum('review_required'), 'prepared_drafts' => DB::table('commerce_draft_links')->count(), 'quarantined_receipts' => DB::table('commerce_receipts')->where('kind', 'quarantined')->count(), 'external_enabled' => false];
     }
 }

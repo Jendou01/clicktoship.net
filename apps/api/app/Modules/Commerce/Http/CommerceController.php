@@ -6,6 +6,7 @@ use App\Modules\Commerce\Application\Access;
 use App\Modules\Commerce\Application\Connections;
 use App\Modules\Commerce\Application\Drafts;
 use App\Modules\Commerce\Application\Orders;
+use App\Modules\Commerce\Application\Providers;
 use App\Modules\Commerce\Application\Webhooks;
 use App\Modules\Commerce\Application\Work;
 use App\Modules\Commerce\Domain\IntegrationFailure;
@@ -23,8 +24,9 @@ final class CommerceController
         $status = 200;
         try {
             $data = match ($action) {
-                'providers' => $a->locked($r, $c, 'integrations.read', fn () => ['providers' => [$connections->capabilities()]]),
+                'providers' => $a->locked($r, $c, 'integrations.read', fn () => ['providers' => app(Providers::class)->catalog()]),
                 'connections' => $a->locked($r, $c, 'integrations.read', fn ($m) => $connections->list($m)),
+                'shopyzee-unavailable' => $a->locked($r, $c, 'integrations.manage', fn () => abort(503)),
                 'begin' => $connections->begin($r, $c),'callback' => $connections->complete($r, $c),
                 'disconnect' => $connections->disconnect($r, $c, $id),
                 'sync' => $work->queue($r, $c, $id, 'sync'), 'prepare' => $work->queue($r, $c, $id, 'prepare'),

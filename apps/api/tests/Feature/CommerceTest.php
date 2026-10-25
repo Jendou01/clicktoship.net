@@ -288,6 +288,8 @@ final class CommerceTest extends CommerceTestCase
     {
         $f = $this->setupCommerce();
         $this->assertSame([], app(SchemaIntegrity::class)->failures());
+        $phase14 = require database_path('migrations/2026_10_25_140000_extend_commerce_provider_identity.php');
+        $phase14->down();
         $guard = require database_path('migrations/2026_10_25_121000_fence_commerce_authorizations.php');
         $guard->down();
         $migration = require database_path('migrations/2026_10_25_120000_create_commerce.php');
@@ -296,6 +298,7 @@ final class CommerceTest extends CommerceTestCase
         $this->assertDatabaseCount('shipments', 0);
         $migration->up();
         $guard->up();
+        $phase14->up();
         $this->assertSame([], app(SchemaIntegrity::class)->failures());
     }
 }

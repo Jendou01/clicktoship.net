@@ -3,7 +3,6 @@
 namespace App\Modules\Commerce\Application;
 
 use App\Modules\Commerce\Domain\IntegrationFailure;
-use App\Modules\Commerce\Domain\StoreProvider;
 use App\Modules\Shipping\Application\ShippingAccess;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -12,13 +11,13 @@ use Illuminate\Support\Str;
 
 final class Tokens
 {
-    public function validated(array $v): array
+    public function validated(array $v, string $provider = 'salla'): array
     {
-        $d = Validator::make($v, ['store_id' => 'required|string|regex:/^[A-Za-z0-9_-]{1,128}$/', 'access_token' => 'required|string|max:16384', 'refresh_token' => 'required|string|max:16384', 'expires_at' => 'required|date|after:now', 'scopes' => 'required|array|min:1|max:50', 'scopes.*' => 'required|string|max:100|distinct', 'provenance' => 'required|in:verified,synthetic'])->validate();
+        $d = Validator::make($v, ['provider' => 'sometimes|in:salla,shopyzee', 'platform_id' => 'sometimes|string|regex:/^[A-Za-z0-9_-]{1,128}$/', 'store_id' => 'required|string|regex:/^[A-Za-z0-9_-]{1,128}$/', 'access_token' => 'required|string|max:16384', 'refresh_token' => 'required|string|max:16384', 'expires_at' => 'required|date|after:now', 'scopes' => 'required|array|min:1|max:50', 'scopes.*' => 'required|string|max:100|distinct', 'provenance' => 'required|in:verified,synthetic'])->validate();
         if ($d['provenance'] === 'synthetic') {
             abort_unless(app()->environment('testing') && in_array(DB::connection()->getDatabaseName(), ['clicktoship_test', 'clicktoship_e2e'], true), 403);
         }
-        if (array_diff(app(StoreProvider::class)->requiredScopes(), $d['scopes'])) {
+        if (array_diff(app(Providers::class)->adapter($provider)->requiredScopes(), $d['scopes'])) {
             throw new IntegrationFailure('SCOPES_CHANGED');
         }
 
@@ -61,7 +60,7 @@ final class Tokens
                 return ['unknown' => true];
             }DB::table('commerce_credentials')->where('connection_id', $c->id)->update(['refresh_nonce' => $lease, 'lease_until' => now()->addSeconds(30)]);
 
-            return ['data' => $plain, 'version' => $t->version, 'scopes' => json_decode($t->scopes, true), 'store' => $c->external_store_id];
+            return ['data' => $plain, 'version' => $t->version, 'scopes' => json_decode($t->scopes, true), 'store' => $c->external_store_id, 'provider' => $c->provider, 'platform' => $c->external_platform_id];
         });
         if (isset($current['ready'])) {
             return $current['ready'];
@@ -69,12 +68,12 @@ final class Tokens
             throw new IntegrationFailure('REFRESH_REAUTHORIZATION_REQUIRED');
         }
         try {
-            $d = $this->validated(app(StoreProvider::class)->refresh($current['data']));
+            $d = $this->validated(app(Providers::class)->adapter($current['provider'])->refresh($current['data']), $current['provider']);
             $scopes = $d['scopes'];
             $expected = $current['scopes'];
             sort($scopes);
             sort($expected);
-            if ($d['store_id'] !== $current['store'] || $scopes !== $expected) {
+            if (! app(Providers::class)->matches((object) ['provider' => $current['provider'], 'external_platform_id' => $current['platform'], 'external_store_id' => $current['store']], $d) || $scopes !== $expected) {
                 throw new IntegrationFailure('SCOPES_OR_IDENTITY_CHANGED');
             }
 

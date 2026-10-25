@@ -19,7 +19,7 @@ if (! app()->environment('testing') || DB::connection()->getDatabaseName() !== '
 }
 $accounts = [];
 DB::transaction(function () use (&$accounts) {
-    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'commerceOwner', 'commerceDraftOwner', 'commerceBatchOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
+    foreach (['pricingOwner', 'qaOwner', 'previewOwner', 'bulkOwner', 'customsOwner', 'dashboardOwner', 'commerceOwner', 'commerceDraftOwner', 'commerceBatchOwner', 'shopyzeeOwner', 'shopyzeeDraftOwner', 'shopyzeeBatchOwner', 'platformOwner', 'platformFinance', 'adminG', 'adminH', 'adminJ', 'adminK', 'adminE', 'adminF'] as $key) {
         $email = strtolower($key).'@browser-fixture.example.test';
         $password = 'Ab1!'.bin2hex(random_bytes(20));
         $u = User::where('email', $email)->first() ?? new User;
@@ -64,14 +64,15 @@ DB::transaction(function () use (&$accounts) {
     $row('rule', 'rule', $selectors + array_replace($amounts, ['base_minor' => '2000']) + ['scope' => 'global', 'mode' => 'fixed', 'tier_id' => null, 'discount_minor' => '0', 'discount_bps' => 0, 'min_margin_minor' => '100', 'min_margin_bps' => 100, 'tax_id' => $tax], 'SAR');
     $accounts['service'] = $service;
     // Opt-in internal normalized fixtures only; NOT Salla responses or real authorization.
-    foreach (['commerceOwner' => 'commerce', 'commerceDraftOwner' => 'commerceDraft', 'commerceBatchOwner' => 'commerceBatch'] as $accountKey => $fixtureKey) {
+    foreach (['commerceOwner' => 'commerce', 'commerceDraftOwner' => 'commerceDraft', 'commerceBatchOwner' => 'commerceBatch', 'shopyzeeOwner' => 'shopyzee', 'shopyzeeDraftOwner' => 'shopyzeeDraft', 'shopyzeeBatchOwner' => 'shopyzeeBatch'] as $accountKey => $fixtureKey) {
+        $provider = str_starts_with($fixtureKey, 'shopyzee') ? 'shopyzee' : 'salla';
         $owner = User::findOrFail($accounts[$accountKey]['id']);
         $nonce = bin2hex(random_bytes(5));
         $merchant = app(MerchantService::class)->create($owner, 'Commerce synthetic browser '.$nonce);
         $connection = (string) Str::uuid();
         $token = $owner->createToken('Synthetic commerce fixture', ['integrations.sync'], now()->addDay());
         $token->accessToken->forceFill(['merchant_id' => $merchant->id, 'auth_version' => $owner->auth_version])->save();
-        DB::table('commerce_connections')->insert(['id' => $connection, 'merchant_id' => $merchant->id, 'provider' => 'salla', 'external_store_id' => 'SYNTHETIC-STORE-'.$nonce, 'state' => 'authorized', 'provenance' => 'synthetic', 'actor_id' => $owner->id, 'auth_version' => $owner->auth_version, 'origin_token_id' => $token->accessToken->id]);
+        DB::table('commerce_connections')->insert(['id' => $connection, 'merchant_id' => $merchant->id, 'provider' => $provider, 'external_platform_id' => $provider === 'salla' ? 'salla' : 'SYNTHETIC-INSTANCE-'.$nonce, 'external_store_id' => 'SYNTHETIC-STORE-'.$nonce, 'state' => 'authorized', 'provenance' => 'synthetic', 'actor_id' => $owner->id, 'auth_version' => $owner->auth_version, 'origin_token_id' => $token->accessToken->id]);
         app(Tokens::class)->store($merchant->id, $connection, ['access_token' => 'synthetic-test-only', 'refresh_token' => 'synthetic-test-only', 'expires_at' => now()->addHour(), 'scopes' => ['synthetic.orders.read']]);
         $conn = DB::table('commerce_connections')->where('id', $connection)->first();
         $orderRefs = [];
