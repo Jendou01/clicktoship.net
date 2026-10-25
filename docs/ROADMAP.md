@@ -131,17 +131,15 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Complete regression and security results: [Phase 10 report](PHASE_10_REPORT.md); [architecture and external approvals](architecture/PHASE_10_CUSTOMS.md).
 * No live carrier, financial, authority filing or legal-clearance capability enabled. Phase 11 requires separate authorization.
 
-## Phase 11 — Merchant dashboard
+## Phase 11 — Merchant dashboard and experience (implemented)
 
-* Scope: Merchant dashboard.
-* Dependencies: Phases 2–10 APIs.
-* Implementation tasks: Overview, shipment/bulk/label/pickup/wallet/invoice/rate/address/team/integration views.
-* Database changes: Read models/indexes only when justified.
-* API changes: Allowlisted filtering/sort/cursor pagination.
-* Frontend changes: Complete responsive Arabic/English workflows and error/empty/loading states.
-* Automated tests: Components, keyboard/accessibility, RTL and complete mocked/sandbox E2E.
-* Acceptance criteria: Merchant quote-to-track flow works without exposing carrier cost/secret.
-* Completion report: Planned.
+* Real permission-filtered operational read models compose Shipping, Tracking, Bulk, WalletBilling, Pricing and Customs, with UTC today/7/30/90/custom filters and safe activity keyset pagination.
+* No fabricated revenue, accepted carrier facts or tracking; no cross-currency totals. Empty/unavailable and local-only preparation states remain explicit.
+* Existing permissions and current session/token/member checks apply to each source; no shared response cache or platform tenant bypass.
+* Unified EN/AR dashboard, daily activity/state charts, current per-currency balances, bulk progress, recent activity, quick actions and permission-aware searchable mobile navigation; shared page headers across operational modules.
+* Six additive PostgreSQL read indexes only; no business tables, ledger or tracking state machine.
+* See [Phase 11 architecture](architecture/PHASE_11_DASHBOARD.md) and [completion report](PHASE_11_REPORT.md) for verification and external limits.
+* No merge, deployment, live operations, customer notifications or Phase 12 work.
 
 ## Phase 12 — Super admin dashboard
 
@@ -217,4 +215,4 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 
 ## Immediate next increment
 
-Review the Phase 10 international/customs feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 11 work.
+Review the Phase 11 merchant dashboard feature branch and completion/security report. External carrier, financial, notification and customs authority gates remain closed. No automatic merge, deployment or Phase 12 work.

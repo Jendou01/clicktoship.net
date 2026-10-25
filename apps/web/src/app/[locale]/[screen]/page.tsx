@@ -1,3 +1,4 @@
+import { MerchantDashboard } from "@/components/merchant-dashboard";
 import { CustomsScreen } from "@/components/customs-screen";
 import { customsScreens,type CustomsView } from "@/lib/customs";
 import { TrackingScreen } from "@/components/tracking-screen";
@@ -24,6 +25,7 @@ export function generateStaticParams() { return [...customsScreens, ...trackingS
 export default async function Page({ params }: { params: Promise<{ locale: string; screen: string }> }) {
   const { locale, screen } = await params;
   if (!isLocale(locale) || ![...customsScreens, ...trackingScreens, ...bulkScreens, ...screenNames, ...managementScreens, ...financeScreens, ...pricingScreens, ...carrierScreens, ...shippingScreens].includes(screen as Screen)) notFound();
+  if (screen === "dashboard") return <MerchantDashboard key={locale} locale={locale} />;
   if (customsScreens.includes(screen as CustomsView)) return <CustomsScreen key={`${locale}:${screen}`} locale={locale} screen={screen as CustomsView}/>;
   if (trackingScreens.includes(screen as TrackingView)) return <TrackingScreen key={`${locale}:${screen}`} locale={locale} screen={screen as TrackingView} />;
   if (bulkScreens.includes(screen as BulkView)) return <BulkScreen key={`${locale}:${screen}`} locale={locale} screen={screen as BulkView} />;

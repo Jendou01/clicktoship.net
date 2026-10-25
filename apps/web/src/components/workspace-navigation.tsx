@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { carrierCopy, carrierScreens } from "@/lib/carriers";
 import { pricingCopy, pricingScreens } from "@/lib/pricing";
 import { api } from "@/lib/api";
+import { dashboardQuery, dashboardCopy } from "@/lib/dashboard";
 import type { Locale } from "@/lib/i18n";
 
 export const merchantLinks = [
@@ -38,6 +39,7 @@ const platformLinks = [
 
 /** Only a public shipment identifier is carried across locales; never tokens, grants or PII. */
 export function localeHref(locale: Locale, screen: string, search = "") {
+  if (screen === "dashboard") { const query = dashboardQuery(search).toString(); return `/${locale}/dashboard${query ? `?${query}` : ""}`; }
   const batch = new URLSearchParams(search).get("batch");
   if (batch && /^[0-9a-f-]{36}$/i.test(batch) && ["bulk", "bulk-import", "bulk-results", "bulk-history"].includes(screen)) return `/${locale}/${screen}?batch=${encodeURIComponent(batch)}`;
   const id = new URLSearchParams(search).get("shipment");
@@ -50,6 +52,7 @@ export function WorkspaceNavigation({ locale, screen, context }: { locale: Local
   const [platform, setPlatform] = useState<string[]>([]);
   const [merchant, setMerchant] = useState("");
   const [languageHref, setLanguageHref] = useState(localeHref(locale === "en" ? "ar" : "en", screen));
+  const [query, setQuery] = useState("");
   const menu = useRef<HTMLDetailsElement>(null);
   const supplied = context !== undefined;
   const suppliedPlatform = context?.platform !== undefined;
@@ -72,11 +75,12 @@ export function WorkspaceNavigation({ locale, screen, context }: { locale: Local
   const currentPermissions = context?.permissions ?? permissions;
   const currentPlatform = context?.platform ?? platform;
   const currentMerchant = context?.merchant ?? merchant;
-  const links = merchantLinks.filter(([, p]) => currentPermissions.includes(p));
+  const order = ["shipments", "shipment-create", "bulk", "tracking", "international", "pickups", "rates", "wallet", "team", "addresses", "organization-settings"];
+  const links = merchantLinks.filter(([, p, en, ar]) => currentPermissions.includes(p) && `${en} ${ar}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).sort(([a], [b]) => { const rank = (v: string) => order.includes(v) ? order.indexOf(v) : 99; return rank(a) - rank(b); });
   return <header dir={locale === "ar" ? "rtl" : "ltr"} className="workspace-header border-b bg-white p-5 text-slate-900"><div className="mx-auto max-w-6xl space-y-4">
     <div className="flex flex-wrap items-center justify-between gap-3"><a className="text-xl font-bold text-teal-900" href={`/${locale}/dashboard`}><bdi dir="ltr">ClickToShip.</bdi></a><a aria-label={label("Switch to Arabic", "Switch to English")} href={languageHref} hrefLang={locale === "en" ? "ar" : "en"}>{locale === "en" ? "العربية" : "English"}</a></div>
     <p>{label("Selected organization", "المنشأة المحددة")}: <bdi>{currentMerchant || "—"}</bdi> · <a href={`/${locale}/organizations`}>{label("Switch organization", "تبديل المنشأة")}</a></p>
-    <details ref={menu} className="workspace-menu" open><summary>{label("Workspace navigation", "التنقل في مساحة العمل")}</summary><nav aria-label={label("Workspace navigation", "التنقل في مساحة العمل")} className="mt-3 flex flex-wrap gap-3"><a href={`/${locale}/dashboard`}>{label("Dashboard", "لوحة التحكم")}</a>{links.map(([route, , en, ar]) => <a key={route} aria-current={screen === route ? "page" : undefined} href={`/${locale}/${route}`}>{label(en, ar)}</a>)}<a href={`/${locale}/mfa`}>{label("MFA", "المصادقة متعددة العوامل")}</a><a href={`/${locale}/security`}>{label("Account security", "أمان الحساب")}</a></nav></details>
+    <details ref={menu} className="workspace-menu" open><summary>{label("Workspace navigation", "التنقل في مساحة العمل")}</summary><label className="navigation-search">{dashboardCopy[locale].menuSearch}<input type="search" value={query} onChange={e=>setQuery(e.target.value)} /></label><nav aria-label={label("Workspace navigation", "التنقل في مساحة العمل")} className="mt-3 flex flex-wrap gap-3"><a aria-current={screen === "dashboard" ? "page" : undefined} href={`/${locale}/dashboard`}>{label("Dashboard", "لوحة التحكم")}</a>{links.map(([route, , en, ar]) => <a key={route} aria-current={screen === route ? "page" : undefined} href={`/${locale}/${route}`}>{label(en, ar)}</a>)}<a href={`/${locale}/mfa`}>{label("MFA", "المصادقة متعددة العوامل")}</a><a href={`/${locale}/security`}>{label("Account security", "أمان الحساب")}</a></nav></details>
     {platformLinks.some(([, p]) => currentPlatform.includes(p)) && <details><summary>{label("Platform administration", "إدارة المنصة")}</summary><nav className="mt-3 flex flex-wrap gap-3">{platformLinks.filter(([, p]) => currentPlatform.includes(p)).map(([route, , en, ar]) => <a key={route} href={`/${locale}/${route}`}>{label(en, ar)}</a>)}</nav>{currentPlatform.includes("platform.carriers.view") && <nav aria-label={label("Carrier configuration", "إعدادات الناقل")} className="flex flex-wrap gap-3">{carrierScreens.map((route) => <a key={route} href={`/${locale}/${route}`}>{carrierCopy[locale][route]}</a>)}</nav>}{currentPlatform.includes("platform.pricing.view") && <nav aria-label={label("Pricing configuration", "إعدادات التسعير")} className="flex flex-wrap gap-3">{pricingScreens.filter((route) => !["rates", "available-rates", "quote-history"].includes(route)).map((route) => <a key={route} href={`/${locale}/${route}`}>{(pricingCopy[locale] as Record<string, string>)[({ "admin-pricing": "admin", "carrier-costs": "contracts", "merchant-pricing": "merchant", "pricing-tiers": "tiers", "shipping-zones": "zones", "pricing-fees": "fees", "pricing-rules": "rules", "pricing-audit": "audit" } as Record<string, string>)[route]]}</a>)}</nav>}</details>}
   </div></header>;
 }

@@ -100,6 +100,14 @@ final class SchemaIntegrity
             $missing[] = 'customs_declarations';
         }
 
+        if (DB::table('migrations')->where('migration', '2026_10_25_080000_add_dashboard_read_indexes')->exists()) {
+            foreach (['dashboard_submissions', 'dashboard_quotes', 'dashboard_customs_latest', 'dashboard_customs_directory', 'dashboard_customs_activity', 'dashboard_shipping_activity'] as $index) {
+                if (! DB::selectOne("SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname=? AND i.indisvalid AND i.indisready", [$index])) {
+                    $missing[] = 'index.'.$index;
+                }
+            }
+        }
+
         return $missing;
     }
 }

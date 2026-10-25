@@ -20,6 +20,7 @@ final class TrackingMigrationTest extends TrackingTestCase
     {
         $f = $this->setupShipment(false);
         $role = DB::table('roles')->where('code', 'merchant.owner')->value('id');
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 11 indexes before prior-phase rollback.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true])); // Remove additive Phase 10 before the original rollback target.
         $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]));
         $this->assertFalse(Schema::hasTable('tracking_work'));

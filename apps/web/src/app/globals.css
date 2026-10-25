@@ -24,3 +24,67 @@ main [role="alert"] { border-inline-start: 4px solid #b91c1c; padding: 1rem; bac
   .team-table td::before { content: attr(data-label); display: block; font-weight: 600; }
   .team-table select { width: 100%; }
 }
+
+/* Phase 11 shared merchant experience: existing brand, native controls, no UI dependency. */
+:root { --workspace-ink: #102c35; --workspace-teal: #00695f; --workspace-border: #dbe5eb; --workspace-muted: #4b6076; }
+.workspace-page { min-height: 100vh; background: #f5f8fa; color: var(--workspace-ink); }
+.workspace-header { border-color: var(--workspace-border); font-size: .875rem; }
+.workspace-header .workspace-menu nav { gap: .4rem; }
+.workspace-header a { text-decoration: none; }
+.workspace-header a:hover { background: #e6f5f1; }
+.navigation-search { display: block; max-width: 24rem; margin-block: .75rem; font-size: .8rem; color: var(--workspace-muted); }
+.navigation-search input { display: block; width: 100%; border: 1px solid var(--workspace-border); padding: .55rem .75rem; border-radius: .6rem; background: #f8fafc; color: var(--workspace-ink); }
+.dashboard-main { max-width: 76rem; margin-inline: auto; padding: 2rem 1.25rem 4rem; display: grid; gap: 1.5rem; }
+.page-heading { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.page-heading h1 { font-size: clamp(1.8rem,4vw,2.4rem); font-weight: 700; letter-spacing: -.025em; }
+.eyebrow { color: var(--workspace-teal); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; margin-bottom: .5rem; }
+.page-description, .panel-description, .section-help { color: var(--workspace-muted); font-size: .875rem; line-height: 1.75; }
+.page-actions, .quick-actions, .pagination-controls { display: flex; flex-wrap: wrap; gap: .6rem; }
+.button-primary, .button-secondary { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: .65rem 1rem; border-radius: .65rem; font-weight: 600; font-size: .875rem; text-decoration: none; cursor: pointer; }
+.button-primary { background: #006158; color: white; border: 1px solid #006158; }
+.button-secondary { background: white; color: #07574f; border: 1px solid #b3ccc6; }
+.button-primary:hover { background: #004c45; }.button-secondary:hover { background: #edf8f5; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+:where(a,button,input,select,summary,textarea):focus-visible { outline: 3px solid #00796b; outline-offset: 3px; }
+.workspace-notice { background: #fff9e9; border: 1px solid #f0d68a; border-inline-start: 4px solid #b77904; border-radius: .75rem; padding: 1rem; font-size: .875rem; line-height: 1.65; }
+.workspace-panel { min-width: 0; border: 1px solid var(--workspace-border); border-radius: 1rem; background: white; padding: 1.5rem; }
+.workspace-panel h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: .8rem; }
+.panel-description { margin-block: .5rem 1rem; }
+.dashboard-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
+.dashboard-filters label { display: grid; gap: .35rem; font-size: .8rem; color: var(--workspace-muted); max-width: 100%; }
+.dashboard-filters input, .dashboard-filters select { border: 1px solid #bacbd3; border-radius: .6rem; min-height: 44px; padding: .6rem; color: var(--workspace-ink); background: white; max-width: 100%; }
+.dashboard-filters p { width: 100%; font-size: .75rem; color: var(--workspace-muted); }
+.welcome-strip { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font-size: .8rem; color: var(--workspace-muted); }
+.welcome-strip h2 { font-weight: 600; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(175px,1fr)); gap: 1rem; }
+.kpi-card { border: 1px solid var(--workspace-border); border-top: 3px solid #007c70; border-radius: 1rem; padding: 1.2rem; background: white; }
+.kpi-card h3 { font-size: .85rem; color: var(--workspace-muted); line-height: 1.5; }
+.kpi-card p { font-weight: 700; font-size: 2.25rem; margin-top: .5rem; }
+.dashboard-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.25rem; }
+.empty-state { padding: 1.5rem 1rem; border: 1px dashed #bfced7; background: #f8fafc; color: #4c6175; border-radius: .75rem; font-size: .875rem; line-height: 1.75; }
+.status-badge { display: inline-flex; border-radius: 999px; padding: .25rem .6rem; background: #e9f2f3; color: #294d59; font-size: .75rem; line-height: 1.5; }
+.distribution-list { display: grid; gap: .8rem; }.distribution-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.currency-card + .currency-card { border-top: 1px solid var(--workspace-border); margin-top: 1rem; padding-top: 1rem; }
+.currency-card h3 { font-weight: 700; margin-bottom: .6rem; }
+.currency-card dl, .summary-numbers { display: grid; gap: .6rem; margin-block: 1rem; }
+.currency-card dl>div, .summary-numbers>div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; font-size: .875rem; }
+.currency-card dt, .summary-numbers dt { color: var(--workspace-muted); }.currency-card dd, .summary-numbers dd { font-weight: 700; }
+.responsive-table { max-width: 100%; overflow-x: auto; margin-top: 1rem; border: 1px solid var(--workspace-border); border-radius: .75rem; }
+.responsive-table table { width: 100%; text-align: start; font-size: .8rem; border-collapse: collapse; }
+.responsive-table th, .responsive-table td { padding: .85rem; text-align: start; border-bottom: 1px solid #e9eef3; overflow-wrap: anywhere; }
+.responsive-table th { background: #f4f7f9; color: #4c6175; }.responsive-table a { color: #006158; text-decoration: underline; }
+.pagination-controls { margin-top: 1rem; }
+.activity-chart { height: 160px; display: flex; align-items: end; gap: 2px; border-bottom: 1px solid #bcced3; margin-block: 1rem; direction: ltr; }
+.chart-column { flex: 1; height: 100%; display: flex; align-items: end; min-width: 0; }.chart-column span { width: 100%; background: #008577; border-radius: 3px 3px 0 0; }
+/* Existing operational tables retain their business controls in a keyboard-scrollable region. */
+main table { text-align: start; }main th { font-weight: 600; }main td { overflow-wrap: anywhere; }
+@media(max-width:639px){
+ .dashboard-columns { grid-template-columns: minmax(0,1fr); }.dashboard-main { padding: 1.5rem .9rem 3rem; gap: 1rem; }.workspace-panel { padding: 1rem; }
+ .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; }.kpi-card { padding: 1rem; }.kpi-card p { font-size: 1.8rem; }
+ .dashboard-filters label { flex: 1 1 100%; }.dashboard-filters input,.dashboard-filters select { width: 100%; min-width: 0; }
+ .responsive-table table,.responsive-table tbody,.responsive-table tr,.responsive-table td { display: block; width: 100%; }.responsive-table thead { display: none; }
+ .responsive-table tr { padding: .6rem; }.responsive-table td { padding: .45rem; border: 0; }.responsive-table td::before { content:attr(data-label); display: block; color: #4c6175; margin-bottom: .2rem; }
+ .responsive-table tr + tr { border-top: 1px solid var(--workspace-border); }
+}
+
+.distribution-list meter { flex: 1; max-width: 55%; min-width: 2rem; height: 1rem; accent-color: #008577; }

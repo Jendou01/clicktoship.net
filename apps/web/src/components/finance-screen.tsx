@@ -1,4 +1,5 @@
 "use client";
+import { PageHeader } from "@/components/ui/workspace";
 
 import { useEffect, useState, type FormEvent } from "react";
 import { requestKey } from "@/lib/request-key";
@@ -58,7 +59,7 @@ export function FinanceScreen({ locale, screen }: { locale: Locale; screen: Fina
   const money = (value: string) => formatMinor(value, wallet?.currency || "SAR", wallet?.exponent ?? 2);
   return <main dir={locale === "ar" ? "rtl" : "ltr"} className="mx-auto max-w-6xl space-y-6 p-6 text-slate-900">
 
-    <h1 className="text-3xl font-bold">{admin ? t.admin : t.wallet}</h1><p>{t.fundingOff}</p>{admin && <p>{t.accounting}</p>}
+    <PageHeader title={admin ? t.admin : t.wallet}/><p>{t.fundingOff}</p>{admin && <p>{t.accounting}</p>}
     {!loaded && <p>{t.loading}</p>}{message && <p role="status">{message}</p>}
     {admin && <><label htmlFor="finance-grant">{t.grant}</label><select id="finance-grant" className={input} value={grantId} onChange={(e) => { const id = e.target.value; const g = grants.find((v) => v.id === id); setGrantId(id); setWallets([]); setTransactions([]); setHolds([]); setCorrections([]); setRuns([]); setHold(null); if (g) void perform(() => loadWallets(`/admin/merchants/${g.merchant_id}`, `access_grant=${id}`)); }}><option value="">{t.choose}</option>{grants.map((g) => <option key={g.id} value={g.id}>{g.merchant_id} · {g.id}</option>)}</select>{!grant && <p>{t.noGrant}</p>}</>}
     {!admin && loaded && !wallets.length && <button className={button} disabled={busy} onClick={() => void perform(async () => { await api("/wallets", "POST", { currency: "SAR" }); await loadWallets(); })}>{t.open}</button>}
