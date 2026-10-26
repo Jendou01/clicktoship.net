@@ -43,10 +43,13 @@ final class IdentityService
 
     public function login(Request $request, array $data): User
     {
-        return DB::transaction(function () use ($data, $request): User {
+        // Warm/read before identity lookup so a cold cache adds the same work to either path.
+        $dummy = app(DummyPassword::class)->hash();
+
+        return DB::transaction(function () use ($data, $request, $dummy): User {
             $user = User::whereRaw('lower(email) = ?', [strtolower($data['email'])])->lockForUpdate()->first();
             // Always execute a password check, including an unknown identity.
-            $hash = $user?->password ?? Hash::make(Str::random(40));
+            $hash = $user?->password ?? $dummy;
             if (! Hash::check($data['password'], $hash) || ! $user) {
                 throw ValidationException::withMessages(['email' => ['The credentials are invalid.']]);
             }

@@ -22,21 +22,36 @@ use App\Modules\Tracking\Domain\TrackingProviderAdapter;
 use App\Modules\Tracking\Infrastructure\DisabledTrackingAdapter;
 use App\Modules\WalletBilling\Domain\PaymentProvider;
 use App\Modules\WalletBilling\Infrastructure\DisabledPaymentProvider;
+use App\Support\Security\SafeFailedJobs;
+use App\Support\Security\SafeHorizonJobs;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Failed\DatabaseUuidFailedJobProvider;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Horizon\Contracts\JobRepository;
+use Laravel\Horizon\Repositories\RedisJobRepository;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->extend('queue.failer', function ($provider, $app) {
+            return $provider instanceof DatabaseUuidFailedJobProvider
+                ? new SafeFailedJobs($app['db'], config('queue.failed.database'), config('queue.failed.table'))
+                : $provider;
+        });
+        $this->app->extend(JobRepository::class, function ($repository, $app) {
+            return $repository instanceof RedisJobRepository
+                ? $app->make(SafeHorizonJobs::class)
+                : $repository;
+        });
         $this->app->bind(StoreProvider::class, DisabledSallaProvider::class);
         $this->app->bind(ShopyzeeProvider::class, DisabledShopyzeeProvider::class);
         $this->app->bind(TrackingProviderAdapter::class, DisabledTrackingAdapter::class);

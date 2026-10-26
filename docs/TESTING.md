@@ -100,3 +100,18 @@ OpenAPI must pass 3.1 validation, unique operation IDs/local reference resolutio
 
 
 For repeated complete verification, use the documented `./scripts/prepare-browser-tests.sh --rebuild` when the disposable database has accumulated many earlier synthetic merchants. Directory traversal tests should not inherit unbounded history across previous runs. This command is explicitly guarded to the disposable E2E database; never reset normal development/production data or increase test timeouts to hide fixture growth.
+
+
+## Phase 16 bounded QA workflows
+
+Baseline and final complete tests remain separate from opt-in benchmarks. `php artisan test --compact tests/Performance` runs four guarded real PostgreSQL/Redis benchmark tests; do not run this concurrently with the complete backend suite because both intentionally use the same disposable `clicktoship_test`. Source workloads include 1,000-row CSV/XLSX and exact bcrypt-12 authentication. Benchmark SQL logging is test-only and outputs counts/timing, not bindings or data. Normal storage/gateway/provider gates remain closed.
+
+`SecurityHardeningTest` verifies real sink redaction, API/CSRF no-store, exact hosts and read-only configuration checks. `ShipmentDirectoryPerformanceTest` proves constant queries and exact tenant/revision summaries. AnalyticsRaceTest now kills an independent export process at a real PostgreSQL barrier and verifies one recovered result/current context; QaQueueMetricsTest measures an actual encrypted Redis job in another worker process. Existing financial/tenant/shipment/bulk/tracking/customs/Commerce race and crash tests remain enabled.
+
+Use the loopback-only load runner and guarded E2E fixture described in [LOAD_TEST_PLAN](performance/LOAD_TEST_PLAN.md). The [restore rehearsal](operations/BACKUP_RESTORE.md) rejects normal source environments and creates its own private network/cluster; it never restores into normal PostgreSQL. Keep credential/dump files private and outside Git. Stop only disposable E2E writers for consistent backup, then restore normal development with scripts/start.sh. Do not weaken throttles, extend test deadlines, insert sleeps, flush normal Redis or reset normal data.
+
+Run the first-party artifact/secret-pattern scanner and nine Python regression tests. Validate dependency locks/audits, declared license inventory, OpenAPI and build route reproducibility. Full Playwright covers existing business journeys; 120-view bilingual keyboard/DOM/responsive inspection supplements it but does not certify WCAG or assistive-technology compatibility. Production-like soak, image scanning/provenance and live-provider sandbox verification are explicitly unexecuted launch prerequisites.
+
+QueueDiagnosticPrivacyTest fails a real encrypted Redis job in another process and verifies both UUID database failure and Horizon metadata contain no private diagnostic/trace; the original encrypted retry payload is byte-identical and decryptable, UUID/forget behavior retained, and console output sanitized. Only diagnostic persistence is wrapped; job exception handling, retries and immutable business evidence are unchanged. Alternate failure providers need separate review and cannot pass non-development preflight.
+
+AuthenticationWorkTest uses a unique dummy-cache configuration key and verifies cold/warm negative attempts share one digest rather than a cache per email, and even a matching dummy password cannot create a user/session. The opt-in benchmark separately measures known valid, known invalid and unknown bcrypt12 cases with expected statuses and unchanged throttles. No sleeps/timebox or known-user-result cache is introduced.

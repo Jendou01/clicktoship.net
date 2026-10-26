@@ -39,3 +39,5 @@ describe("shipment workflow safety", () => {
   expect(phone).toHaveAttribute("aria-invalid", "true"); await waitFor(() => expect(phone).toHaveFocus());
   expect(screen.getByRole("alert")).toHaveTextContent(locale === "en" ? "Configured service" : "الخدمة المهيأة");
  });
+
+it('preserves every accepted quote digit without floating point conversion',async()=>{const shipment={id:'precision-fixture',state:'draft',financial_state:'none',document_state:'not_requested',version:1,revision:1};mocked.mockImplementation(async path=>path==='/shipments/precision-fixture'?{shipment,draft:{packages:[{}],items:[]},quote:{id:'quote',total_minor:'100000000000000001',currency:'SAR',expires_at:'2026-12-01T00:00:00Z'},validation:{valid:false,missing:[]}}:path.includes('/events')?{events:[]}:{shipments:[shipment],page:1,last_page:1});render(<ShippingScreen locale="en" screen="shipment-details"/>);fireEvent.click(await screen.findByRole('button',{name:'Open'}));expect(await screen.findByText('1,000,000,000,000,000.01 SAR',{exact:true})).toBeVisible();});

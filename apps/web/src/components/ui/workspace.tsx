@@ -5,4 +5,4 @@ export function KpiCard({label,value,href}:{label:string;value:string|number;hre
 export function EmptyState({children}:{children:ReactNode}){return <p className="empty-state">{children}</p>;}
 export function StatusBadge({children}:{children:ReactNode}){return <span className="status-badge">{children}</span>;}
 export function Notice({children}:{children:ReactNode}){return <aside role="note" className="workspace-notice">{children}</aside>;}
-export function DataTable({label,children}:{label:string;children:ReactNode}){return <div className="responsive-table" role="region" aria-label={label} tabIndex={0}><table>{children}</table></div>;}
+export function DataTable({label,children}:{label:string;children:ReactNode}){return <div className="responsive-table" role="region" aria-label={label} tabIndex={0}><table aria-label={label}>{children}</table></div>;}

@@ -38,10 +38,29 @@ final class Shipments
     /** Minimal merchant-authorized directory context; no addresses, phone or carrier credentials. */
     public function summary(string $merchant, object $shipment): array
     {
-        $payload = DB::table('shipment_revisions')->where('merchant_id', $merchant)->where('shipment_id', $shipment->id)->where('revision', $shipment->revision)->value('payload');
-        $draft = json_decode(Crypt::decryptString($payload), true, flags: JSON_THROW_ON_ERROR);
+        return $this->summaries($merchant, [$shipment])[$shipment->id];
+    }
 
-        return ['description' => $draft['description'], 'recipient' => $draft['destination']['name'] ?? null];
+    /** One bounded query for the page's exact immutable tenant/revision pairs. */
+    public function summaries(string $merchant, array $shipments): array
+    {
+        abort_if(count($shipments) > 25, 422);
+        if (! $shipments) {
+            return [];
+        }
+        $rows = DB::table('shipment_revisions')->where('merchant_id', $merchant)->where(function ($q) use ($shipments) {
+            foreach ($shipments as $s) {
+                $q->orWhere(fn ($pair) => $pair->where('shipment_id', $s->id)->where('revision', $s->revision));
+            }
+        })->get(['shipment_id', 'payload']);
+        $out = [];
+        foreach ($rows as $row) {
+            $draft = json_decode(Crypt::decryptString($row->payload), true, flags: JSON_THROW_ON_ERROR);
+            $out[$row->shipment_id] = ['description' => $draft['description'], 'recipient' => $draft['destination']['name'] ?? null];
+        }
+        abort_unless(count($out) === count($shipments), 409);
+
+        return $out;
     }
 
     public function event(string $merchant, string $shipment, string $kind, ?string $actor = null, array $metadata = []): void
