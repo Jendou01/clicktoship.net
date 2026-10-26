@@ -14,6 +14,7 @@ use App\Modules\Tracking\Application\TrackingHealthMonitor;
 use App\Modules\Tracking\Application\TrackingPollScheduler;
 use App\Modules\WalletBilling\Application\Reconciliation;
 use App\Support\SchemaIntegrity;
+use App\Support\Security\ConfigurationAudit;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -126,3 +127,11 @@ Artisan::command('analytics:recover', function (): void {
     $this->info((string) app(Exports::class)->recover());
 })->purpose('Recover bounded report exports and remove expired reporting-owned encrypted artifacts');
 Schedule::command('analytics:recover')->everyMinute()->withoutOverlapping();
+
+Artisan::command('security:check-config', function (): int {
+    $checks = app(ConfigurationAudit::class)->checks();
+    $ok = ! array_filter($checks, fn ($c) => ! $c['ok']);
+    $this->line(json_encode(['ok' => $ok, 'checks' => $checks, 'scope' => 'configuration_preflight_not_deployment_or_activation_approval']));
+
+    return $ok ? 0 : 1;
+})->purpose('Read-only non-development configuration preflight; never prints configuration secrets');

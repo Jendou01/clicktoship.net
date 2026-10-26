@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: ClickToShip API — Phases 1–15
-  version: 0.15.0
+  title: ClickToShip API — Phases 1–16
+  version: 0.16.0
   description: Implemented identity, strict merchant tenancy, profiles/addresses, manual business verification, invitations,
     MFA, approved session-bound administration, private bounded bulk import preparation and gated shipment management. Live shipping and real charges remain disabled.
 paths:

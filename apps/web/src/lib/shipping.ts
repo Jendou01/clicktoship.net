@@ -1,3 +1,4 @@
+import {formatMinor} from '@/lib/finance';
 export const shippingScreens = ["shipments", "shipment-create", "shipment-details", "pickups", "shipment-documents", "admin-shipping"] as const;
 export type ShippingView = typeof shippingScreens[number];
 export type Party = { country: string; city: string; name?: string; phone?: string; email?: string; line1?: string; postal?: string; state?: string };
@@ -15,3 +16,6 @@ export const shippingCopy = {
  }
 } as const;
 export const eventCopy: Record<string, [string, string]> = { document_quarantined: ["Document quarantined", "وضعت الوثيقة في الحجر"], draft_saved: ["Draft saved", "تم حفظ المسودة"], validated: ["Draft validated", "تم التحقق من المسودة"], quote_accepted: ["Quote accepted", "تم اعتماد الاقتباس"], cancelled: ["Cancelled before submission", "ألغيت قبل الإرسال"], reserved: ["Funds reserved", "تم حجز الرصيد"], dispatch_started: ["Dispatch started", "بدأ الإرسال"], carrier_accepted: ["Carrier accepted", "قبل الناقل الشحنة"], carrier_rejected: ["Carrier rejected", "رفض الناقل الشحنة"], carrier_unknown: ["Unknown carrier outcome", "نتيجة الناقل مجهولة"], captured: ["Funds captured", "تم تحصيل الرصيد"], released: ["Funds released", "تم تحرير الرصيد"], reconciliation_requested: ["Reconciliation requested", "طلبت تسوية"], reconciliation_approved: ["Reconciliation approved", "اعتمدت التسوية"], supplementary_evidence: ["Supplementary evidence retained", "حفظ دليل إضافي"], blocked_before_dispatch: ["Blocked before dispatch", "حظر قبل الإرسال"], document_validated: ["Document validated", "تم التحقق من الوثيقة"], document_failed: ["Document validation failed", "فشل التحقق من الوثيقة"], document_revoked: ["Document access revoked", "ألغيت صلاحية الوثيقة"] };
+
+// The current quote contract enables SAR only; never infer another currency precision.
+export function shipmentQuoteTotal(quote:{total_minor:string;currency:string}){return quote.currency==='SAR'?formatMinor(quote.total_minor,quote.currency,2):'—';}

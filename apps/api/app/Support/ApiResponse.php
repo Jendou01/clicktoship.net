@@ -22,7 +22,7 @@ final class ApiResponse
             'data' => $data,
             'meta' => ['request_id' => self::requestId()],
             'error' => null,
-        ], $status)->header('X-Request-ID', self::requestId());
+        ], $status)->header('X-Request-ID', self::requestId())->header('Cache-Control', 'private, no-store');
     }
 
     public static function error(string $code, string $message, int $status, array $details = []): JsonResponse
@@ -31,6 +31,6 @@ final class ApiResponse
             'data' => null,
             'meta' => ['request_id' => self::requestId()],
             'error' => ['code' => $code, 'message' => $message, 'details' => (object) $details],
-        ], $status)->header('X-Request-ID', self::requestId());
+        ], $status)->header('X-Request-ID', self::requestId())->header('Cache-Control', 'private, no-store');
     }
 }

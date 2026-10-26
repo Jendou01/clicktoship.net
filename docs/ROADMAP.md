@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–14 are merged; Phase 15 analytics is implemented on its review branch with all external and financial activation gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–15 are merged; Phase 16 security/performance QA is implemented on its review branch with all external and financial activation gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -183,17 +183,15 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Acceptance: Existing history preserved; no cross-tenant disclosure, currency mixing, live actions, unsafe exports or fabricated carrier evidence. PostgreSQL/Redis regression, concurrency, migration, browser and visual verification recorded in [Phase 15 report](PHASE_15_REPORT.md).
 * Completion: Implemented on `feat/phase-15-analytics-reporting` for review; not automatically merged or deployed. No Phase 16 work.
 
-## Phase 16 — Security, performance and QA
+## Phase 16 — Security, performance, resilience and final QA
 
-* Scope: Security, performance and QA.
-* Dependencies: All relevant modules.
-* Implementation tasks: Threat-model review, scans, concurrency/load/soak, retention, accessibility, monitoring and recovery drills.
-* Database changes: Indexes/retention policies only after measurements.
-* API changes: Rate limit/abuse/error review.
-* Frontend changes: RTL/accessibility/UAT fixes.
-* Automated tests: 1k-row imports, webhook bursts, carrier outage, restore, finance invariants.
-* Acceptance criteria: No critical unresolved defects; measured load/recovery and signoff.
-* Completion report: Planned.
+* Scope: source/risk inventory and threat model, reproducible security/performance fixes, bounded synthetic load/recovery and separate deployment capability verdicts.
+* Dependencies: all existing authoritative Phase0–15 modules; no new business schema or external activation.
+* Implemented: diagnostic/cache/host/configuration/CI hardening, exact quote presentation, named tables and bounded exact-revision shipment summaries; preserved tenant/financial/evidence gates.
+* Evidence: full regressions, real PG/Redis/worker races, private cluster restore/dependency faults, source-backed performance, bilingual keyboard/responsive/browser checks and dependency/lock/build/OpenAPI/installation scans. Exact executed results/limits in [report](PHASE_16_REPORT.md).
+* Artifacts: [threat model](security/THREAT_MODEL.md), [risk inventory](security/SECURITY_AUDIT.md), [baseline](performance/BASELINE.md), [load workflow](performance/LOAD_TEST_PLAN.md), [restore](operations/BACKUP_RESTORE.md), [readiness](operations/STAGING_READINESS.md), [launch blockers](operations/LAUNCH_BLOCKERS.md).
+* Acceptance: no normal data reset, duplicate financial/shipment effects, unsafe artifact publication, fake production claims or live provider/money/customer notification activation. Local readiness is conditional; staging/production/external capabilities remain explicitly blocked by evidence/operational approvals.
+* Delivery: feature branch `feat/phase-16-security-performance-qa`, review only. No automatic merge, deployment or Phase17.
 
 ## Phase 17 — Production deployment preparation
 

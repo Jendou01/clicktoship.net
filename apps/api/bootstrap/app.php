@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RequestId;
+use App\Http\Middleware\TrustedApplicationHost;
 use App\Modules\Identity\Http\ActiveIdentity;
 use App\Modules\Identity\Http\RequireSession;
 use App\Modules\Identity\Http\RequireVerifiedEmail;
@@ -20,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend([RequestId::class, ClearMerchantContext::class]);
+        $middleware->prepend([RequestId::class, TrustedApplicationHost::class, ClearMerchantContext::class]);
         $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: ['api/v1/tracking/webhooks/*']);
         $middleware->redirectGuestsTo(fn (Request $request) => null);

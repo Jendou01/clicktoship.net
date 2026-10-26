@@ -27,7 +27,7 @@ jobs:
           --health-cmd "redis-cli ping"
           --health-interval 5s --health-timeout 3s --health-retries 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified tag
       - name: Build PHP runtime
         run: docker build -f infrastructure/docker/api.Dockerfile -t clicktoship-api:ci .
       - name: Install, validate, lint and test on PostgreSQL and Redis
@@ -52,19 +52,20 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified tag
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4, verified tag
         with:
           node-version: '24'
           cache: npm
       - run: python3 -m unittest discover -s scripts/tests -v
+      - run: python3 scripts/qa/audit_repository.py
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified tag
         if: failure()
         with:
           name: playwright-results
@@ -79,8 +80,8 @@ jobs:
       E2E_BASE_URL: http://127.0.0.1:8080
       MAILPIT_URL: http://127.0.0.1:8025
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified tag
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4, verified tag
         with:
           node-version: '24'
           cache: npm
@@ -91,7 +92,7 @@ jobs:
           ./scripts/prepare-browser-tests.sh
       - run: npx --workspace=@clicktoship/web playwright install --with-deps chromium
       - run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, verified tag
         if: failure()
         with:
           name: full-stack-browser-results
