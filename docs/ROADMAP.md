@@ -1,6 +1,6 @@
 # Development roadmap
 
-Phases 0–15 are merged; Phase 16 security/performance QA is implemented on its review branch with all external and financial activation gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
+Phases 0–16 are merged; Phase 17 deployment-readiness work is on its review branch with all external and financial activation gates closed. Live money and shipping remain separately gated. Blueprint sprint labels are delivery estimates; the user's explicit Phase 0–17 sequence is canonical. Salla precedes Shopyzee as requested. No production readiness is implied by scaffolding.
 
 Each phase becomes bounded issues/PRs with testable acceptance criteria, feature flags where needed and an updated completion report. Required external documents/contract decisions block the corresponding capability, not independent work. Migration entries below are intended changes, not already installed domain tables.
 
@@ -193,21 +193,19 @@ Each phase becomes bounded issues/PRs with testable acceptance criteria, feature
 * Acceptance: no normal data reset, duplicate financial/shipment effects, unsafe artifact publication, fake production claims or live provider/money/customer notification activation. Local readiness is conditional; staging/production/external capabilities remain explicitly blocked by evidence/operational approvals.
 * Delivery: feature branch `feat/phase-16-security-performance-qa`, review only. No automatic merge, deployment or Phase17.
 
-## Phase 17 — Production deployment preparation
+## Phase 17 — VPS deployment readiness and protected staging preparation
 
-* Scope: Production deployment preparation.
-* Dependencies: Contract/legal/security/finance approval; Phase 16.
-* Implementation tasks: Staging runbooks, TLS/secret management, separate runtime DB role, backups/PITR, metrics/alerts, rollback, pilot plan.
-* Database changes: Migration/backfill and backup/restore rehearsal.
-* API changes: Production origin/cookie/proxy/ingress configuration.
-* Frontend changes: Environment validation and maintenance states.
-* Automated tests: Staging smoke, recovery/rollback/UAT; no automated production shipment creates.
-* Acceptance criteria: Approved controlled pilot only; publication/deployment requires explicit action.
-* Completion report: Planned; not deployed.
+* Scope: verified release packaging, separate protected staging templates, runtime role/secret/proxy/queue hardening, local isolated simulation and host/release/backup/rollback/interactive acceptance runbooks.
+* Dependencies: Phase16 merge `a211ca10e9f33313a73e48acece01b8d43523931`; actual remote hosting requires separately authorized exact host and applicable gates.
+* Artifacts: [architecture](deployment/ARCHITECTURE.md), [VPS estimates](deployment/VPS_REQUIREMENTS.md), [setup](deployment/STAGING_SETUP.md), [preflight](deployment/SECURITY_PREFLIGHT.md), release/rollback/backup/monitoring and launch checklists.
+* Database: no domain migration; explicit post-migration reviewed runtime grants and separate maintenance identity; no retained-data reset or destructive rollback.
+* Runtime: pinned multi-stage PHP-FPM/standalone Next/gateway builds, restricted loopback HTTPS, private DB/authenticated Redis, separate reserved critical/background workers and singleton scheduler.
+* Acceptance: reproducible local rehearsal and complete regressions, truthful distinction between artifacts/local evidence and actual VPS/CI/backup/storage/provider approval. No real carrier/payment/Commerce/customs/exports activation or external notifications.
+* Delivery: `feat/phase-17-deployment-readiness`, PR review only. No automatic merge, host access, DNS or deployment. See [Phase17 report](PHASE_17_REPORT.md) for executed evidence and eleven capability verdicts.
 
 ## Immediate next increment
 
-Review the Phase 14 gated Shopyzee foundation and separate connector design. Resolve accessible plugin documentation, actual deployed source/version, tenant/order/authentication contracts and isolated compatibility testing before external activation. Salla, carrier, financial, notification and customs gates remain closed. No automatic merge or deployment. Phase 15 analytics preserves these evidence gates.
+Review Phase17 release artifacts/local rehearsal and resolve actual hosting authorization, independent review, offsite backup/key custody, private mail/storage/scanning/retention and monitoring ownership before any remote staging. Salla/Shopyzee/carrier/financial/notification/customs/export gates remain closed. No deployment or Phase18 is authorized.
 
 ## Phase 14 implementation status
 

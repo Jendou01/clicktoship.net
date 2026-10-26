@@ -1,0 +1,57 @@
+name: Manually approved release packaging (no deployment)
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_sha:
+        description: Exact reviewed 40-character main commit SHA
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release-readiness
+  cancel-in-progress: false
+jobs:
+  package:
+    # Repository owner must configure required reviewers on this environment.
+    environment: staging-readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Verify reviewed main SHA and hosted CI success
+        env:
+          REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ "$REVIEWED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git fetch origin main
+          git merge-base --is-ancestor "$REVIEWED_SHA" origin/main
+          gh api "repos/$GH_REPO/actions/runs?head_sha=$REVIEWED_SHA&event=push" > /tmp/runs.json
+          jq -e 'any(.workflow_runs[]; .name == "Foundation CI" and .status == "completed" and .conclusion == "success")' /tmp/runs.json
+          git checkout --detach "$REVIEWED_SHA"
+          python3 scripts/qa/audit_repository.py
+      - name: Build reviewed immutable artifacts
+        env:
+          REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+        run: |
+          set -euo pipefail
+          for service in api web gateway; do
+            docker build --build-arg RELEASE_SHA="$REVIEWED_SHA" -f "infrastructure/deployment/$service.Dockerfile" -t "clicktoship-$service:$REVIEWED_SHA" .
+          done
+          mkdir release
+          docker save "clicktoship-api:$REVIEWED_SHA" "clicktoship-web:$REVIEWED_SHA" "clicktoship-gateway:$REVIEWED_SHA" | gzip > release/images.tar.gz
+          sha256sum release/images.tar.gz > release/SHA256SUMS
+          git rev-parse HEAD > release/REVIEWED_SHA
+          docker image inspect "clicktoship-api:$REVIEWED_SHA" "clicktoship-web:$REVIEWED_SHA" "clicktoship-gateway:$REVIEWED_SHA" --format '{{.Id}}' > release/IMAGE_IDS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: reviewed-release-images
+          path: release/
+          retention-days: 7
+# Deliberately no SSH, DNS, registry credentials, remote scripts or deploy job.
+# Packaging does not pass host/backup/security preflight or authorize deployment.

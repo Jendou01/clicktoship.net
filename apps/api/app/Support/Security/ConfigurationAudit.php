@@ -17,6 +17,7 @@ final class ConfigurationAudit
             'DEBUG_DISABLED' => config('app.debug') === false,
             'HTTPS_APPLICATION_ORIGIN' => ($url['scheme'] ?? '') === 'https' && ! isset($url['user']) && ! isset($url['pass']) && ! in_array($url['host'] ?? '', ['localhost', '127.0.0.1'], true),
             'EXACT_ALLOWED_HOSTS' => $hosts && count(array_filter($hosts, fn ($h) => (bool) preg_match('/^(?:[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?)$/Di', $h))) === count($hosts) && in_array(strtolower($url['host'] ?? ''), array_map('strtolower', $hosts), true),
+            'EXACT_TRUSTED_PROXY_ADDRESSES' => ($proxies = config('security.trusted_proxies', [])) && count(array_filter($proxies, fn ($p) => filter_var($p, FILTER_VALIDATE_IP) !== false)) === count($proxies),
             'SECURE_HTTPONLY_COOKIES' => config('session.secure') === true && config('session.http_only') === true,
             'SAME_SITE_AND_HOST_ONLY_COOKIE' => in_array(config('session.same_site'), ['lax', 'strict'], true) && ! config('session.domain'),
             'REDIS_ENCRYPTED_SESSIONS' => config('session.driver') === 'redis' && config('session.encrypt') === true,

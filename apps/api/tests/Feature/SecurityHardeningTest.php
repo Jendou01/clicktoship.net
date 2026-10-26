@@ -86,7 +86,7 @@ final class SecurityHardeningTest extends TestCase
         $env = app()->environment();
         try {
             app()->instance('env', 'staging');
-            config(['app.debug' => false, 'app.url' => 'https://preview.example.test', 'security.allowed_hosts' => ['preview.example.test'], 'session.secure' => true, 'session.http_only' => true, 'session.same_site' => 'lax', 'session.domain' => null, 'session.driver' => 'redis', 'session.encrypt' => true, 'sanctum.stateful' => ['preview.example.test'], 'mail.default' => 'smtp', 'bulk.structural_only' => false, 'analytics.test_artifacts_enabled' => false]);
+            config(['app.debug' => false, 'app.url' => 'https://preview.example.test', 'security.allowed_hosts' => ['preview.example.test'], 'security.trusted_proxies' => ['172.30.71.10'], 'session.secure' => true, 'session.http_only' => true, 'session.same_site' => 'lax', 'session.domain' => null, 'session.driver' => 'redis', 'session.encrypt' => true, 'sanctum.stateful' => ['preview.example.test'], 'mail.default' => 'smtp', 'bulk.structural_only' => false, 'analytics.test_artifacts_enabled' => false]);
             DB::shouldReceive('selectOne')->once()->andReturn((object) ['rolsuper' => false, 'rolcreatedb' => false, 'rolcreaterole' => false, 'rolbypassrls' => false]);
             $this->assertSame([], array_values(array_filter(app(ConfigurationAudit::class)->checks(), fn ($c) => ! $c['ok'])));
             $this->assertFalse(config('finance.corrections_enabled'));

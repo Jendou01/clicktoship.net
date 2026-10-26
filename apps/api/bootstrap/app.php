@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\RequestId;
 use App\Http\Middleware\TrustedApplicationHost;
+use App\Http\Middleware\TrustedApplicationProxy;
 use App\Modules\Identity\Http\ActiveIdentity;
 use App\Modules\Identity\Http\RequireSession;
 use App\Modules\Identity\Http\RequireVerifiedEmail;
@@ -11,6 +12,7 @@ use App\Support\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\ThrottleRequestsWithRedis;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend([RequestId::class, TrustedApplicationHost::class, ClearMerchantContext::class]);
+        $middleware->replace(TrustProxies::class, TrustedApplicationProxy::class);
         $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: ['api/v1/tracking/webhooks/*']);
         $middleware->redirectGuestsTo(fn (Request $request) => null);
