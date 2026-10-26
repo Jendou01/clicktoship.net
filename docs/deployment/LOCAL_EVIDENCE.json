@@ -1,0 +1,171 @@
+{
+  "scope": "disposable_loopback_simulation_not_remote_staging",
+  "project": "cts17-9bacbd370d",
+  "checks": {
+    "rendered_private_network_nonroot_readonly_limits": true,
+    "fresh_migrations_restricted_runtime": true,
+    "cached_configuration_preflight": true,
+    "tls_csrf_registration_unverified_account": true,
+    "tls_hostname_auth_gate_en_ar_private_routes": true,
+    "protected_tls_browser_en_ar_desktop_mobile": true,
+    "runtime_money_and_ddl_denied": true,
+    "zero_wallet_provisioning_without_amount_writes": true,
+    "graceful_restart_horizon_readiness": true,
+    "same_artifact_recreate_no_schema_downgrade": true,
+    "encrypted_object_manifest_restore": true,
+    "restored_finance_function_not_publicly_executable": true,
+    "restored_schema_key_preserved_wrong_key_rejected": true,
+    "authenticated_encrypted_backup_restore_24_migrations": true,
+    "backup_ciphertext_tampering_rejected": true
+  },
+  "offline_preflight": {
+    "ok": true,
+    "checks": [
+      {
+        "code": "EXACT_HOST",
+        "ok": true
+      },
+      {
+        "code": "PINNED_RELEASE_IMAGES",
+        "ok": true
+      },
+      {
+        "code": "SECRET_DIRECTORY_PRIVATE",
+        "ok": true
+      },
+      {
+        "code": "SECRET_APPLICATION_ENV",
+        "ok": true
+      },
+      {
+        "code": "SECRET_DATABASE_OWNER_PASSWORD",
+        "ok": true
+      },
+      {
+        "code": "SECRET_REDIS_CONF",
+        "ok": true
+      },
+      {
+        "code": "SECRET_TLS_CRT",
+        "ok": true
+      },
+      {
+        "code": "SECRET_TLS_KEY",
+        "ok": true
+      },
+      {
+        "code": "SECRET_GATEWAY_HTPASSWD",
+        "ok": true
+      },
+      {
+        "code": "SECRET_HOST_CONF",
+        "ok": true
+      },
+      {
+        "code": "EXACT_APPLICATION_SETTINGS",
+        "ok": true
+      },
+      {
+        "code": "EXACT_PRIVATE_PROXY_IP",
+        "ok": true
+      },
+      {
+        "code": "INDEPENDENT_SECRETS_PRESENT",
+        "ok": true
+      },
+      {
+        "code": "NO_EXTERNAL_MAIL_IN_SIMULATION",
+        "ok": true
+      }
+    ],
+    "scope": "offline_local_simulation_not_remote_deployment_approval"
+  },
+  "configuration": {
+    "ok": true,
+    "checks": [
+      {
+        "code": "NON_DEVELOPMENT_ENVIRONMENT",
+        "ok": true
+      },
+      {
+        "code": "DEBUG_DISABLED",
+        "ok": true
+      },
+      {
+        "code": "HTTPS_APPLICATION_ORIGIN",
+        "ok": true
+      },
+      {
+        "code": "EXACT_ALLOWED_HOSTS",
+        "ok": true
+      },
+      {
+        "code": "EXACT_TRUSTED_PROXY_ADDRESSES",
+        "ok": true
+      },
+      {
+        "code": "SECURE_HTTPONLY_COOKIES",
+        "ok": true
+      },
+      {
+        "code": "SAME_SITE_AND_HOST_ONLY_COOKIE",
+        "ok": true
+      },
+      {
+        "code": "REDIS_ENCRYPTED_SESSIONS",
+        "ok": true
+      },
+      {
+        "code": "EXACT_STATEFUL_ORIGIN",
+        "ok": true
+      },
+      {
+        "code": "PRIVATE_MAIL_TRANSPORT",
+        "ok": true
+      },
+      {
+        "code": "REVIEWED_FAILURE_STORAGE",
+        "ok": true
+      },
+      {
+        "code": "FINANCIAL_GATE_CLOSED",
+        "ok": true
+      },
+      {
+        "code": "EXPORT_GATE_CLOSED",
+        "ok": true
+      },
+      {
+        "code": "NON_STRUCTURAL_ONLY_SCANNING",
+        "ok": true
+      },
+      {
+        "code": "APPLICATION_ENCRYPTION_KEY_PRESENT",
+        "ok": true
+      },
+      {
+        "code": "RESTRICTED_DATABASE_LOGIN",
+        "ok": true
+      }
+    ],
+    "scope": "configuration_preflight_not_deployment_or_activation_approval"
+  },
+  "browser": {
+    "code": "PROTECTED_TLS_BROWSER_PASSED",
+    "views": 12,
+    "local_certificate_trusted": true,
+    "tls_verification_disabled": false
+  },
+  "restart_http_status_counts": {
+    "200": 1
+  },
+  "images": {
+    "api": "sha256:d4509eb252305bb85ff2c8c2dcffc1ab9d0c1aae4dd879a5f1798e7e85957876",
+    "web": "sha256:a5ca236bd93a31496b8b8c462da7be342d3d87f56abbcd6715283a706df1ffcb",
+    "gateway": "sha256:0c16fc019145d0cb0d968fed7ded11113ab7699a5d6982e3894f2a97ff2fe7cf"
+  },
+  "offsite_backup_verified": false,
+  "remote_deployment_authorized": false,
+  "source_base": "a211ca10e9f33313a73e48acece01b8d43523931",
+  "local_working_source_not_reviewed_release": true
+}

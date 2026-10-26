@@ -96,3 +96,7 @@ Verified V2 response/lookup/label/pickup contracts, account/service mapping and 
 ## Phase 16 launch acceptance
 
 Resolve B16-01–12 in security/SECURITY_AUDIT.md and operations/LAUNCH_BLOCKERS.md: actual restricted runtime roles, reviewed immutable release/ingress/proxy/secret/supervision/capacity configuration, private storage/scanning/residency/retention, qualified accounting/regulatory approval, current carrier/store/deployed-version sandbox contracts, managed PITR/key/object recovery and approved RPO/RTO, critical queue capacity, formal accessibility/on-call/monitoring and independent remote release checks. Default failure diagnostic privacy is fixed; alternate stores/retention need review. Review legacy hashing-cost migration/remote timing policy separately; no universal constant-time or production SLA certification is implied by configured-cost local samples. No real-world capability becomes enabled from passing local tests.
+
+## Phase 17 host acceptance pending
+
+Exact VPS/provider/region/domain, separate deployment authorization, named operator/on-call, protected CI environment/review/provenance, actual host firewall/TLS/patching/resource/DB-role validation, private SMTP/controlled egress, encrypted offsite retention/PITR and matching key escrow, approved storage/scanning/residency, formal accessibility and cross-version rollback remain required. See deployment/PRODUCTION_CHECKLIST.md. A protected local simulation cannot supply an owner-accessible external URL. No production or provider activation follows from a merged PR.

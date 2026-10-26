@@ -1,0 +1,185 @@
+# Standalone file, NEVER an overlay on the retained development project.
+name: ${CTS_PROJECT:?Supply a separate project name}
+x-runtime: &runtime
+  image: ${CTS_API_IMAGE:?Supply reviewed API image digest}
+  user: "10001:10001"
+  init: true
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  mem_limit: 768m
+  cpus: 1.0
+  stop_grace_period: 90s
+  volumes:
+    - private_data:/app/storage/app
+  tmpfs:
+    - /tmp:uid=10001,gid=10001,mode=0700,size=64m
+    - /app/storage/framework/cache:uid=10001,gid=10001,mode=0700,size=16m
+    - /app/storage/framework/sessions:uid=10001,gid=10001,mode=0700,size=16m
+    - /app/storage/framework/views:uid=10001,gid=10001,mode=0700,size=32m
+    - /app/storage/logs:uid=10001,gid=10001,mode=0700,size=16m
+    - /app/bootstrap/cache:uid=10001,gid=10001,mode=0700,size=16m
+  secrets:
+    - source: application_env
+      target: /app/.env
+  networks: [private]
+  logging: &logging
+    driver: json-file
+    options: {max-size: 10m, max-file: "3"}
+services:
+  postgres:
+    image: postgres:17-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27
+    restart: unless-stopped
+    shm_size: 256m
+    mem_limit: 1536m
+    cpus: 1.0
+    pids_limit: 128
+    security_opt: [no-new-privileges:true]
+    environment:
+      POSTGRES_DB: clicktoship_staging
+      POSTGRES_USER: cts_owner
+      POSTGRES_PASSWORD_FILE: /run/secrets/database_owner_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets: [database_owner_password]
+    volumes: [database_data:/var/lib/postgresql/data]
+    networks: [private]
+    logging: *logging
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U cts_owner -d clicktoship_staging]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-bookworm@sha256:44960b3100c48159a66d28c18b0588c193492e25f7551d60e51dd464fc3eca5b
+    user: "999:999"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 64
+    command: [redis-server, /run/secrets/redis_configuration]
+    secrets: [redis_configuration]
+    volumes: [redis_data:/data]
+    tmpfs: ["/tmp:uid=999,gid=999,mode=0700,size=16m"]
+    networks: [private]
+    logging: *logging
+    healthcheck:
+      # Authentication is checked by application readiness, never put passwords in argv.
+      test: [CMD-SHELL, "redis-cli ping 2>&1 | grep -q NOAUTH"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    <<: *runtime
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, php, artisan, schema:verify]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  migrate:
+    <<: *runtime
+    profiles: [maintenance]
+    restart: "no"
+    command: [php, artisan, migrate, --force, --no-interaction]
+    secrets:
+      - source: migration_env
+        target: /app/.env
+  critical:
+    <<: *runtime
+    command: [php, artisan, horizon]
+    environment: {HORIZON_ROLE: critical}
+    depends_on: {api: {condition: service_healthy}}
+    healthcheck:
+      test: [CMD, php, artisan, horizon:status]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  background:
+    <<: *runtime
+    command: [php, artisan, horizon]
+    environment: {HORIZON_ROLE: background}
+    depends_on: {api: {condition: service_healthy}}
+    healthcheck:
+      test: [CMD, php, artisan, horizon:status]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  scheduler:
+    <<: *runtime
+    command: [php, artisan, schedule:work]
+    depends_on: {api: {condition: service_healthy}}
+    # Exactly one replica per environment. No automatic scale-out.
+  web:
+    image: ${CTS_WEB_IMAGE:?Supply reviewed web image digest}
+    user: "10001:10001"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 128
+    tmpfs: ["/tmp:uid=10001,gid=10001,mode=0700,size=64m"]
+    networks: [private]
+    logging: *logging
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/en').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  gateway:
+    image: ${CTS_GATEWAY_IMAGE:?Supply reviewed gateway image digest}
+    user: "10001:10001"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    tmpfs: ["/tmp:uid=10001,gid=10001,mode=0700,size=64m"]
+    ports: ["127.0.0.1:${CTS_HTTPS_PORT:-18443}:8443"]
+    secrets: [tls_certificate, tls_key, gateway_passwords, host_rule]
+    networks:
+      ingress:
+        gw_priority: 1
+      private:
+        ipv4_address: ${CTS_PROXY_IP:-172.30.71.10}
+    depends_on:
+      api: {condition: service_healthy}
+      web: {condition: service_healthy}
+    logging: *logging
+    healthcheck:
+      test: [CMD, nginx, -t]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  ingress: {}
+  private:
+    internal: true
+    ipam:
+      config: [{subnet: "${CTS_SUBNET:-172.30.71.0/24}"}]
+volumes:
+  database_data:
+  redis_data:
+  private_data:
+secrets:
+  migration_env: {file: "${CTS_SECRET_DIR}/migration.env"}
+  application_env: {file: "${CTS_SECRET_DIR:?Supply protected secrets directory}/application.env"}
+  database_owner_password: {file: "${CTS_SECRET_DIR}/database-owner-password"}
+  redis_configuration: {file: "${CTS_SECRET_DIR}/redis.conf"}
+  tls_certificate: {file: "${CTS_SECRET_DIR}/tls.crt"}
+  tls_key: {file: "${CTS_SECRET_DIR}/tls.key"}
+  gateway_passwords: {file: "${CTS_SECRET_DIR}/gateway.htpasswd"}
+  host_rule: {file: "${CTS_SECRET_DIR}/host.conf"}

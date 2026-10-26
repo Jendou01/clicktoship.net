@@ -1,0 +1,9 @@
+# Inactive server fragment. Exact host and external port80 mapping require separate approval.
+# Attach only to the approved gateway; never publish application/internal ports.
+server {
+    listen 8080 default_server;
+    server_name staging.example.test;
+    access_log off;
+    if ($host != staging.example.test) { return 444; }
+    return 308 https://staging.example.test$request_uri;
+}

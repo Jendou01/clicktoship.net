@@ -6,3 +6,11 @@
 **/.env.*
 attachments
 .git
+
+**/storage
+**/test-results
+**/playwright-report
+**/*.pem
+**/*.key
+**/*.sql.dump
+**/credentials*.json
