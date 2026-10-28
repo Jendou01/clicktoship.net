@@ -37,6 +37,9 @@ class DemoPolicyTest(unittest.TestCase):
         for name,service in c['services'].items():
             service['command']=commands.get(name)
             service['secrets']=[{'source':x} for x in secret_sources.get(name,['application_env'])]
+            mount={'postgres':('database_data','/var/lib/postgresql/data'),'redis':('redis_data','/data')}.get(name)
+            if name in {'api','migrate','critical','background','scheduler'}:mount=('private_data','/app/storage/app')
+            service['volumes']=[{'type':'volume','source':mount[0],'target':mount[1],'volume':{'nocopy':True}}] if mount else []
         c['services']['gateway'].update(networks={'private':{'ipv4_address':'172.30.73.10'},'ingress':{}},ports=[{'host_ip':'127.0.0.1','published':'18443','target':8443,'protocol':'tcp'}])
         c['services']['postgres']['healthcheck']={'test':['CMD-SHELL','pg_isready -h 127.0.0.1 -U cts_owner -d clicktoship_demo']}
         return c,images
@@ -44,6 +47,14 @@ class DemoPolicyTest(unittest.TestCase):
     def test_socket_only_bootstrap_server_cannot_satisfy_postgres_readiness(self):
         c,images=self.rendered()
         c['services']['postgres']['healthcheck']['test']=['CMD-SHELL','pg_isready -U cts_owner -d clicktoship_demo']
+        self.assertFalse(policy.validate_compose(c,c['name'],images))
+
+    def test_shared_volume_copy_up_and_foreign_service_mounts_are_rejected(self):
+        c,images=self.rendered()
+        c['services']['api']['volumes'][0]['volume']['nocopy']=False
+        self.assertFalse(policy.validate_compose(c,c['name'],images))
+        c,images=self.rendered()
+        c['services']['web']['volumes']=copy.deepcopy(c['services']['postgres']['volumes'])
         self.assertFalse(policy.validate_compose(c,c['name'],images))
 
     def test_network_and_retained_volume_attacks(self):

@@ -120,8 +120,13 @@ def validate_compose(c, instance, images, public=False, directory=None):
                 return False
         elif ports:
             return False
-        for v in s.get('volumes',[]):
-            if v.get('type')!='volume' or v.get('source') not in c['volumes']:
+        expected_mount=({'postgres':('database_data','/var/lib/postgresql/data'),'redis':('redis_data','/data')}.get(name)
+            or (('private_data','/app/storage/app') if name in {'api','migrate','critical','background','scheduler'} else None))
+        mounts=s.get('volumes',[])
+        if len(mounts)!=(1 if expected_mount else 0):return False
+        for v in mounts:
+            if (v.get('type')!='volume' or (v.get('source'),v.get('target'))!=expected_mount
+                    or v.get('read_only') or v.get('volume',{}).get('nocopy') is not True):
                 return False
         if name not in {'postgres'} and (s.get('read_only') is not True or 'ALL' not in s.get('cap_drop',[])):
             return False

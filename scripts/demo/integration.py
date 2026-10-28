@@ -173,6 +173,9 @@ def exercise(root,metadata,output):
         log_policy=dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc',
             "SELECT current_setting('log_statement')='none' AND current_setting('log_min_error_statement')='panic' AND current_setting('log_error_verbosity')='terse' AND current_setting('log_parameter_max_length_on_error')='0'")
         assert log_policy.strip()==b't';checks['postgres_secret_safe_logging_verified']=True
+        object_probe=b"<?php require '/app/vendor/autoload.php';$app=require '/app/bootstrap/app.php';$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();$d=Illuminate\\Support\\Facades\\Storage::disk('local');$p='TEST DEMO synthetic storage probe';$d->put('demo-ci-encrypted-probe',Illuminate\\Support\\Facades\\Crypt::encryptString($p));$c=$d->get('demo-ci-encrypted-probe');if($c===$p||Illuminate\\Support\\Facades\\Crypt::decryptString($c)!==$p)exit(1);$d->delete('demo-ci-encrypted-probe');if($d->exists('demo-ci-encrypted-probe'))exit(2);"
+        dc('exec','-T','api','php',data=object_probe)
+        checks['fresh_nocopy_storage_encrypted_write_read_delete']=True
         for service in ['postgres','redis','api','web','critical','background','scheduler','mailpit']:
             info=json.loads(docker('inspect',dc('ps','-q',service).decode().strip()))[0]
             assert not info['HostConfig'].get('PortBindings')
