@@ -14,7 +14,7 @@ from resources import docker, docker_env, SOCKET
 ROOT=Path(__file__).resolve().parents[2]
 
 def build_images(sha, verbose=False):
-    if run(['git','-C',str(ROOT),'rev-parse','HEAD']).decode().strip()!=sha or run(['git','-C',str(ROOT),'status','--porcelain']).strip():
+    if run(['git','--no-optional-locks','-C',str(ROOT),'rev-parse','HEAD']).decode().strip()!=sha or run(['git','--no-optional-locks','-C',str(ROOT),'status','--porcelain']).strip():
         raise ValueError('CLEAN_EXACT_CHECKOUT_REQUIRED')
     refs=[];images={}
     # Only tracked commit bytes enter the context. Ignored .env/cache/fixtures

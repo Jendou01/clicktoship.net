@@ -109,10 +109,11 @@ console.log(JSON.stringify(out));"""
 
 def register(directory,ca,dc,key):
     client=BrowserSession(directory,ca);client.request('/sanctum/csrf-cookie',expected=204)
-    account={'email':'demo-'+key+'-'+secrets.token_hex(3)+'@example.invalid','password':'Ab1!'+secrets.token_urlsafe(24)}
+    account={'email':'demo-'+key.lower()+'-'+secrets.token_hex(3)+'@example.invalid','password':'Ab1!'+secrets.token_urlsafe(24)}
     result=client.request('/api/v1/auth/register',{'name':'TEST DEMO '+key,'email':account['email'],
         'password':account['password'],'password_confirmation':account['password'],'locale':'en'},201)
     assert result['user']['email_verified'] is False
+    assert result['user']['email']==account['email']
     account['id']=result['user']['id']
     verification=mail_fragment(dc,account['email'],'verification')
     client.request('/api/v1/auth/email/verify',{'verification':verification})

@@ -58,7 +58,7 @@ def tls(directory, ca_file=None):
 
 def approved(a):
     m=verify_review(a.manifest,a.signature,a.review_key,a.review_key_sha256)
-    if run(['git','-C',str(ROOT),'rev-parse','HEAD']).decode().strip()!=m['git_sha'] or run(['git','-C',str(ROOT),'status','--porcelain']).strip():
+    if run(['git','--no-optional-locks','-C',str(ROOT),'rev-parse','HEAD']).decode().strip()!=m['git_sha'] or run(['git','--no-optional-locks','-C',str(ROOT),'status','--porcelain']).strip():
         raise ValueError('EXACT_CLEAN_REVIEWED_CHECKOUT_REQUIRED')
     # Query GitHub over verified HTTPS rather than accepting a handwritten CI URL.
     url=f'https://api.github.com/repos/Jendou01/clicktoship.net/actions/runs/{m["ci_run_id"]}'
