@@ -37,6 +37,6 @@ If an account, approved rate card, browser, service or evidence is missing, reco
 The demo-lifecycle CI job is additional to the existing application suites. See
 SECURITY_REVIEW.md for its isolation and evidence boundary. It explicitly refuses
 the target VPS, invokes lifecycle cores only on private synthetic runner resources,
-and uploads a boolean-only evidence JSON. A real successful run is required before
+and uploads a sanitized check/digest evidence JSON. A real successful run is required before
 claiming this gap is closed. No CI/public certificate, signer or test account is
 valid as an actual deployment approval or human recovery arrangement.

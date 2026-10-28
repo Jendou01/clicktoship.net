@@ -96,7 +96,14 @@ console.log(JSON.stringify(out));"""
         if match:
             return urllib.parse.unquote(match.group(1).replace('&amp;','&'))
         time.sleep(1)
-    raise ValueError('PRIVATE_MAIL_DELIVERY_NOT_OBSERVED')
+    # Never emit mail bodies, tokens or raw worker logs. Only bounded exception
+    # class names from the already-sanitized application logger aid diagnosis.
+    worker=dc('ps','-q','background').decode().strip()
+    logs=docker('logs',worker).decode(errors='replace')
+    types=sorted(set(re.findall(r'"exception_type":"([A-Za-z_\\\\]{1,160})"',logs)))
+    print(json.dumps({'code':'PRIVATE_MAIL_DIAGNOSTIC','message_present':bool(messages),
+                      'exception_types':types}),flush=True)
+    raise ValueError('PRIVATE_MAIL_LINK_NOT_OBSERVED' if messages else 'PRIVATE_MAIL_DELIVERY_NOT_OBSERVED')
 
 def register(directory,ca,dc,key):
     client=BrowserSession(directory,ca);client.request('/sanctum/csrf-cookie',expected=204)
@@ -295,7 +302,9 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         if canary_volume:
             docker('volume','rm',canary_volume)
     result={'scope':'isolated_linux_demo_integration_not_host_approval','ok':True,'checks':checks,
-            'git_sha':metadata['sha'],'real_vps_accessed':False,'human_release_approval':False}
+            'git_sha':metadata['sha'],'image_content_ids':metadata['images'],
+            'archive_sha256':m['archive_sha256'],
+            'real_vps_accessed':False,'human_release_approval':False}
     output.write_text(json.dumps(result,indent=2)+'\n');output.chmod(0o644)
     print(json.dumps({'code':'DEMO_LIFECYCLE_INTEGRATION_PASSED','checks':len(checks)}))
 

@@ -31,7 +31,7 @@ approval procedures provision synthetic accounts. No verified-email, membership,
 admin-role, MFA or financial rows are directly seeded. Draft and zero-wallet
 fixtures use owning services. Tests cover worker queues, scheduler, isolation,
 restart, certificate/gateway changes, emergency stop, canary-preserving teardown
-and fresh redeployment. Only sanitized boolean evidence is uploaded; no image,
+and fresh redeployment. Only sanitized checks, source SHA and content digests are uploaded; no image,
 key, credential, mail, browser trace or raw private log is an artifact.
 
 Record actual job URLs/results in the final PR/handoff. Adding the job does not

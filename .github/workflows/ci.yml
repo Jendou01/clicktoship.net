@@ -142,4 +142,4 @@ jobs:
           name: disposable-demo-lifecycle-evidence
           path: /tmp/cts-demo-ci-evidence.json
           retention-days: 7
-      # No images, keys, mail, fixture credentials, traces or raw logs uploaded.
+      # Only checks/source SHA/content digests; no images, keys, mail or raw logs.
