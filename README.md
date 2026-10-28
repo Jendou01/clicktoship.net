@@ -1,5 +1,10 @@
 # ClickToShip
 
+Protected disposable remote demonstrations use the **separate**, manually approved
+[demo profile](docs/demo/REMOTE_DEMO_SETUP.md). They do not waive any staging or
+production gate. No deployment is triggered by push. See its synthetic-only loss
+policy, reviewed archive promotion, acceptance checklist and teardown procedure.
+
 Aramex-first, multi-carrier-ready shipping SaaS. **Current scope: Phases 0–16 development foundations and pre-deployment QA**, including authentication/tenancy, merchant administration, a financial ledger, static pricing, evidence-gated carrier adapters, shipment/bulk drafts, tracking foundations, customs preparation bilingual merchant/platform dashboards and an evidence-gated store integration foundation. Live carrier operations, wallet funding, payments and customs clearance remain disabled. No production deployment has occurred.
 
 ## Requirements

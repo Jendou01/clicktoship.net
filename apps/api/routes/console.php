@@ -15,11 +15,37 @@ use App\Modules\Tracking\Application\TrackingPollScheduler;
 use App\Modules\WalletBilling\Application\Reconciliation;
 use App\Support\SchemaIntegrity;
 use App\Support\Security\ConfigurationAudit;
+use App\Support\Security\DemoFixtures;
+use App\Support\Security\DisposableDemo;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
+
+Artisan::command('demo:fixtures {owner} {merchant}', function (): void {
+    $this->line(json_encode(app(DemoFixtures::class)->create($this->argument('owner'), $this->argument('merchant'))));
+})->purpose('Idempotent synthetic drafts in explicitly opted-in disposable demo only; no accounts or credentials');
+
+Artisan::command('demo:check', function (): int {
+    if (! app()->environment('demo') || config('demo.enabled') !== true || DB::connection()->getDatabaseName() !== 'clicktoship_demo') {
+        $this->error('DEMO_SCOPE_REQUIRED');
+
+        return 1;
+    }
+    DisposableDemo::assertConfiguration();
+    $checks = app(ConfigurationAudit::class)->checks();
+    $checks[] = ['code' => 'SYNTHETIC_IDENTITIES_ONLY', 'ok' => ! DB::table('users')->whereRaw("email NOT LIKE '%@example.invalid'")->exists()];
+    $checks[] = ['code' => 'ASSIGNED_ADMINS_HAVE_CONFIRMED_MFA', 'ok' => ! DB::table('platform_role_assignments as a')->whereNotExists(fn ($q) => $q->selectRaw('1')->from('user_mfa_credentials as m')->whereColumn('m.user_id', 'a.user_id')->whereNotNull('m.confirmed_at'))->exists()];
+    $checks[] = ['code' => 'NO_LIVE_CARRIER_ACCOUNTS', 'ok' => ! DB::table('carrier_accounts')->exists()];
+    $checks[] = ['code' => 'NO_COMMERCE_CONNECTIONS', 'ok' => ! DB::table('commerce_connections')->exists()];
+    $checks[] = ['code' => 'NO_PAYMENT_INTENTS', 'ok' => ! DB::table('payment_intents')->exists()];
+    $checks[] = ['code' => 'NO_DIRECT_MONEY_WRITE', 'ok' => ! DB::selectOne("SELECT has_table_privilege(current_user, 'wallet_balances', 'UPDATE') AS allowed")->allowed];
+    $ok = ! array_filter($checks, fn ($c) => ! $c['ok']);
+    $this->line(json_encode(['ok' => $ok, 'checks' => $checks, 'scope' => 'demo_runtime_configuration_not_browser_acceptance']));
+
+    return $ok ? 0 : 1;
+})->purpose('Read-only demo runtime audit; never approves production');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

@@ -8,5 +8,5 @@ export function generateStaticParams() { return locales.map((locale) => ({ local
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}><body>{children}</body></html>;
+  return <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}><body>{process.env.CTS_DISPOSABLE_DEMO === "true" && <aside role="note" className="bg-amber-100 p-3 text-center text-sm text-black">{locale === "ar" ? "عرض تجريبي — بيانات اصطناعية قابلة للفقدان. لا شحن أو مدفوعات حقيقية." : "TEST / DEMO — disposable synthetic data. No real shipping or payments."}</aside>}{children}</body></html>;
 }

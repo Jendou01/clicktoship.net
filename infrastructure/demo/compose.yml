@@ -1,0 +1,199 @@
+{
+  "name": "${CTS_PROJECT:?Use demo control.py}",
+  "services": {
+    "api": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "api"
+      },
+      "volumes": [{"type":"volume","source":"private_data","target":"/app/storage/app","volume":{"nocopy":true}}]
+    },
+    "web": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "web"
+      },
+      "environment": {
+        "CTS_DISPOSABLE_DEMO": "true"
+      }
+    },
+    "gateway": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "gateway"
+      },
+      "ports": !override ["127.0.0.1:18443:8443"],
+      "networks": {
+        "ingress": {
+          "gw_priority": 1
+        },
+        "private": {
+          "ipv4_address": "172.30.73.10"
+        }
+      }
+    },
+    "postgres": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "postgres"
+      },
+      "environment": {
+        "POSTGRES_DB": "clicktoship_demo"
+      },
+      "command": ["postgres", "-c", "log_statement=none", "-c", "log_min_error_statement=panic", "-c", "log_error_verbosity=terse", "-c", "log_parameter_max_length_on_error=0"],
+      "volumes": [{"type":"volume","source":"database_data","target":"/var/lib/postgresql/data","volume":{"nocopy":true}}],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "pg_isready -h 127.0.0.1 -U cts_owner -d clicktoship_demo"
+        ],
+        "interval": "5s",
+        "timeout": "3s",
+        "retries": 20
+      }
+    },
+    "redis": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "redis"
+      },
+      "volumes": [{"type":"volume","source":"redis_data","target":"/data","volume":{"nocopy":true}}]
+    },
+    "critical": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "critical"
+      },
+      "volumes": [{"type":"volume","source":"private_data","target":"/app/storage/app","volume":{"nocopy":true}}]
+    },
+    "background": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "background"
+      },
+      "volumes": [{"type":"volume","source":"private_data","target":"/app/storage/app","volume":{"nocopy":true}}]
+    },
+    "scheduler": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "scheduler"
+      },
+      "volumes": [{"type":"volume","source":"private_data","target":"/app/storage/app","volume":{"nocopy":true}}]
+    },
+    "migrate": {
+      "extends": {
+        "file": "../deployment/compose.yml",
+        "service": "migrate"
+      },
+      "volumes": [{"type":"volume","source":"private_data","target":"/app/storage/app","volume":{"nocopy":true}}]
+    },
+    "mailpit": {
+      "image": "axllent/mailpit@sha256:0790692be935ea4420d085694f7985b1f692ca6a8771ab0e0bd8ba75ac180498",
+      "user": "10001:10001",
+      "restart": "unless-stopped",
+      "read_only": true,
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "mem_limit": "128m",
+      "pids_limit": 64,
+      "networks": [
+        "private"
+      ],
+      "tmpfs": [
+        "/tmp:uid=10001,gid=10001,mode=0700,size=32m"
+      ],
+      "environment": {
+        "MP_DATABASE": "/tmp/mailpit.db",
+        "MP_SMTP_BIND_ADDR": "0.0.0.0:1025",
+        "MP_SMTP_DISABLE_RDNS": "true",
+        "MP_UI_BIND_ADDR": "0.0.0.0:8025",
+        "MP_SMTP_ALLOWED_RECIPIENTS": ".*@example[.]invalid$",
+        "MP_MAX_MESSAGES": "100",
+        "MP_MAX_AGE": "24h",
+        "MP_DISABLE_VERSION_CHECK": "true"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "/mailpit",
+          "readyz"
+        ],
+        "interval": "10s",
+        "timeout": "3s",
+        "retries": 10
+      },
+      "logging": {
+        "driver": "none"
+      }
+    }
+  },
+  "networks": {
+    "ingress": {},
+    "private": {
+      "internal": true,
+      "ipam": {
+        "config": [
+          {
+            "subnet": "172.30.73.0/24"
+          }
+        ]
+      }
+    }
+  },
+  "volumes": {
+    "database_data": {
+      "driver": "local",
+      "driver_opts": {
+        "type": "tmpfs",
+        "device": "tmpfs",
+        "o": "uid=999,gid=999,mode=0700,size=2g,nosuid,nodev,noexec"
+      }
+    },
+    "redis_data": {
+      "driver": "local",
+      "driver_opts": {
+        "type": "tmpfs",
+        "device": "tmpfs",
+        "o": "uid=999,gid=999,mode=0700,size=256m,nosuid,nodev,noexec"
+      }
+    },
+    "private_data": {
+      "driver": "local",
+      "driver_opts": {
+        "type": "tmpfs",
+        "device": "tmpfs",
+        "o": "uid=10001,gid=10001,mode=0700,size=256m,nosuid,nodev,noexec"
+      }
+    }
+  },
+  "secrets": {
+    "migration_env": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/migration.env"
+    },
+    "application_env": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/application.env"
+    },
+    "database_owner_password": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/database-owner-password"
+    },
+    "redis_configuration": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/redis.conf"
+    },
+    "tls_certificate": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/tls.crt"
+    },
+    "tls_key": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/tls.key"
+    },
+    "gateway_passwords": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/gateway.htpasswd"
+    },
+    "host_rule": {
+      "file": "${CTS_SECRET_DIR:?Use demo control.py}/host.conf"
+    }
+  }
+}

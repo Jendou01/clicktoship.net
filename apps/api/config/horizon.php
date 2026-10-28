@@ -38,5 +38,11 @@ return [
         ] : (env('HORIZON_ROLE') === 'background' ? [
             'background' => ['connection' => 'redis', 'queue' => ['default', 'bulk', 'tracking', 'customs'], 'balance' => false, 'maxProcesses' => 1, 'memory' => 192, 'tries' => 1, 'timeout' => 60, 'nice' => 5],
         ] : []),
+        // Separate demo policy; staging configuration above is unchanged.
+        'demo' => env('HORIZON_ROLE') === 'critical' ? [
+            'critical' => ['connection' => 'redis', 'queue' => ['critical', 'carrier', 'carrier-events', 'shipments'], 'balance' => false, 'maxProcesses' => 1, 'memory' => 192, 'tries' => 1, 'timeout' => 60, 'nice' => 0],
+        ] : (env('HORIZON_ROLE') === 'background' ? [
+            'background' => ['connection' => 'redis', 'queue' => ['default', 'bulk', 'tracking', 'customs'], 'balance' => false, 'maxProcesses' => 1, 'memory' => 192, 'tries' => 1, 'timeout' => 60, 'nice' => 5],
+        ] : []),
     ],
 ];
