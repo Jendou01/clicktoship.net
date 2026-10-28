@@ -10,9 +10,15 @@ ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'scripts/demo'))
 import control
 import resources
-from policy import ACK
+from policy import ACK, safe_compose_detail
 
 class DemoLifecycleSafetyTest(unittest.TestCase):
+    def test_compose_error_diagnostic_removes_private_values_before_output(self):
+        secret='synthetic-private-sentinel-only'
+        lines=safe_compose_detail(('progress\nError: '+secret+'\nfailed dependency').encode(),[secret])
+        self.assertNotIn(secret,' '.join(lines))
+        self.assertIn('[REDACTED]',' '.join(lines))
+        self.assertNotIn('progress',lines)
     def test_shutdown_does_not_require_ci_or_tls(self):
         args=['control.py','stop','--directory','/run/cts-demo-123456abcdef','--ack',ACK]
         with patch.object(sys,'argv',args), patch.object(control,'protected_ram') as ram, \

@@ -93,7 +93,11 @@ def context(directory,m,public=None):
     if public:
         command+=['-f',str(ROOT/'infrastructure/demo/publish.yml')]
     def dc(*args,data=None):
-        return run(command+list(args),env=env,input=data)
+        try:
+            return run(command+list(args),env=env,input=data)
+        except ValueError as error:
+            if args and args[0]=='up':error.operation='compose_up'
+            raise
     rendered=json.loads(dc('config','--format','json'))
     if not validate_compose(rendered,instance,{**m['images'],**FIXED},public,directory):
         raise ValueError('COMPOSE_BOUNDARY_REJECTED')

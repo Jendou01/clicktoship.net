@@ -24,7 +24,7 @@ import urllib.parse
 from pathlib import Path
 from control import (ROOT, FIXED, HOST, protected_ram, prepare, check, context,
                      start_instance, refresh_gateway, gateway_probe, verify_archive, image_identity)
-from policy import run, digest, verify_review
+from policy import run, digest, verify_review, environment, safe_compose_detail
 from resources import SOCKET, docker_env, docker, owned_action, receipt, inventory, write_private
 from package import build_images
 
@@ -327,7 +327,19 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         assert count==b'0';checks['fresh_redeployment_has_no_previous_accounts']=True
         owned_action(fresh,'teardown')
     except Exception as error:
-        detail=getattr(error,'stderr',b'').decode(errors='replace').lower()
+        if getattr(error,'operation',None)=='compose_up':
+            values=[]
+            for directory in directories:
+                if (directory/'application.env').is_file():
+                    env=environment(directory/'application.env')
+                    values += [env[k] for k in ['APP_KEY','DB_PASSWORD','REDIS_PASSWORD']]
+                    values += [env['APP_KEY'].removeprefix('base64:')]
+                    for name in ['database-owner-password','gateway.htpasswd','tls.key','tls.crt']:
+                        values += (directory/name).read_text().splitlines()
+                    values += list(json.loads((directory/'reviewer-access.json').read_text()).values())
+            print(json.dumps({'code':'REDACTED_COMPOSE_UP_DIAGNOSTIC','detail':safe_compose_detail(
+                (getattr(error,'stderr',None) or b'')+(getattr(error,'stdout',None) or b''),values)}),flush=True)
+        detail=(getattr(error,'stderr',None) or b'').decode(errors='replace').lower()
         print(json.dumps({'code':'PRIVATE_COMMAND_DIAGNOSTIC','flags':[x for x in [
             'dependency failed to start','unhealthy','no space left on device','cannot allocate memory',
             'permission denied','not found','address already in use','already in use','failed to create task'] if x in detail],

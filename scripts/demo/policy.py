@@ -18,8 +18,16 @@ def run(args, timeout=180, **kwargs):
     if result.returncode:
         error = ValueError('DEMO_COMMAND_REJECTED')
         error.stderr = result.stderr  # Private diagnostic data; never stringify it.
+        error.stdout = result.stdout
         raise error
     return result.stdout
+
+def safe_compose_detail(output, secrets):
+    text=output.decode(errors='replace')
+    text=re.sub(r'\x1b\[[0-9;]*[A-Za-z]','',text)
+    for value in sorted(set(secrets),key=len,reverse=True):
+        if len(value)>=8:text=text.replace(value,'[REDACTED]')
+    return [line[:400] for line in text.splitlines() if re.search(r'error|failed|exited|invalid|unsupported|unhealthy',line,re.I)][-8:]
 
 def digest(path):
     h = hashlib.sha256()
