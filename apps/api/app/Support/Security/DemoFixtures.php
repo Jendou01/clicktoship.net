@@ -20,6 +20,12 @@ final class DemoFixtures
         return DB::transaction(function () use ($owner, $merchant): array {
             $user = User::whereKey($owner)->lockForUpdate()->firstOrFail();
             abort_unless($user->hasVerifiedEmail() && str_ends_with($user->email, '@example.invalid'), 403);
+            abort_unless(DB::table('merchant_role_assignments as a')
+                ->join('merchant_users as m', 'm.id', '=', 'a.membership_id')
+                ->join('roles as r', 'r.id', '=', 'a.role_id')
+                ->where('a.merchant_id', $merchant)->where('m.merchant_id', $merchant)
+                ->where('m.user_id', $owner)->where('m.status', 'active')
+                ->where('r.code', 'merchant.owner')->exists(), 403);
             $token = $user->createToken('Disposable synthetic draft fixture', ['shipments.write'], now()->addMinutes(5));
             $token->accessToken->forceFill(['merchant_id' => $merchant, 'auth_version' => $user->auth_version])->save();
             $user->withAccessToken($token->accessToken);

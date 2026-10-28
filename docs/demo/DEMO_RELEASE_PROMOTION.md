@@ -30,3 +30,13 @@ An encrypted private review key prompts locally for its passphrase. Never put it
 6. Generate fresh runtime secrets and verify/start as REMOTE_DEMO_SETUP describes. No `--local-image-ids` exception or change to production preflight exists. Manual owner deployment authorization for exact SHA/host is still required. The old approved Phase 17 images cannot contain this new profile and must not be treated as its release.
 
 7. Later changes repeat feature branch → tests → PR → independent review/merge → exact successful CI → new reviewed package/signature → manual host approval → isolated fresh demo. Do not swap a tag on a running instance. Stop all demo writers/workers/scheduler before upgrade/reset; migrations only use a separate one-shot owner. For a disposable reset, tear down only the verified demo project and create a fresh unique one; retained databases are never migrated or erased. Rebuild synthetic fixtures. Acceptance failure leaves ingress closed. Rollback means a freshly provisioned isolated instance of the last approved code with its own new credentials and disposable data; never downgrade retained schemas or reuse lost keys.
+
+
+Reviewed builder hardening: only tracked bytes from the frozen Git commit enter
+a fresh build context. Ignored local .env/cache/test credentials never become
+COPY inputs. The local Unix Docker daemon is explicit. Before loading, the
+receiver checks the signed archive hash, safe outer tar entries, exactly the
+three approved image config digests, expected SHA-tag identities and layer
+references. Docker verifies loaded content and the operator verifies source labels.
+These checks are integrity/review controls, not cryptographic build provenance.
+The private CI archive and ephemeral test signature are never release approvals.

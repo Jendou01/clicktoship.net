@@ -31,3 +31,10 @@ Normal browser registration/email verification and team invitations remain requi
 `control.py verify` is offline/local config, certificate and artifact validation plus hosted-CI query; it is not browser/host acceptance. `demo:check` checks actual restricted runtime configuration and synthetic database boundaries. An empty admin table satisfying “no assigned admin lacks MFA” does not mean onboarding or MFA acceptance passed. Record those journeys separately, with real evidence. Complete DEMO_ACCEPTANCE_CHECKLIST before reporting a working demo. Unknown/unexecuted checks are BLOCKED, not PASS.
 
 Hostinger physical disk/snapshot/backup encryption remains unverified until applicable evidence exists. This profile avoids writing its data/secrets to those disks; it does not certify the provider. Production requirements remain intact.
+
+
+Cleanup safety is deliberately independent of operation readiness: expired/missing
+TLS, unavailable GitHub or application secrets cannot block closing the exact
+owned instance. A private resource receipt and actual target identity are still
+mandatory. Matching labels alone never authorize deletion. No global prune is
+used. See SECURITY_REVIEW.md and DEMO_RESET_AND_TEARDOWN.md.

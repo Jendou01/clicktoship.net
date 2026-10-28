@@ -63,21 +63,38 @@ def validate_env(e, instance):
             and all(re.fullmatch(r'[a-f0-9]{64}',e.get(k,'')) for k in ('DB_PASSWORD','REDIS_PASSWORD'))
             and len({e['APP_KEY'],e['DB_PASSWORD'],e['REDIS_PASSWORD']}) == 3)
 
-def validate_compose(c, instance, images, public=False):
+def validate_compose(c, instance, images, public=False, directory=None):
     if c.get('name') != instance or set(c.get('services',{})) != SERVICES:
         return False
     if set(c.get('volumes',{})) != {'database_data','redis_data','private_data'}:
         return False
-    for v in c['volumes'].values():
+    for name,v in c['volumes'].items():
         opts = v.get('driver_opts',{})
-        if v.get('external') or v.get('driver') != 'local' or opts.get('type') != 'tmpfs' or opts.get('device') != 'tmpfs' or 'nosuid' not in opts.get('o','') or 'nodev' not in opts.get('o',''):
+        if v.get('name')!=instance+'_'+name or v.get('external') or v.get('driver') != 'local' or opts.get('type') != 'tmpfs' or opts.get('device') != 'tmpfs' or 'nosuid' not in opts.get('o','') or 'nodev' not in opts.get('o',''):
             return False
     if set(c.get('networks',{})) != {'ingress','private'} or not c['networks']['private'].get('internal') or any(n.get('external') for n in c['networks'].values()):
         return False
     if c['networks']['private'].get('ipam',{}).get('config') != [{'subnet':'172.30.73.0/24'}]:
         return False
+    if any(v.get('name')!=instance+'_'+name or v.get('driver') not in (None,'bridge') for name,v in c['networks'].items()):
+        return False
+    commands={'redis':['redis-server','/run/secrets/redis_configuration'],
+        'migrate':['php','artisan','migrate','--force','--no-interaction'],
+        'critical':['php','artisan','horizon'],'background':['php','artisan','horizon'],
+        'scheduler':['php','artisan','schedule:work']}
+    secret_sources={
+        'postgres':{'database_owner_password'},'redis':{'redis_configuration'},
+        'gateway':{'tls_certificate','tls_key','gateway_passwords','host_rule'},
+        'migrate':{'migration_env'},'web':set(),'mailpit':set(),
+    }
     for name,s in c['services'].items():
         if s.get('privileged') or s.get('network_mode') or s.get('pid') or s.get('devices') or s.get('cap_add') or s.get('env_file') or s.get('build'):
+            return False
+        if s.get('entrypoint') is not None or s.get('command')!=commands.get(name):
+            return False
+        if {x['source'] for x in s.get('secrets',[])}!=secret_sources.get(name,{'application_env'}):
+            return False
+        if 'no-new-privileges:true' not in s.get('security_opt',[]) or not s.get('mem_limit') or not s.get('pids_limit'):
             return False
         expected_image = images['api' if name in {'api','migrate','critical','background','scheduler'} else name]
         if s.get('image') != expected_image or set(s.get('networks',{})) != ({'private','ingress'} if name == 'gateway' else {'private'}):
@@ -95,7 +112,14 @@ def validate_compose(c, instance, images, public=False):
                 return False
         if name not in {'postgres'} and (s.get('read_only') is not True or 'ALL' not in s.get('cap_drop',[])):
             return False
-        if name not in {'postgres'} and str(s.get('user')) not in {'10001:10001','999:999'}:
+        if name not in {'postgres'} and str(s.get('user'))!=('999:999' if name=='redis' else '10001:10001'):
+            return False
+    if directory is not None:
+        expected={'migration_env':'migration.env','application_env':'application.env',
+            'database_owner_password':'database-owner-password','redis_configuration':'redis.conf',
+            'tls_certificate':'tls.crt','tls_key':'tls.key','gateway_passwords':'gateway.htpasswd','host_rule':'host.conf'}
+        if set(c.get('secrets',{}))!=set(expected) or any(
+                v.get('external') or v.get('file')!=str(directory/expected[k]) for k,v in c['secrets'].items()):
             return False
     return True
 

@@ -30,3 +30,13 @@ CTS_DEMO_ACK=SYNTHETIC_ONLY_PERMANENT_DATA_LOSS_ACCEPTED \
 Runner checks protected EN/AR/mobile pages and banner, login/logout, API draft/quote, denied submit, isolated tenant access and two MFA/admin dashboards. It emits codes only; failed private diagnostics are suppressed. It does not test real provider calls, customer mail, funded ledger, delivered carrier events, full accessibility, load, or production readiness. Manual registration, invitations, CSRF/RBAC and detailed feature acceptance must also use the existing full-stack regression tests plus actual demo checklist; a script pass does not fill untested rows.
 
 If an account, approved rate card, browser, service or evidence is missing, record BLOCKED. No skipped/zero-test run counts as approval. Keep private account provisioning material outside chat, and revoke access after the review window.
+
+
+## Isolated Linux lifecycle job
+
+The demo-lifecycle CI job is additional to the existing application suites. See
+SECURITY_REVIEW.md for its isolation and evidence boundary. It explicitly refuses
+the target VPS, invokes lifecycle cores only on private synthetic runner resources,
+and uploads a boolean-only evidence JSON. A real successful run is required before
+claiming this gap is closed. No CI/public certificate, signer or test account is
+valid as an actual deployment approval or human recovery arrangement.

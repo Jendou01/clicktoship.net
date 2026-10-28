@@ -104,3 +104,42 @@ jobs:
           retention-days: 7
       - if: always()
         run: docker compose down
+
+  demo-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_BROWSERS_PATH: /tmp/cts-demo-playwright
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Prepare ephemeral Linux browser tooling only
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          npx --workspace=@clicktoship/web playwright install --with-deps chromium
+          # Disposable hosted CI VM only. Never run this setup on the target VPS.
+          sudo swapoff -a
+          sudo git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Build tracked-source demo images and a private local archive
+        run: |
+          sudo --preserve-env=PATH,GITHUB_ACTIONS,PLAYWRIGHT_BROWSERS_PATH python3 scripts/demo/integration.py \
+            --build-only --directory /tmp/cts-demo-ci
+      - name: Exercise private demo lifecycle, accounts and teardown isolation
+        run: |
+          sudo --preserve-env=PATH,GITHUB_ACTIONS,PLAYWRIGHT_BROWSERS_PATH python3 scripts/demo/integration.py \
+            --directory /tmp/cts-demo-ci --output /tmp/cts-demo-ci-evidence.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: disposable-demo-lifecycle-evidence
+          path: /tmp/cts-demo-ci-evidence.json
+          retention-days: 7
+      # No images, keys, mail, fixture credentials, traces or raw logs uploaded.

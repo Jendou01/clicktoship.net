@@ -215,3 +215,5 @@ ClickToShip-side foundation implemented on `feat/phase-14-shopyzee-integration`:
 ## Bounded disposable remote demo profile (not a new product phase)
 
 Separate demo Compose/policy, RAM-only synthetic resources, reviewed signed archive promotion, runtime opt-in guard, safe lifecycle, draft fixtures and acceptance tooling are implemented on a feature branch. Production/staging preflight remains unchanged. No VPS access or deployment occurs in this coding task. Merge/release review, hosted full regression evidence and actual approved demo acceptance remain required; funded ledger/carrier statuses remain forbidden by existing SQL guards. See docs/demo/REMOTE_DEMO_SETUP.md.
+
+Follow-up PR review hardens exact-ID cleanup, emergency closure, local daemon binding, tracked-only image builds and archive inspection, and adds a private Linux demo-lifecycle job. Results must be recorded from actual CI, not inferred from test definitions. No VPS operations or new product phase.

@@ -74,3 +74,34 @@ docker exec -it "$API_ID" php artisan demo:fixtures VERIFIED_OWNER_UUID SELECTED
 No passwords/MFA codes appear in these commands. Owner and administrator UUIDs come from normal authenticated account workflows; never invent their verification/MFA state. Runtime accounts do not inherit migration credentials.
 
 For private mail verification, an operator may inspect the exact demo mailpit container's internal IP and forward its 8025 inbox through the existing authenticated SSH session to the owner's **127.0.0.1 only** (for example `ssh -N -L 127.0.0.1:18025:VERIFIED_PRIVATE_MAILPIT_IP:8025 ctsadmin@2.24.48.221`). Do not publish a container mail port or use a wildcard local bind. The owner reads verification/invitation mail privately; do not expose/reset links in chat or test evidence. Close the SSH forwarding session after use.
+
+## Reviewed lifecycle updates
+
+All Docker calls bind explicitly to unix:///var/run/docker.sock, including image
+load/inspection and cleanup. Render validation checks canonical project resource
+names, commands, secrets, limits and private mounts; no inherited Docker context
+can redirect operations. Startup records root-private resource identities after
+each creation stage. A failed startup stops only verified resources. Cleanup uses
+the receipt and does not require a valid certificate or online CI.
+
+After approved manual DNS-01 reissuance, atomically install a valid matching
+certificate/key into the existing RAM secret directory with uid/gid 10001 and
+0440, verify the pair/chain/hostname, then `demo refresh-gateway`. Native file
+secret bind mounts require container recreation, not merely nginx reload. The
+controller validates and recreates only the recorded gateway and updates its
+resource ID. Verify the served certificate and revoked credentials afterward.
+No automatic renewal or persistent disk key copy is implied.
+
+Before publication, a trusted operator can open an existing-auth SSH loopback
+forward to 127.0.0.1:18443 and run the private browser acceptance command:
+
+```sh
+CTS_DEMO_ACK="$ACK" node scripts/demo/browser-acceptance.cjs \
+  /private/demo-browser-fixture.json --private-loopback
+```
+
+This maps only the canonical browser origin to local 127.0.0.1:18443, retaining
+normal hostname/SNI/cookie/CSRF checks. API requests execute in the browser so
+they follow the same private mapping. Do not disable certificate validation.
+After separate publication approval, rerun without --private-loopback from an
+independent client. Actual public acceptance remains separate from CI evidence.

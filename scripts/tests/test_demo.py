@@ -28,10 +28,15 @@ class DemoPolicyTest(unittest.TestCase):
 
     def rendered(self):
         image='sha256:'+'a'*64
-        c={'name':'cts-demo-'+'1'*12,'services':{},'networks':{'ingress':{},'private':{'internal':True,'ipam':{'config':[{'subnet':'172.30.73.0/24'}]}}},'volumes':{n:{'driver':'local','driver_opts':{'type':'tmpfs','device':'tmpfs','o':'nosuid,nodev'}} for n in ['database_data','redis_data','private_data']}}
+        c={'name':'cts-demo-'+'1'*12,'services':{},'networks':{'ingress':{'name':'cts-demo-'+'1'*12+'_ingress'},'private':{'name':'cts-demo-'+'1'*12+'_private','internal':True,'ipam':{'config':[{'subnet':'172.30.73.0/24'}]}}},'volumes':{n:{'name':'cts-demo-'+'1'*12+'_'+n,'driver':'local','driver_opts':{'type':'tmpfs','device':'tmpfs','o':'nosuid,nodev'}} for n in ['database_data','redis_data','private_data']}}
         images={**control.FIXED,'api':image,'web':image,'gateway':image}
         for name in policy.SERVICES:
-            c['services'][name]={'image':images['api' if name in {'api','migrate','critical','background','scheduler'} else name],'networks':{'private':{}},'read_only':True,'cap_drop':['ALL'],'user':'10001:10001'}
+            c['services'][name]={'image':images['api' if name in {'api','migrate','critical','background','scheduler'} else name],'networks':{'private':{}},'read_only':True,'cap_drop':['ALL'],'user':'999:999' if name=='redis' else '10001:10001','security_opt':['no-new-privileges:true'],'mem_limit':128000000,'pids_limit':128}
+        commands={'redis':['redis-server','/run/secrets/redis_configuration'],'migrate':['php','artisan','migrate','--force','--no-interaction'],'critical':['php','artisan','horizon'],'background':['php','artisan','horizon'],'scheduler':['php','artisan','schedule:work']}
+        secret_sources={'postgres':['database_owner_password'],'redis':['redis_configuration'],'gateway':['tls_certificate','tls_key','gateway_passwords','host_rule'],'migrate':['migration_env'],'web':[],'mailpit':[]}
+        for name,service in c['services'].items():
+            service['command']=commands.get(name)
+            service['secrets']=[{'source':x} for x in secret_sources.get(name,['application_env'])]
         c['services']['gateway'].update(networks={'private':{'ipv4_address':'172.30.73.10'},'ingress':{}},ports=[{'host_ip':'127.0.0.1','published':'18443','target':8443,'protocol':'tcp'}])
         return c,images
 
