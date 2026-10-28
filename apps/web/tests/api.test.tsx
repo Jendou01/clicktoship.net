@@ -4,6 +4,17 @@ import { api, ApiError } from "../src/lib/api";
 beforeEach(() => { document.cookie = "XSRF-TOKEN=encrypted%3Dcsrf; path=/"; });
 afterEach(() => vi.unstubAllGlobals());
 describe("same-origin API client", () => {
+  it("keeps first-party GET metadata for stateful authentication behind a no-referrer gateway", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: { authenticated: true }, error: null }) });
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(api("/auth/me")).resolves.toEqual({ authenticated: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, request] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/v1/auth/me");
+    expect(request.referrerPolicy).toBe("same-origin");
+    expect(request.credentials).toBe("same-origin");
+    expect(request.headers.Authorization).toBeUndefined();
+  });
   it("sends CSRF and merchant context on mutations without putting credentials in URLs", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ data: { saved: true }, error: null }) });
     vi.stubGlobal("fetch", fetchMock);

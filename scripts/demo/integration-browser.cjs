@@ -28,6 +28,7 @@ function code(secret){
   const locations=[...String(error.stack).matchAll(/(browser-acceptance|integration-browser)\.cjs:(\d+):(\d+)/g)]
     .map(x=>({file:x[1]+'.cjs',line:Number(x[2]),column:Number(x[3])}));
   console.log(JSON.stringify({code:'PRIVATE_DEMO_BROWSER_TEST_FAILED',locations,
+    network:error.demoNetwork||[],
     browser_codes:[...new Set(String(error.message).match(/ERR_[A-Z_]+/g)||[])]}));
   process.exit(1);
 });

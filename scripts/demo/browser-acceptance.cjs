@@ -13,6 +13,7 @@ async function runAcceptance(f, options={}) {
   const baseURL = 'https://staging.zeeship.cloud';
   const browser = await chromium.launch({headless:true,...options.launch});
   const checks = [];
+  const network=[];
   try {
     const denied = await browser.newContext({baseURL});
     const deniedPage=await denied.newPage();
@@ -26,13 +27,20 @@ async function runAcceptance(f, options={}) {
     await denied.close(); checks.push('gateway_unauthorized_401');
     const context = await browser.newContext({baseURL,httpCredentials:f.gateway});
     const page = await context.newPage();
+    page.on('response',async response=>{
+      const path=new URL(response.url()).pathname;
+      if(!['/sanctum/csrf-cookie','/api/v1/auth/login','/api/v1/auth/me'].includes(path))return;
+      let code=null;
+      try {const candidate=(await response.json()).error?.code;if(/^[A-Z_]{3,100}$/.test(candidate))code=candidate;}catch{}
+      network.push({path,status:response.status(),code});if(network.length>20)network.shift();
+    });
     // No traces, screenshots, video, passwords or response bodies in evidence.
     // In-browser fetch follows Chromium's private endpoint mapping and keeps
     // the canonical origin/cookies/SNI. APIRequestContext would use host DNS.
     const api = async (path,data) => {
       const result=await page.evaluate(async ({path,data})=>{
         const token=decodeURIComponent(document.cookie.split('; ').find(x=>x.startsWith('XSRF-TOKEN='))?.split('=').slice(1).join('=')||'');
-        const r=await fetch(path,{method:data===undefined?'GET':'POST',credentials:'same-origin',headers:{Accept:'application/json',...(data===undefined?{}:{'Content-Type':'application/json','X-XSRF-TOKEN':token})},body:data===undefined?undefined:JSON.stringify(data)});
+        const r=await fetch(path,{method:data===undefined?'GET':'POST',credentials:'same-origin',referrerPolicy:'same-origin',headers:{Accept:'application/json',...(data===undefined?{}:{'Content-Type':'application/json','X-XSRF-TOKEN':token})},body:data===undefined?undefined:JSON.stringify(data)});
         return {status:r.status,body:r.status===204?null:await r.json()};
       },{path,data});
       return {status:()=>result.status,ok:()=>result.status>=200&&result.status<300,json:async()=>result.body};
@@ -98,7 +106,8 @@ async function runAcceptance(f, options={}) {
     }
     checks.push('two_admin_mfa_enforced_and_dashboard');
     await context.close();return {scope:'disposable_demo_browser_acceptance',checks,ok:true,live_integrations_verified:false};
-  } finally {await browser.close();}
+  } catch(error) {error.demoNetwork=network;throw error;}
+  finally {await browser.close();}
 }
 module.exports={runAcceptance};
 if(require.main===module) (async()=>{

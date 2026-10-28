@@ -268,6 +268,11 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
             except Exception:
                 if time.monotonic()>deadline:raise
                 time.sleep(2)
+        dc('exec','-T','api','sh','-c','umask 077; cat > /tmp/cts-demo-queue.php; php /tmp/cts-demo-queue.php; result=$?; rm /tmp/cts-demo-queue.php; exit "$result"',data=queue_probe)
+        deadline=time.monotonic()+45
+        while not all(json.loads(dc('exec','-T','api','php',data=queue_read))):
+            if time.monotonic()>deadline:raise ValueError('POST_RESTART_QUEUES_NOT_OBSERVED')
+            time.sleep(1)
         checks['redis_restart_and_explicit_worker_recovery']=True
         # Browser runs inside web's internal network namespace. Even a resolver
         # mistake cannot route to the real VPS. It maps canonical SNI to gateway.
@@ -334,6 +339,7 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
             docker('volume','rm',canary_volume)
         print(json.dumps({'code':'DEMO_IT_COMPLETED_CHECKS','checks':checks}),flush=True)
     result={'scope':'isolated_linux_demo_integration_not_host_approval','ok':True,'checks':checks,
+            'browser_checks':browser['checks'],
             'git_sha':metadata['sha'],'image_content_ids':metadata['images'],
             'archive_sha256':m['archive_sha256'],
             'real_vps_accessed':False,'human_release_approval':False}
