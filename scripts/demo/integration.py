@@ -279,7 +279,13 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         assert set(web['NetworkSettings']['Networks'])=={directory.name+'_private'}
         browser_env={'PATH':os.environ['PATH'],'HOME':str(home),'CTS_DEMO_ACK':'SYNTHETIC_ONLY_PERMANENT_DATA_LOSS_ACCEPTED',
             'PLAYWRIGHT_BROWSERS_PATH':os.environ['PLAYWRIGHT_BROWSERS_PATH']}
-        browser=json.loads(run(['nsenter','--target',str(web['State']['Pid']),'--net','node',str(ROOT/'scripts/demo/integration-browser.cjs'),str(fixture)],env=browser_env,timeout=180))
+        browser_process=subprocess.run(['nsenter','--target',str(web['State']['Pid']),'--net','node',str(ROOT/'scripts/demo/integration-browser.cjs'),str(fixture)],
+            env=browser_env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=180)
+        browser=json.loads(browser_process.stdout)
+        if browser_process.returncode:
+            # The controlled child emits locations/static browser codes only.
+            print(json.dumps(browser),flush=True)
+            raise ValueError('PRIVATE_DEMO_BROWSER_ACCEPTANCE_FAILED')
         assert browser['ok'];checks['private_demo_browser_acceptance']=True
         scheduler=dc('ps','-q','scheduler').decode().strip()
         deadline=time.monotonic()+75

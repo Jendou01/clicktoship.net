@@ -23,4 +23,11 @@ function code(secret){
       '--host-resolver-rules=MAP staging.zeeship.cloud 172.30.73.10:8443']},
   });
   console.log(JSON.stringify(result));
-})().catch(()=>{console.error('PRIVATE_DEMO_BROWSER_TEST_FAILED_NO_CREDENTIAL_DIAGNOSTICS');process.exit(1);});
+})().catch(error=>{
+  // Locations/static browser codes only; assertion messages may contain secrets.
+  const locations=[...String(error.stack).matchAll(/(browser-acceptance|integration-browser)\.cjs:(\d+):(\d+)/g)]
+    .map(x=>({file:x[1]+'.cjs',line:Number(x[2]),column:Number(x[3])}));
+  console.log(JSON.stringify({code:'PRIVATE_DEMO_BROWSER_TEST_FAILED',locations,
+    browser_codes:[...new Set(String(error.message).match(/ERR_[A-Z_]+/g)||[])]}));
+  process.exit(1);
+});
