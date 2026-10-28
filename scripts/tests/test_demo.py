@@ -32,7 +32,7 @@ class DemoPolicyTest(unittest.TestCase):
         images={**control.FIXED,'api':image,'web':image,'gateway':image}
         for name in policy.SERVICES:
             c['services'][name]={'image':images['api' if name in {'api','migrate','critical','background','scheduler'} else name],'networks':{'private':{}},'read_only':True,'cap_drop':['ALL'],'user':'999:999' if name=='redis' else '10001:10001','security_opt':['no-new-privileges:true'],'mem_limit':128000000,'pids_limit':128}
-        commands={'redis':['redis-server','/run/secrets/redis_configuration'],'migrate':['php','artisan','migrate','--force','--no-interaction'],'critical':['php','artisan','horizon'],'background':['php','artisan','horizon'],'scheduler':['php','artisan','schedule:work']}
+        commands={'postgres':['postgres','-c','log_statement=none','-c','log_min_error_statement=panic','-c','log_error_verbosity=terse','-c','log_parameter_max_length_on_error=0'],'redis':['redis-server','/run/secrets/redis_configuration'],'migrate':['php','artisan','migrate','--force','--no-interaction'],'critical':['php','artisan','horizon'],'background':['php','artisan','horizon'],'scheduler':['php','artisan','schedule:work']}
         secret_sources={'postgres':['database_owner_password'],'redis':['redis_configuration'],'gateway':['tls_certificate','tls_key','gateway_passwords','host_rule'],'migrate':['migration_env'],'web':[],'mailpit':[]}
         for name,service in c['services'].items():
             service['command']=commands.get(name)

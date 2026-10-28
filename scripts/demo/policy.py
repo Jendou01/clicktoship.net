@@ -80,7 +80,8 @@ def validate_compose(c, instance, images, public=False, directory=None):
         return False
     if any(v.get('name')!=instance+'_'+name or v.get('driver') not in (None,'bridge') for name,v in c['networks'].items()):
         return False
-    commands={'redis':['redis-server','/run/secrets/redis_configuration'],
+    commands={'postgres':['postgres','-c','log_statement=none','-c','log_min_error_statement=panic','-c','log_error_verbosity=terse','-c','log_parameter_max_length_on_error=0'],
+        'redis':['redis-server','/run/secrets/redis_configuration'],
         'migrate':['php','artisan','migrate','--force','--no-interaction'],
         'critical':['php','artisan','horizon'],'background':['php','artisan','horizon'],
         'scheduler':['php','artisan','schedule:work']}

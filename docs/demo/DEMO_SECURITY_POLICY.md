@@ -30,7 +30,7 @@ Normal browser registration/email verification and team invitations remain requi
 
 `control.py verify` is offline/local config, certificate and artifact validation plus hosted-CI query; it is not browser/host acceptance. `demo:check` checks actual restricted runtime configuration and synthetic database boundaries. An empty admin table satisfying “no assigned admin lacks MFA” does not mean onboarding or MFA acceptance passed. Record those journeys separately, with real evidence. Complete DEMO_ACCEPTANCE_CHECKLIST before reporting a working demo. Unknown/unexecuted checks are BLOCKED, not PASS.
 
-Hostinger physical disk/snapshot/backup encryption remains unverified until applicable evidence exists. This profile avoids writing its data/secrets to those disks; it does not certify the provider. Production requirements remain intact.
+Hostinger physical disk/snapshot/backup encryption remains unverified until applicable evidence exists. Application databases, objects, caches and generated secrets use RAM mounts. Docker/provider/system operational logs may persist metadata; do not claim every host byte is RAM-only or securely erased. Demo PostgreSQL suppresses statement/error-detail/parameter logging to keep inline role-provisioning credentials out of diagnostics; ordinary server errors remain available. Application logging uses the existing sanitizer and Mailpit logs are disabled. No provider certification is implied. Production requirements remain intact.
 
 
 Cleanup safety is deliberately independent of operation readiness: expired/missing

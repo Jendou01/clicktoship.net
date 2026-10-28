@@ -170,6 +170,9 @@ def exercise(root,metadata,output):
         print('DEMO_IT_START',flush=True)
         start_instance(directory,m,root/'ca.crt');checks['actual_private_start_migrations_and_readiness']=True
         _,dc,_=check(directory,m,root/'ca.crt')
+        log_policy=dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc',
+            "SELECT current_setting('log_statement')='none' AND current_setting('log_min_error_statement')='panic' AND current_setting('log_error_verbosity')='terse' AND current_setting('log_parameter_max_length_on_error')='0'")
+        assert log_policy.strip()==b't';checks['postgres_secret_safe_logging_verified']=True
         for service in ['postgres','redis','api','web','critical','background','scheduler','mailpit']:
             info=json.loads(docker('inspect',dc('ps','-q',service).decode().strip()))[0]
             assert not info['HostConfig'].get('PortBindings')

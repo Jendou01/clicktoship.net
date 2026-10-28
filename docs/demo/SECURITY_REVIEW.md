@@ -16,6 +16,7 @@ No Hostinger access, DNS/firewall changes, live operation or merge is authorized
 | P2: fixture provisioning accepted a non-owner with shipping permissions | Require the selected verified active merchant.owner as well as existing service permissions | Positive repeated fixture creation and negative operational-user attempt |
 | P2: certificate replacement needed bind-mount refresh | Explicit refresh-gateway validates new pair and recreates only the recorded gateway, adopting its new ID | Peer certificate DER comparison, revocation/recreation and retained other resource IDs |
 | P2: socket-only PostgreSQL initialization could satisfy readiness before the final server | Demo readiness explicitly probes loopback TCP, unavailable to the temporary socket-only initialization server | Negative policy regression and actual fresh-start/redeploy lifecycle; no host DB port is published |
+| P2: failed inline role provisioning could copy SQL credentials into persistent Docker logs | Demo PostgreSQL suppresses statement text, parameter values and verbose error details while retaining ordinary server errors | Exact rendered command policy and actual runtime settings inspection; no blanket RAM-only host-log claim |
 
 The PostgreSQL temporary-server behavior is documented in the
 [official image entrypoint](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh).
