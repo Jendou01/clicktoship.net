@@ -323,7 +323,12 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         count=fresh_dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc','SELECT count(*) FROM users').strip()
         assert count==b'0';checks['fresh_redeployment_has_no_previous_accounts']=True
         owned_action(fresh,'teardown')
-    except Exception:
+    except Exception as error:
+        detail=getattr(error,'stderr',b'').decode(errors='replace').lower()
+        print(json.dumps({'code':'PRIVATE_COMMAND_DIAGNOSTIC','flags':[x for x in [
+            'dependency failed to start','unhealthy','no space left on device','cannot allocate memory',
+            'permission denied','not found','address already in use','already in use','failed to create task'] if x in detail],
+            'unhealthy_services':sorted(set(re.findall(r'cts-demo-[a-f0-9]{12}-([a-z]+)-1[^\n]*unhealthy',detail)))}),flush=True)
         for directory in directories:
             diagnose(directory)
         raise

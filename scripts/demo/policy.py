@@ -16,7 +16,9 @@ FILES = ('application.env', 'migration.env', 'database-owner-password', 'redis.c
 def run(args, timeout=180, **kwargs):
     result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, timeout=timeout, **kwargs)
     if result.returncode:
-        raise ValueError('DEMO_COMMAND_REJECTED')
+        error = ValueError('DEMO_COMMAND_REJECTED')
+        error.stderr = result.stderr  # Private diagnostic data; never stringify it.
+        raise error
     return result.stdout
 
 def digest(path):
@@ -88,6 +90,8 @@ def validate_compose(c, instance, images, public=False, directory=None):
         'migrate':{'migration_env'},'web':set(),'mailpit':set(),
     }
     for name,s in c['services'].items():
+        if name=='postgres' and s.get('healthcheck',{}).get('test')!=['CMD-SHELL','pg_isready -h 127.0.0.1 -U cts_owner -d clicktoship_demo']:
+            return False
         if s.get('privileged') or s.get('network_mode') or s.get('pid') or s.get('devices') or s.get('cap_add') or s.get('env_file') or s.get('build'):
             return False
         if s.get('entrypoint') is not None or s.get('command')!=commands.get(name):

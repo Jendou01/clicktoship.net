@@ -15,6 +15,10 @@ No Hostinger access, DNS/firewall changes, live operation or merge is authorized
 | P1: the gateway's no-referrer policy removed first-party metadata from browser GETs, so Sanctum could not identify cookie-authenticated frontend requests | Internal API fetches explicitly use same-origin referrer policy; gateway policy, exact Sanctum origins, CSRF and cookie authentication stay intact | API-client regression plus actual protected production-image browser acceptance; never forge Origin or relax Sanctum |
 | P2: fixture provisioning accepted a non-owner with shipping permissions | Require the selected verified active merchant.owner as well as existing service permissions | Positive repeated fixture creation and negative operational-user attempt |
 | P2: certificate replacement needed bind-mount refresh | Explicit refresh-gateway validates new pair and recreates only the recorded gateway, adopting its new ID | Peer certificate DER comparison, revocation/recreation and retained other resource IDs |
+| P2: socket-only PostgreSQL initialization could satisfy readiness before the final server | Demo readiness explicitly probes loopback TCP, unavailable to the temporary socket-only initialization server | Negative policy regression and actual fresh-start/redeploy lifecycle; no host DB port is published |
+
+The PostgreSQL temporary-server behavior is documented in the
+[official image entrypoint](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh).
 
 ## Validation boundary
 

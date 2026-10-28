@@ -38,7 +38,13 @@ class DemoPolicyTest(unittest.TestCase):
             service['command']=commands.get(name)
             service['secrets']=[{'source':x} for x in secret_sources.get(name,['application_env'])]
         c['services']['gateway'].update(networks={'private':{'ipv4_address':'172.30.73.10'},'ingress':{}},ports=[{'host_ip':'127.0.0.1','published':'18443','target':8443,'protocol':'tcp'}])
+        c['services']['postgres']['healthcheck']={'test':['CMD-SHELL','pg_isready -h 127.0.0.1 -U cts_owner -d clicktoship_demo']}
         return c,images
+
+    def test_socket_only_bootstrap_server_cannot_satisfy_postgres_readiness(self):
+        c,images=self.rendered()
+        c['services']['postgres']['healthcheck']['test']=['CMD-SHELL','pg_isready -U cts_owner -d clicktoship_demo']
+        self.assertFalse(policy.validate_compose(c,c['name'],images))
 
     def test_network_and_retained_volume_attacks(self):
         c,images=self.rendered();self.assertTrue(policy.validate_compose(c,c['name'],images))
