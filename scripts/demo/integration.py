@@ -17,6 +17,7 @@ import shutil
 import socket
 import ssl
 import struct
+import subprocess
 import tempfile
 import time
 import urllib.parse
@@ -24,7 +25,7 @@ from pathlib import Path
 from control import (ROOT, FIXED, HOST, protected_ram, prepare, check, context,
                      start_instance, refresh_gateway, gateway_probe, verify_archive, image_identity)
 from policy import run, digest, verify_review
-from resources import docker, owned_action, receipt, inventory, write_private
+from resources import SOCKET, docker_env, docker, owned_action, receipt, inventory, write_private
 from package import build_images
 
 def runner_only():
@@ -99,7 +100,8 @@ console.log(JSON.stringify(out));"""
     # Never emit mail bodies, tokens or raw worker logs. Only bounded exception
     # class names from the already-sanitized application logger aid diagnosis.
     worker=dc('ps','-q','background').decode().strip()
-    logs=docker('logs',worker).decode(errors='replace')
+    logs=subprocess.run(['docker','--host',SOCKET,'logs',worker],env=docker_env(),
+        stdout=subprocess.PIPE,stderr=subprocess.STDOUT,check=True,timeout=20).stdout.decode(errors='replace')
     types=sorted(set(re.findall(r'"exception_type":"([A-Za-z_\\\\]{1,160})"',logs)))
     print(json.dumps({'code':'PRIVATE_MAIL_DIAGNOSTIC','message_present':bool(messages),
                       'exception_types':types}),flush=True)
@@ -115,6 +117,24 @@ def register(directory,ca,dc,key):
     verification=mail_fragment(dc,account['email'],'verification')
     client.request('/api/v1/auth/email/verify',{'verification':verification})
     return client,account
+
+def diagnose(directory):
+    """Bounded state only; never emit environment, health output or raw logs."""
+    if not (directory/'resources.json').is_file():return
+    r=receipt(directory)
+    for name,item in inventory(directory,r['images']).items():
+        if not name.startswith('container:'):continue
+        info=json.loads(docker('inspect',item['id']))[0]
+        raw=subprocess.run(['docker','--host',SOCKET,'logs',item['id']],env=docker_env(),
+            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=20).stdout.decode(errors='replace')
+        state=info['State'];health=state.get('Health',{})
+        raw+='\n'.join(x.get('Output','') for x in health.get('Log',[]))
+        print(json.dumps({'code':'PRIVATE_CONTAINER_DIAGNOSTIC','service':name.split(':')[1],
+            'exit':state['ExitCode'],'oom':state['OOMKilled'],'status':state['Status'],
+            'health':health.get('Status'),
+            'exception_types':sorted(set(re.findall(r'"exception_type":"([A-Za-z_\\\\]{1,160})"',raw))),
+            'static_codes':sorted(set(re.findall(r'\b(?:SCHEMA|DISPOSABLE|DEMO)_[A-Z_]{3,80}\b',raw))),
+            'failure_flags':[word for word in ['permission denied','read-only file system','out of memory','not found'] if word in raw.lower()]}),flush=True)
 
 def exercise(root,metadata,output):
     checks={};directories=[];canary=None;canary_volume=None
@@ -291,6 +311,10 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         count=fresh_dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc','SELECT count(*) FROM users').strip()
         assert count==b'0';checks['fresh_redeployment_has_no_previous_accounts']=True
         owned_action(fresh,'teardown')
+    except Exception:
+        for directory in directories:
+            diagnose(directory)
+        raise
     finally:
         for directory in directories:
             if (directory/'resources.json').exists():
@@ -301,6 +325,7 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
             docker('rm','-f',canary)
         if canary_volume:
             docker('volume','rm',canary_volume)
+        print(json.dumps({'code':'DEMO_IT_COMPLETED_CHECKS','checks':checks}),flush=True)
     result={'scope':'isolated_linux_demo_integration_not_host_approval','ok':True,'checks':checks,
             'git_sha':metadata['sha'],'image_content_ids':metadata['images'],
             'archive_sha256':m['archive_sha256'],

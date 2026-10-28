@@ -16,7 +16,13 @@ async function runAcceptance(f, options={}) {
   try {
     const denied = await browser.newContext({baseURL});
     const deniedPage=await denied.newPage();
-    expect((await deniedPage.goto(baseURL+'/en')).status()).toBe(401);
+    // Chromium may fail the navigation after receiving a Basic-auth challenge.
+    // Require the real network response even when no document is committed.
+    const denial=deniedPage.waitForResponse(r=>r.url()===baseURL+'/en');
+    await deniedPage.goto(baseURL+'/en').catch(error=>{
+      if(!error.message.includes('ERR_INVALID_AUTH_CREDENTIALS'))throw error;
+    });
+    expect((await denial).status()).toBe(401);
     await denied.close(); checks.push('gateway_unauthorized_401');
     const context = await browser.newContext({baseURL,httpCredentials:f.gateway});
     const page = await context.newPage();
