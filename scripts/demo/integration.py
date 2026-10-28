@@ -180,6 +180,7 @@ def exercise(root,metadata,output):
         dc('exec','-T','web','node','-e',"fetch('http://198.51.100.1',{signal:AbortSignal.timeout(1000)}).then(()=>process.exit(1)).catch(()=>process.exit(0))")
         checks['private_application_egress_denied_test_net_only']=True
         queue_probe=b'''<?php require '/app/vendor/autoload.php';$app=require '/app/bootstrap/app.php';$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
+Illuminate\\Support\\Facades\\Redis::del('demo-ci-critical','demo-ci-default');
 dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-critical','seen'); })->onQueue('critical');
 dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-default','seen'); })->onQueue('default');'''
         dc('exec','-T','api','sh','-c','umask 077; cat > /tmp/cts-demo-queue.php; php /tmp/cts-demo-queue.php; result=$?; rm /tmp/cts-demo-queue.php; exit "$result"',data=queue_probe)
@@ -320,12 +321,16 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
         assert json.loads(docker('inspect',canary))[0]['State']['Running']
         assert json.loads(docker('volume','inspect',canary_volume))[0]['Name']==canary_volume
         checks['offline_no_certificate_stop_teardown_preserves_unrelated_resources']=True
-        fresh=Path('/run/cts-demo-'+secrets.token_hex(6));directories.append(fresh)
-        prepare(fresh,m,crt2,key2,root/'ca.crt');start_instance(fresh,m,root/'ca.crt')
-        _,fresh_dc,_=check(fresh,m,root/'ca.crt')
-        count=fresh_dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc','SELECT count(*) FROM users').strip()
-        assert count==b'0';checks['fresh_redeployment_has_no_previous_accounts']=True
-        owned_action(fresh,'teardown')
+        # Bound the repeatability test: earlier hosted runs exposed intermittent
+        # startup failures. Every repetition uses new secrets/resources/schema.
+        for attempt in range(3):
+            fresh=Path('/run/cts-demo-'+secrets.token_hex(6));directories.append(fresh)
+            prepare(fresh,m,crt2,key2,root/'ca.crt');start_instance(fresh,m,root/'ca.crt')
+            _,fresh_dc,_=check(fresh,m,root/'ca.crt')
+            count=fresh_dc('exec','-T','postgres','psql','-U','cts_owner','-d','clicktoship_demo','-Atc','SELECT count(*) FROM users').strip()
+            assert count==b'0'
+            owned_action(fresh,'teardown')
+        checks['three_fresh_redeployments_have_no_previous_accounts']=True
     except Exception as error:
         if getattr(error,'operation',None)=='compose_up':
             values=[]
@@ -335,7 +340,7 @@ dispatch(static function(){ Illuminate\\Support\\Facades\\Redis::set('demo-ci-de
                     values += [env[k] for k in ['APP_KEY','DB_PASSWORD','REDIS_PASSWORD']]
                     values += [env['APP_KEY'].removeprefix('base64:')]
                     for name in ['database-owner-password','gateway.htpasswd','tls.key','tls.crt']:
-                        values += (directory/name).read_text().splitlines()
+                        if (directory/name).is_file():values += (directory/name).read_text().splitlines()
                     values += list(json.loads((directory/'reviewer-access.json').read_text()).values())
             print(json.dumps({'code':'REDACTED_COMPOSE_UP_DIAGNOSTIC','detail':safe_compose_detail(
                 (getattr(error,'stderr',None) or b'')+(getattr(error,'stdout',None) or b''),values)}),flush=True)
