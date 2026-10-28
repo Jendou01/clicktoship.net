@@ -58,6 +58,10 @@ jobs:
           node-version: '24'
           cache: npm
       - run: python3 -m unittest discover -s scripts/tests -v
+      - name: Validate separate demo Compose policy without starting services
+        run: python3 scripts/demo/check_compose.py
+      - name: Verify demo review signatures and tamper rejection using ephemeral keys
+        run: python3 scripts/demo/test_review_crypto.py
       - run: python3 scripts/qa/audit_repository.py
       - run: npm ci
       - run: npm run lint

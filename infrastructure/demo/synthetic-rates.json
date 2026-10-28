@@ -1,0 +1,109 @@
+{
+  "policy": "INPUT_FIXTURE_ONLY_NORMAL_INDEPENDENT_PRICING_APPROVAL_REQUIRED",
+  "definitions": [
+    {
+      "kind": "service",
+      "code": "demo_synthetic_service",
+      "configuration": {
+        "name_en": "TEST DEMO synthetic estimate only",
+        "name_ar": "تسعير تجريبي اصطناعي فقط",
+        "evidence": "Synthetic demo fixture; NOT a carrier contract or tax determination.",
+        "carrier": "synthetic_demo_only",
+        "volumetric_divisor": 5000,
+        "weight_step_grams": 500,
+        "weight_mode": "aggregate",
+        "ttl_seconds": 300,
+        "rounding": "half_up",
+        "capabilities": {
+          "cod": false,
+          "remote": false,
+          "declared_value": false
+        }
+      }
+    },
+    {
+      "kind": "zone",
+      "code": "demo_synthetic_zone",
+      "configuration": {
+        "name_en": "TEST DEMO synthetic estimate only",
+        "name_ar": "تسعير تجريبي اصطناعي فقط",
+        "evidence": "Synthetic demo fixture; NOT a carrier contract or tax determination.",
+        "country": "SA",
+        "cities": [
+          "synthetic origin",
+          "synthetic destination"
+        ],
+        "remote": false
+      }
+    },
+    {
+      "kind": "tax",
+      "code": "demo_synthetic_tax",
+      "configuration": {
+        "name_en": "TEST DEMO synthetic estimate only",
+        "name_ar": "تسعير تجريبي اصطناعي فقط",
+        "evidence": "Synthetic demo fixture; NOT a carrier contract or tax determination.",
+        "country": "SA",
+        "jurisdiction": "origin",
+        "mode": "exempt",
+        "percent_bps": 0
+      }
+    },
+    {
+      "kind": "tariff",
+      "code": "demo_synthetic_tariff",
+      "currency": "SAR",
+      "configuration": {
+        "name_en": "TEST DEMO synthetic estimate only",
+        "name_ar": "تسعير تجريبي اصطناعي فقط",
+        "evidence": "Synthetic demo fixture; NOT a carrier contract or tax determination.",
+        "service_id": "REPLACE_WITH_REVIEWED_DEMO_SERVICE_UUID",
+        "origin_country": "SA",
+        "destination_country": "SA",
+        "lane": "domestic",
+        "weight_from": 0,
+        "weight_to": 1000000001,
+        "packages_from": 1,
+        "packages_to": 100,
+        "base_minor": "1000",
+        "fixed_minor": "0",
+        "percent_bps": 0,
+        "included_grams": 1000,
+        "step_grams": 1000,
+        "step_minor": "100"
+      }
+    },
+    {
+      "kind": "rule",
+      "code": "demo_synthetic_rule",
+      "currency": "SAR",
+      "configuration": {
+        "name_en": "TEST DEMO synthetic estimate only",
+        "name_ar": "تسعير تجريبي اصطناعي فقط",
+        "evidence": "Synthetic demo fixture; NOT a carrier contract or tax determination.",
+        "service_id": "REPLACE_WITH_REVIEWED_DEMO_SERVICE_UUID",
+        "origin_country": "SA",
+        "destination_country": "SA",
+        "lane": "domestic",
+        "weight_from": 0,
+        "weight_to": 1000000001,
+        "packages_from": 1,
+        "packages_to": 100,
+        "base_minor": "2000",
+        "fixed_minor": "0",
+        "percent_bps": 0,
+        "included_grams": 1000,
+        "step_grams": 1000,
+        "step_minor": "100",
+        "scope": "global",
+        "mode": "fixed",
+        "tier_id": null,
+        "discount_minor": "0",
+        "discount_bps": 0,
+        "min_margin_minor": "100",
+        "min_margin_bps": 100,
+        "tax_id": "REPLACE_WITH_REVIEWED_DEMO_TAX_UUID"
+      }
+    }
+  ]
+}

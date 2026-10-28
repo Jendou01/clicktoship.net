@@ -1,0 +1,5 @@
+# Only control.py publish may use this override, after private TLS/runtime checks
+# and explicit gateway ingress approval. Never add backend ports here.
+services:
+  gateway:
+    ports: !override ["2.24.48.221:443:8443"]

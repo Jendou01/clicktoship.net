@@ -22,6 +22,7 @@ use App\Modules\Tracking\Domain\TrackingProviderAdapter;
 use App\Modules\Tracking\Infrastructure\DisabledTrackingAdapter;
 use App\Modules\WalletBilling\Domain\PaymentProvider;
 use App\Modules\WalletBilling\Infrastructure\DisabledPaymentProvider;
+use App\Support\Security\DisposableDemo;
 use App\Support\Security\SafeFailedJobs;
 use App\Support\Security\SafeHorizonJobs;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -65,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        DisposableDemo::assertConfiguration();
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
         Gate::policy(Membership::class, MembershipPolicy::class);
         $clear = fn () => app(MerchantContext::class)->clear();

@@ -210,3 +210,8 @@ Review Phase17 release artifacts/local rehearsal and resolve actual hosting auth
 ## Phase 14 implementation status
 
 ClickToShip-side foundation implemented on `feat/phase-14-shopyzee-integration`: provider/platform/store ownership, provider-aware sync and credential fences, unified orders/source filters, existing reviewed draft/batch orchestration, aggregate monitoring and bilingual UI. All eight supplied official Nazmart plugin-guide URLs are proxy-denied. Shopyzee live authorization/sync/webhooks and standalone plugin compatibility remain unverified and disabled. See [report](PHASE_14_REPORT.md), [evidence](integrations/SHOPYZEE_EVIDENCE.md) and [connector proposal](integrations/SHOPYZEE_CONNECTOR_DESIGN.md). Phase 15 analytics uses these persisted sources while preserving all external evidence gates.
+
+
+## Bounded disposable remote demo profile (not a new product phase)
+
+Separate demo Compose/policy, RAM-only synthetic resources, reviewed signed archive promotion, runtime opt-in guard, safe lifecycle, draft fixtures and acceptance tooling are implemented on a feature branch. Production/staging preflight remains unchanged. No VPS access or deployment occurs in this coding task. Merge/release review, hosted full regression evidence and actual approved demo acceptance remain required; funded ledger/carrier statuses remain forbidden by existing SQL guards. See docs/demo/REMOTE_DEMO_SETUP.md.

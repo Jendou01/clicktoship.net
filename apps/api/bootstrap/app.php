@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\DemoBoundary;
 use App\Http\Middleware\RequestId;
 use App\Http\Middleware\TrustedApplicationHost;
 use App\Http\Middleware\TrustedApplicationProxy;
@@ -23,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->prepend([RequestId::class, TrustedApplicationHost::class, ClearMerchantContext::class]);
+        $middleware->prepend([RequestId::class, TrustedApplicationHost::class, ClearMerchantContext::class, DemoBoundary::class]);
         $middleware->replace(TrustProxies::class, TrustedApplicationProxy::class);
         $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: ['api/v1/tracking/webhooks/*']);
