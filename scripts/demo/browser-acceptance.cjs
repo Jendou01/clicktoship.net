@@ -26,6 +26,18 @@ async function runAcceptance(f, options={}) {
     expect((await denial).status()).toBe(401);
     await denied.close(); checks.push('gateway_unauthorized_401');
     const context = await browser.newContext({baseURL,httpCredentials:f.gateway});
+    // Exercise human-paced journeys under the real gateway budget. Do not
+    // increase its limits or retry mutations after a 429/ambiguous response.
+    let turn=Promise.resolve();let throttled=false;
+    await context.route(baseURL+'/**',async route=>{
+      if(new URL(route.request().url()).pathname.startsWith('/_next/static/'))return route.continue();
+      const current=turn.then(async()=>{
+        await new Promise(resolve=>setTimeout(resolve,250));
+        await route.continue();
+      });
+      turn=current.catch(()=>{});await current;
+    });
+    context.on('response',response=>{if(response.status()===429)throttled=true;});
     const page = await context.newPage();
     page.on('response',async response=>{
       const path=new URL(response.url()).pathname;
@@ -105,6 +117,7 @@ async function runAcceptance(f, options={}) {
       await logout();
     }
     checks.push('two_admin_mfa_enforced_and_dashboard');
+    expect(throttled).toBe(false);checks.push('gateway_budget_respected_without_mutation_retries');
     await context.close();return {scope:'disposable_demo_browser_acceptance',checks,ok:true,live_integrations_verified:false};
   } catch(error) {error.demoNetwork=network;throw error;}
   finally {await browser.close();}

@@ -29,6 +29,11 @@ CTS_DEMO_ACK=SYNTHETIC_ONLY_PERMANENT_DATA_LOSS_ACCEPTED \
 
 Runner checks protected EN/AR/mobile pages and banner, login/logout, API draft/quote, denied submit, isolated tenant access and two MFA/admin dashboards. It emits codes only; failed private diagnostics are suppressed. It does not test real provider calls, customer mail, funded ledger, delivered carrier events, full accessibility, load, or production readiness. Manual registration, invitations, CSRF/RBAC and detailed feature acceptance must also use the existing full-stack regression tests plus actual demo checklist; a script pass does not fill untested rows.
 
+Acceptance requests are paced below the unchanged ingress budget, including
+frontend prefetch requests. Any observed429 still fails acceptance. No mutation
+is retried to conceal throttling or an ambiguous outcome. This is a functional
+journey, not a load-test exemption or a relaxed gateway policy.
+
 If an account, approved rate card, browser, service or evidence is missing, record BLOCKED. No skipped/zero-test run counts as approval. Keep private account provisioning material outside chat, and revoke access after the review window.
 
 
